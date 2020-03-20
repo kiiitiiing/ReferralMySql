@@ -1,0 +1,154 @@
+﻿@model List<GraphValuesModel>
+
+@{
+    ViewData["Title"] = "Graph";
+    var startDate = ViewBag.StartDate;
+    var endDate = ViewBag.EndDate;
+    var dateRange = startDate.ToString("yyyy/MM/dd") + " - " + endDate.ToString("yyyy/MM/dd");
+}
+
+<link href="~/assets/plugins/chart.js/Chart.min.css" rel="stylesheet" />
+<script src="~/assets/dist/js/utils.js"></script>
+<div style="
+     width: 97.5vw;
+    position: relative;
+    left: 45%;
+    right: 45%;
+    margin-left: -45vw;
+    margin-right: -45vw;">
+	<div class="card card-outline card-success">
+		<div class="card-header">
+			<form asp-action="Graph" class="fa-pull-left form-inline">
+				<input class="form-control form-control-sm bg-white"
+					   id="daterange"
+					   name="daterange"
+					   readonly
+					   style="cursor:pointer;"
+					   type="text"
+					   value="@dateRange" />
+				<button type="submit" value="Search" class="btn btn-sm btn-success">
+					<i class="fa fa-search"></i>
+				</button>
+			</form>
+		</div>
+		<div class="card-body">
+			<div style="width: 100%;">
+				<canvas id="canvas"></canvas>
+			</div>
+
+
+			@foreach (var item in Model)
+			{
+				<input type="text" class="facilityName" value="@item.Facility" hidden />
+				<input type="hidden" class="incoming" value="@item.Incoming" />
+				<input type="hidden" class="accepted" value="@item.Accepted" />
+				<input type="hidden" class="outgoing" value="@item.Outgoing" />
+				<input type="hidden" class="total" value="@item.Total" />
+			}
+		</div>
+	</div>
+</div>
+<script>
+	//datepicker
+	$(document).ready(function () {
+        $('input[name="daterange"]').daterangepicker({
+            format: 'YYYY/MM/DD',
+            startDate: '@startDate.ToString("yyyy/MM/dd")',
+            endDate: '@endDate.ToString("yyyy/MM/dd") ',
+            opens: 'right'
+        });
+    });
+	//end
+    var Facilities = [];
+    var Incoming = [];
+    var Accepted = [];
+    var Outgoing = [];
+    var IncomingBG = [];
+    var AcceptedBG = [];
+    var OutgoingBG = [];
+    var fac = $('.facilityName');
+    var inc = $('.incoming');
+    var acc = $('.accepted');
+	var out = $('.outgoing');
+	for(var i = 0; i < fac.length; i++){
+        Facilities[i] = ($(fac[i]).val());
+        Incoming[i] = ($(inc[i]).val());
+        Accepted[i] = ($(acc[i]).val());
+        Outgoing[i] = ($(out[i]).val());
+        //IncomingBG = '#0000FF';
+        //AcceptedBG = '#0000FF';
+        //OutgoingBG = '#0000FF';
+    }
+	window.chartColors = {
+      red: 'rgb(255, 99, 132)',
+      orange: 'rgb(255, 159, 64)',
+      yellow: 'rgb(255, 205, 86)',
+      green: 'rgb(45, 201, 12)',
+      blue: 'rgb(54, 162, 235)',
+      purple: 'rgb(153, 102, 255)',
+      grey: 'rgb(201, 203, 207)'
+    };
+    var thicc = 6;
+    var barPercent = 1;
+    var Total = $('.total');
+    var x = 0;
+    var color = Chart.helpers.color;
+    var horizontalBarChartData = {
+        labels: Facilities,
+		datasets: [{
+			label: 'Incoming',
+            backgroundColor: color(window.chartColors.blue).alpha(1).rgbString(),
+            borderColor: window.chartColors.blue,
+            barPercentage: barPercent,
+            borderWidth: 1,
+			//barThickness: thicc,
+            data: Incoming
+		}, {
+			label: 'Accepted',
+			backgroundColor: color(window.chartColors.red).alpha(1).rgbString(),
+			borderColor: window.chartColors.red,
+            barPercentage: barPercent,
+            borderWidth: 1,
+			//barThickness: thicc,
+			data: Accepted
+		}, {
+			label: 'Outgoing',
+			backgroundColor: color(window.chartColors.green).alpha(1).rgbString(),
+			borderColor: window.chartColors.green,
+            barPercentage: barPercent,
+            borderWidth: 1,
+			//barThickness: thicc,
+			data: Outgoing
+		}]
+
+	};
+
+	window.onload = function () {
+		var ctx = document.getElementById('canvas').getContext('2d');
+		window.myHorizontalBar = new Chart(ctx, {
+			type: 'horizontalBar',
+			data: horizontalBarChartData,
+			options: {
+				// Elements options apply to all of the options unless overridden in a dataset
+				// In this case, we are setting the border of each horizontal bar to be 2px wide
+				elements: {
+					rectangle: {
+						borderWidth: 2,
+					}
+				},
+				responsive: true,
+                legend: {
+                    display: true,
+					position: 'bottom',
+				},
+				title: {
+					display: true,
+                    text: 'E REFERRAL REPORT IN '+'@startDate.ToString("MMMM yyyy").ToUpper()'+' to '+'@endDate.ToString("MMMM yyyy").ToUpper()',
+					fontSize: 30
+				}
+			}
+		});
+
+    };
+
+</script>

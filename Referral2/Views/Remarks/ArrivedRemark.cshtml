@@ -1,0 +1,69 @@
+﻿@model RemarksViewModel
+@using Newtonsoft.Json;
+@{
+    var NotifyPatient = new NotificationModel();
+    var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+    var userFacility = int.Parse(User.FindFirstValue("Facility"));
+    var _userFacility = User.FindFirstValue("Facility");
+    var UserName = User.FindFirstValue(ClaimTypes.Surname) + " " + User.FindFirstValue(ClaimTypes.GivenName);
+    string[] userName = User.FindFirstValue(ClaimTypes.GivenName).Split();
+    var UserInformation = new UserModel
+    {
+        UserID = userId,
+        Level = User.FindFirstValue(ClaimTypes.Role),
+        Facility = _userFacility,
+        Firstname = userName[0],
+        Middlename = userName.Length < 2 ? " " : userName[1],
+        Lastname = User.FindFirstValue(ClaimTypes.Surname)
+    };
+
+    // ARRIVED
+    NotifyPatient = new NotificationModel
+    {
+        PatientCode = Model.Code,
+        TrackStatus = "arrived",
+        UpdatedAt = DateTime.Now
+    };
+ }
+
+<div class="modal fade" role="dialog" id="arrived-modal">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <form asp-action="ArrivedRemark" method="post" id="arrive-form">
+                <div class="modal-header">
+                    <h4>
+                        PATIENT ARRIVED
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <div class="">
+                        <input type="hidden" asp-for="Code" />
+                    </div>
+                    <div class="text-center">
+                        <small class="text-bold">Date/Time arrived</small><br />
+                        <span class="text-success">@DateTime.Now.ToString("MMM dd, yyyy hh:mm tt", System.Globalization.CultureInfo.InvariantCulture)</span>
+                    </div>
+                    <div class="">
+                        <textarea asp-for="Remarks" class="form-control" rows="7"></textarea>
+                        <span asp-validation-for="Remarks" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-end">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="arrived" type="submit" class="btn btn-success">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+    
+<script>
+    Initialize("@Constants.Server_Link");
+    setTimeout(function () { SubmitUserInformation(@Html.Raw(JsonConvert.SerializeObject(UserInformation))); }, 200);
+
+    $("#arrived").click(function () {
+        setTimeout(function () { EnveloperPatientInformation(@Html.Raw(JsonConvert.SerializeObject(NotifyPatient))); }, 200);
+    });
+
+    $.validator.unobtrusive.parse("#arrive-form");
+</script>

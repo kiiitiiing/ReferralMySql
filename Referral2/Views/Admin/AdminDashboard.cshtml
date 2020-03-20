@@ -1,0 +1,141 @@
+﻿@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    var totalDoctor = Model.TotalDoctors;
+    var onlineDoctors = Model.OnlineDoctors;
+    var activeFacility = Model.ActviteFacilities;
+    var referredPatients = Model.ReferredPatients;
+}
+
+    <div class="row">
+        <!-- ADMIN DASHBOARD -->
+        <div class="col-md-9">
+            <div class="card card-success card-outline">
+                <div class="card-header with-border">
+                    <h4>Admin: Dashboard</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- TOTAL DOCTORS -->
+                        <div class="col-sm-6">
+                            <div class="small-box bg-gradient-yellow">
+                                <div class="inner" style="padding-left: 30px;">
+                                    <h4>@totalDoctor</h4>
+
+                                    <p>TOTAL DOCTORS</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="fa fa-user-md"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- ONLINE DOCTORS -->
+                        <div class="col-sm-6">
+                            <div class="small-box bg-gradient-cyan">
+                                <div class="inner" style="padding-left: 30px;">
+                                    <h4>@onlineDoctors</h4>
+
+                                    <p>ONLINE DOCTORS</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="fa fa-users"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <!-- ACTIVE FACILITIES -->
+                        <div class="col-sm-6">
+                            <div class="small-box bg-gradient-red">
+                                <div class="inner" style="padding-left: 30px;">
+                                    <h4>@activeFacility</h4>
+
+                                    <p>ACTIVE FACILITIES</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="fa fa-hospital"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- REFERRED PATIENTS -->
+                        <div class="col-sm-6">
+                            <div class="small-box bg-gradient-green">
+                                <div class="inner" style="padding-left: 30px;">
+                                    <h4>@referredPatients</h4>
+
+                                    <p>REFERRED PATIENTS</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="far fa-file-alt"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- LINKS -->
+        <div class="col-md-3">
+            @await Html.PartialAsync("~/Views/Shared/PartialViews/_LinksPartial.cshtml")
+        </div>
+        <!-- MONTHLY ACTIVITY -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Monthly Activity</h4>
+                </div>
+                <div class="card-body" id="dashboard_div">
+                    <div class="chart">
+                        <canvas id="barChart" height="326" width="653" style="width: 523px; height: 261px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<audio id="soundFx">
+    <source src="~/assets/sounds/sound1.ogg" />
+</audio>
+
+<script>
+    DashboardAPI('@User.FindFirstValue(ClaimTypes.Role)');
+    //$('#notif-modal').modal('show');
+
+    
+
+    var title = "New Referral"
+    var patient = "Jane Doe";
+    var actionMd = "Dr. Keith Joseph";
+    var status = "";
+    var facility = "Talisay District Hospital";
+
+    var delay = 5000;
+    $(function () {
+        Lobibox.notify('success', {
+            delay: false,
+            img: 'assets/hospitallogos/DOHLOGO.png',
+            title: title,
+            msg: patient + ' was referred by ' + actionMd + ' of ' + facility
+        });
+    });
+
+    /*
+        toastr.options = {
+          "closeButton": false,
+          "debug": false,
+          "newestOnTop": false,
+          "progressBar": false,
+          "positionClass": "toast-bottom-right",
+          "preventDuplicates": false,
+          "onclick": null,
+          "showDuration": "300",
+          "hideDuration": "1000",
+          "timeOut": "0",
+          "extendedTimeOut": "1000",
+          "showEasing": "swing",
+          "hideEasing": "linear",
+          "showMethod": "fadeIn",
+          "hideMethod": "fadeOut"
+    }
+    Command: toastr["success"](patient + " was referred by " + actionMd + " of " + facility, title)*/
+</script>

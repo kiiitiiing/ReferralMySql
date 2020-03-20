@@ -1,0 +1,86 @@
+﻿@model SupportDashboadViewModel
+
+@{
+    ViewData["Title"] = "Support Dashboard";
+    var totalDoctor = Model.TotalDoctors;
+    var onlineDoctors = Model.OnlineDoctors;
+    var referredPatients = Model.ReferredPatients;
+}
+
+<div class="row">
+    <!-- ADMIN DASHBOARD -->
+    <div class="col-md-9">
+        <div class="card card-success card-outline">
+            <div class="card-header with-border">
+                <h3>Support: Dashboard</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- TOTAL DOCTORS -->
+                    <div class="col-sm-4">
+                        <div class="small-box bg-gradient-yellow">
+                            <div class="inner" style="padding-left: 30px;">
+                                <h4>@totalDoctor</h4>
+
+                                <p>TOTAL DOCTORS</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fa fa-user-md"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ONLINE DOCTORS -->
+                    <div class="col-sm-4">
+                        <div class="small-box bg-gradient-cyan">
+                            <div class="inner" style="padding-left: 30px;">
+                                <h4>@onlineDoctors</h4>
+
+                                <p>ONLINE DOCTORS</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fa fa-users"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- REFERRED PATIENTS -->
+                    <div class="col-sm-4">
+                        <div class="small-box bg-gradient-success">
+                            <div class="inner" style="padding-left: 30px;">
+                                <h4>@referredPatients</h4>
+
+                                <p>REFERRED PATIENTS</p>
+                            </div>
+                            <div class="icon">
+                                <i class="far fa-file-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- LINKS -->
+    <div class="col-md-3">
+        <partial name="~/Views/Shared/PartialViews/_SupportLinksPartial.cshtml" />
+    </div>
+    <!-- MONTHLY ACTIVITY -->
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header">
+                <h3>Monthly Activity</h3>
+            </div>
+            <div class="card-body">
+                <div class="chart">
+                    <canvas id="barChart" height="326" width="653" style="width: 523px; height: 261px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="~/assets/plugins/chart.js/Chart.js"></script>
+<script>
+    DashboardAPI('@User.FindFirstValue(ClaimTypes.Role)');
+    $('#LoginNotif').modal('show');
+</script>

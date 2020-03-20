@@ -1,0 +1,38 @@
+﻿@model SearchModel
+
+@{
+    var dateRange = Model.StartDate + " - " + Model.EndDate;
+}
+
+<form class="fa-pull-right form-inline ml-3" asp-action="@Model.Action" method="get">
+    <div class="form-actions note-color">
+        <!-- INPUT -->
+        <input class="form-control form-control-sm" 
+               name="search" 
+               placeholder="Code,Firstname,Lastname" 
+               type="text" 
+               value="@Model.Search" />
+        <!-- DATERANGE -->
+        <input class="form-control form-control-sm bg-white" 
+               id="daterange"
+               name="daterange" 
+               readonly
+               style="cursor:pointer;"
+               type="text" 
+               value="@dateRange"  />
+        <button type="submit" value="Search" class="btn btn-sm btn-success">
+            <i class="fa fa-search"></i>
+        </button>
+    </div>
+</form>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('input[name="daterange"]').daterangepicker({
+            format: 'YYYY/MM/DD',
+            startDate: '@Model.StartDate',
+            endDate: '@Model.EndDate',
+            opens: 'left'
+        });
+    });
+</script>

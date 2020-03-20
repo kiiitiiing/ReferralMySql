@@ -1,0 +1,277 @@
+﻿@model PaginatedList<AcceptedViewModel>
+@using Referral2.Models.MobileModels;
+@using Newtonsoft.Json;
+@{
+    ViewData["Title"] = "Accepted Patients";
+    var dateRange = ViewBag.StartDate + " - " + ViewBag.EndDate;
+
+    var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+    var userFacility = int.Parse(User.FindFirstValue("Facility"));
+    var _userFacility = User.FindFirstValue("Facility");
+    var UserName = User.FindFirstValue(ClaimTypes.Surname) + " " + User.FindFirstValue(ClaimTypes.GivenName);
+    string[] userName = User.FindFirstValue(ClaimTypes.GivenName).Split();
+    var GetFirstPatient = Model.FirstOrDefault();
+
+    var UserInformation = new UserModel
+    {
+        UserID = userId,
+        Level = User.FindFirstValue(ClaimTypes.Role),
+        Facility = _userFacility,
+        Firstname = userName[0],
+        Middlename = userName.Length < 2 ? " " : userName[1],
+        Lastname = User.FindFirstValue(ClaimTypes.Surname)
+    };
+
+}
+
+
+<div id="modal-placeholders"></div>
+
+<div class="col-md-12">
+
+    <!-- CARD START-->
+    <div class="card">
+        <!-- CARD DANGER HEADER -->
+        <div class="card-header">
+            @await Html.PartialAsync("~/Views/Shared/PartialViews/_PatientSearchFilter.cshtml", new SearchModel
+            {
+                Action = "Accepted",
+                StartDate = ViewBag.StartDate,
+                EndDate = ViewBag.EndDate,
+                Search = ViewBag.CurrentSearch
+            })
+            <div>
+                <h3 class="card-title">
+                    Accepted Patients
+                </h3><br />
+                <span class="text-sm text-muted">TOTAL: @ViewBag.Total</span>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        <!-- CARD DANGER BODY -->
+        <form method="post" action="">
+            <input type="hidden" name="_token" value="" autocomplete="off" />
+            <div class="card-body">
+                @if (Model.Count() > 0)
+                {
+                    <table class="table table-striped" width="100%">
+                        <thead class="bg-gray">
+                            <tr>
+                                <th width="20%">
+                                    <p>Referring Facility</p>
+                                </th>
+                                <th width="25%">
+                                    <p>Patient Name/Code</p>
+                                </th>
+                                <th width="22%">
+                                    <p>Date Accepted</p>
+                                </th>
+                                <th width="13%">
+                                    <p>Current Status</p>
+                                </th>
+                                <th width="20%">
+                                    <p>Action</p>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                var status = item.Status;
+                                var facility = item.ReferringFacility.Length > 25 ? new string(item.ReferringFacility.Take(25).ToArray()) + "..." : item.ReferringFacility;
+                                <tr>
+                                    <!-- REFERRING FACILITY -->
+                                    <td>
+                                        <span class="facility-color" title="@item.ReferringFacility">
+                                            @facility
+                                        </span>
+                                        <br />
+                                        <p class="small text-muted">@item.Type</p>
+                                    </td>
+                                    <!-- PATIENT NAME -->
+                                    <td>
+                                        @if (item.Type.Equals("Non-Pregnant"))
+                                        {
+                                            <a class="text-info" style="cursor:pointer;" data-toggle="ajax-modal" data-target="#normal-form-modal" data-url="@Url.Action("PrintableNormalForm","ViewForms", new { code = item.PatientCode })">
+                                                @item.PatientName.NameToUpper()
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a class="text-info" style="cursor:pointer;" data-toggle="ajax-modal" data-target="#print-pregnant-form-modal" data-url="@Url.Action("PrintablePregnantForm","ViewForms", new { code = item.PatientCode })">
+                                                @item.PatientName.NameToUpper()
+                                            </a>
+                                        }
+                                        <p class="small text-muted">
+                                            @item.PatientCode
+                                        </p>
+                                    </td>
+                                    <!-- DATE ACTIVITY -->
+                                    <td>
+                                        @item.DateAction.GetDate("MMMM dd, yyyy hh:mm tt")
+                                    </td>
+                                    <!-- STATUS -->
+                                    <td>
+                                        @status.ToUpper()
+                                    </td>
+                                    <!-- ACTION -->
+                                    <td>
+                                        @if (status.Equals("referred"))
+                                        {
+                                            //reco
+                                        <button type="button" class="btn btn-sm btn-info" title="ReCo" data-toggle="ajax-modal" data-target="#arrived-modal" data-url="@Url.Action("ViewReco","Modals",new { code = item.PatientCode})">
+                                            <i class="fa fa-comments"></i>
+                                        </button>
+                                        }
+                                        else if (status.Equals("accepted"))
+                                        {
+                                            //arrived
+                                            <button id="arrived" type="button" title="Patient Arrived" class="btn btn-sm btn-primary" data-toggle="ajax-modal" data-target="#arrived-modal" data-url="@Url.Action("ArrivedRemark","Remarks",new { code = item.PatientCode})">
+                                                <i class="fa fa-wheelchair"></i>
+                                            </button>
+                                            //reco
+                                            <button type="button" class="btn btn-sm btn-info" title="ReCo" data-toggle="ajax-modal" data-target="#arrived-modal" data-url="@Url.Action("ViewReco","Modals",new { code = item.PatientCode})">
+                                                <i class="fa fa-comments"></i>
+                                            </button>
+                                        }
+                                        else if (status.Equals("arrived"))
+                                        {
+                                            //admitted
+                                            <button id="arrived_to_admitted" type="button" title="Patient Admitted" class="btn btn-sm btn-info" data-toggle="ajax-modal" data-target="#admitted-modal" data-url="@Url.Action("AdmittedRemark","Remarks",new { code = item.PatientCode})">
+
+                                                <i class="fa fa-stethoscope"></i>
+                                            </button>
+                                            //discharged
+                                            <button id="arrived_to_discharged" type="button" title="Dishcharge Patient" class="btn btn-sm btn-warning" data-toggle="ajax-modal" data-target="#discharged-modal" data-url="@Url.Action("DischargedRemark","Remarks",new { code = item.PatientCode})">
+                                                <i class="fa fa-wheelchair"></i>
+                                            </button>
+                                            //refer
+                                            <button id="arrived_to_referred" type="button" title="Refer Patient" class="btn btn-sm btn-success" data-toggle="ajax-modal" data-target="#refer-modal" data-url="@Url.Action("ReferRemark","Remarks",new { code = item.PatientCode})">
+                                                <i class="fa fa-ambulance"></i>
+                                            </button>
+                                            //reco
+                                            <button type="button" class="btn btn-sm btn-info" title="ReCo" data-toggle="ajax-modal" data-target="#arrived-modal" data-url="@Url.Action("ViewReco","Modals",new { code = item.PatientCode})">
+                                                <i class="fa fa-comments"></i>
+                                            </button>
+                                        }
+                                        else if (status.Equals("admitted"))
+                                        {
+                                            //discharged
+                                            <button id="admitted_to_discharged" type="button" title="Dishcharge Patient" class="btn btn-sm btn-warning" data-toggle="ajax-modal" data-target="#discharged-modal" data-url="@Url.Action("DischargedRemark","Remarks",new { code = item.PatientCode})">
+                                                <i class="fa fa-wheelchair"></i>
+                                            </button>
+                                            //refer
+                                            <button id="admitted_to_referred" type="button" title="Refer Patient" class="btn btn-sm btn-success" data-toggle="ajax-modal" data-target="#refer-modal" data-url="@Url.Action("ReferRemark","Remarks",new { code = item.PatientCode})">
+                                                <i class="fa fa-ambulance"></i>
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        <span class="text-lg">
+                            <i class="fa fa-exclamation-triangle"></i>
+                            &nbsp;No data found!
+                        </span>
+                    </div>
+                }
+                
+            </div>
+            <!-- CARD FOOTER -->
+            <div class="card-footer">
+                @await Html.PartialAsync("~/Views/Shared/PartialViews/_PageList.cshtml", new PageListModel
+               {
+                   Action = "Accepted",
+                   HasNextPage = Model.HasNextPage,
+                   HasPreviousPage = Model.HasPreviousPage,
+                   PageIndex = Model._pageIndex,
+                   TotalPages = Model._totalPages,
+                   Parameters = new Dictionary<string, string>
+                    {
+                       { "page", Model._pageIndex.ToString() },
+                       { "search", ViewBag.CurrentSearch },
+                       { "dateRange", dateRange }
+                    }
+                })
+
+                <table class="table table-striped">
+                    <caption>LEGEND: </caption>
+                    <tbody>
+                        <!-- ARRIVED -->
+                        <tr>
+                            <td class="text-left">
+                                <button class="btn btn-sm btn-primary" disabled>
+                                    <i class="fa fa-wheelchair"></i>
+                                </button>
+                                &nbsp;&nbsp;Arrived
+                            </td>
+                        </tr>
+                        <!-- DIDNT ARRIVED -->
+                        <tr>
+                            <td class="text-left">
+                                <button class="btn btn-sm btn-danger" disabled>
+                                    <i class="fa fa-wheelchair"></i>
+                                </button>
+                                &nbsp;&nbsp;Patient Didn't Arrive
+                            </td>
+                        </tr>
+                        <!-- ADMITTED -->
+                        <tr>
+                            <td class="text-left">
+                                <button class="btn btn-sm btn-info" disabled>
+                                    <i class="fa fa-stethoscope"></i>
+                                </button>
+                                &nbsp;&nbsp;Admitted
+                            </td>
+                        </tr>
+                        <!-- DISCHARGED -->
+                        <tr>
+                            <td class="text-left">
+                                <button class="btn btn-sm btn-warning" disabled>
+                                    <i class="fa fa-wheelchair"></i>
+                                </button>
+                                &nbsp;&nbsp;Patient Discharged
+                            </td>
+                        </tr>
+                        <!-- REFER -->
+                        <tr>
+                            <td class="text-left">
+                                <button class="btn btn-sm btn-success" disabled>
+                                    <i class="fa fa-ambulance"></i>
+                                </button>
+                                &nbsp;&nbsp;Refer Patient
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- RECO -->
+<div class="modal card fade" role="dialog" id="reco_modal">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div id="admitted_content">
+                <hr />
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/socket.js"></script>
+<script>
+    Initialize("@Constants.Server_Link");
+    setTimeout(function () { SubmitUserInformation(@Html.Raw(JsonConvert.SerializeObject(UserInformation))); }, 200);
+</script>
+
+
+
+
+

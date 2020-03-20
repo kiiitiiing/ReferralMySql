@@ -1,0 +1,762 @@
+﻿@model PaginatedList<IncomingViewModel>
+@using Referral2.Models.MobileModels;
+@using Newtonsoft.Json;
+@{
+    ViewData["Title"] = "Incoming Patients";
+    var accept = "accept-modal";
+    var startDate = ViewBag.StartDate;
+    var endDate = ViewBag.EndDate;
+    var dateRange = startDate + " - " + endDate;
+    var dep = ViewBag.Departments.SelectedValue == null ? "" : ViewBag.Departments.SelectedValue.ToString();
+    var status = ViewBag.IncomingStatus.SelectedValue == null ? "" : ViewBag.IncomingStatus.SelectedValue.ToString();
+
+    var NotifyPatient = new NotificationModel();
+    var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+    var userFacility = int.Parse(User.FindFirstValue("Facility"));
+    var _userFacility = User.FindFirstValue("Facility");
+    var UserName = User.FindFirstValue(ClaimTypes.Surname) + " " + User.FindFirstValue(ClaimTypes.GivenName);
+    string[] userName = User.FindFirstValue(ClaimTypes.GivenName).Split();
+    var GetFirstPatient = Model.FirstOrDefault();
+    var UserInformation = new UserModel
+    {
+        UserID = userId,
+        Level = User.FindFirstValue(ClaimTypes.Role),
+        Facility = _userFacility,
+        Firstname = userName[0],
+        Middlename = userName.Length < 2 ? " " : userName[1],
+        Lastname = User.FindFirstValue(ClaimTypes.Surname)
+    };
+
+    if (GetFirstPatient.Status.Equals("accepted", StringComparison.OrdinalIgnoreCase))
+    {
+        NotifyPatient = new NotificationModel
+        {
+            PatientCode = GetFirstPatient.Code,
+            TrackStatus = GetFirstPatient.Status,
+            UpdatedAt = DateTime.Now
+        };
+    }
+}
+
+<div class="content">
+    <div class="container">
+        <div class="row">
+            <!-- CARD DANGER -->
+            <div class="col-md-3">
+                <!-- SELECT DATE -->
+                <div class="card card-danger card-green">
+                    <!-- CARD DANGER HEADER -->
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            Filter Result
+                        </h3>
+                        <span class="badge bg-gradient-success fa-pull-right">
+                            Result: @ViewBag.Total
+                        </span>
+                    </div>
+                    <!-- CARD DANGER BODY -->
+                    <div class="card-body">
+                        <form asp-action="Incoming" method="post">
+                            <!-- SEARCH -->
+                            <div class="form-group ">
+                                <input class="form-control" type="text" placeholder="Code, Firstname, Lastname" name="search" value="@ViewBag.CurrentSearch" autocomplete="off" />
+                            </div>
+                            <!-- DATE FILTER -->
+                            <div class="form-group">
+                                <input class="form-control" type="text" name="daterange" value="@dateRange" autocomplete="off">
+                            </div>
+                            <!-- DEPARTMENT -->
+                            <div class="form-group">
+                                <select class="form-control depselect" asp-items="ViewBag.Departments" name="department">
+                                    <option value="">All Department</option>
+                                </select>
+                            </div>
+                            <!-- STATUS -->
+                            <div class="form-group">
+                                <select class="form-control statselect" 
+                                        name="status"
+                                        asp-items="ViewBag.IncomingStatus">
+                                    <option value="">Select All</option>
+                                </select>
+                            </div>
+                            <div class="form-group hide"></div>
+                            <!-- BUTTONS -->
+                            <div class="form-group">
+                                <!-- FILTER -->
+                                <button type="submit" value="Filter" class="btn btn-block btn-success">
+                                    <i class="fa fa-filter"></i>
+                                    &nbsp;Filter Result
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <partial name="~/Views/Shared/PartialViews/_MainMenuPartial.cshtml" />
+            </div>
+            <div class="col-md-9">
+                <!-- PATIENT LIST -->
+                <div class="card card-outline">
+                    <!-- DAILY USERS HEADER -->
+                    <div class="card-header with-border">
+                        <h4>
+                            Incoming Patients
+                        </h4>
+                    </div>
+                    <!-- DAILY USERS BODY -->
+                    <div class="card-body">
+                        <div class="timeline">
+                            @if (Model.Count() > 0)
+                            {
+                                foreach (var item in Model)
+                                {
+                                    var dateAction = item.DateAction.GetDate("MMM dd, yyyy hh:mm tt");
+                                    var currentUserFacility = int.Parse(User.FindFirstValue("Facility"));
+                                    var currentUserDepartment = string.IsNullOrEmpty(User.FindFirstValue("Department"))? 0 : int.Parse(User.FindFirstValue("Department"));
+                                    
+                                    switch (item.Status)
+                                    {
+                                        case "rejected":
+                                            {
+                                                <div>
+                                                    <i class="fa fa-user-times bg-maroon"></i>
+                                                    <div class="timeline-item">
+                                                        <span class="time">
+                                                            <i class="fa fa-calendar">
+                                                                &nbsp;@dateAction
+                                                            </i>
+                                                        </span>
+                                                        <h3 class="timeline-header no-border">
+                                                            <small class="text-bold">
+                                                                <a href="@Url.Action("Track","ViewPatients", new { code = item.Code })" target="_blank">@item.Code</a>
+                                                            </small>
+                                                            <a href="#">@item.PatientName</a>
+                                                            was RECOMMENDED TO REDIRECT to other facility by
+                                                            <span class="custom-warning">@item.ActionMd</span>
+                                                        </h3>
+                                                        <div class="timeline-footer">
+                                                            <div class="form-inline">
+                                                                <div class="form-group">
+                                                                    @if (item.SeenCount > 0)
+                                                                    {
+                                                                        <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })">
+                                                                            <i class="fa fa-user-md"></i>
+                                                                            &nbsp;Seen
+                                                                            <small class="badge bg-green" id="seen_@item.Code">@item.SeenCount</small>
+                                                                        </button>
+                                                                    }
+                                                                    @if (item.CallCount > 0)
+                                                                    {
+                                                                        <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                                                                            <i class="fa fa-phone"></i>
+                                                                            &nbsp;Caller
+
+                                                                            <small class="badge bg-blue">@item.CallCount</small>
+
+                                                                        </button>
+                                                                    }
+                                                                    <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                                                                        <i class="fa fa-comments"></i>
+                                                                        &nbsp;ReCo
+                                                                        @if (item.FeedbackCount > 0)
+                                                                        {
+                                                                            <small class="badge bg-blue" id=reco_@item.Code>@item.FeedbackCount</small>
+                                                                        }
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                break;
+                                            }
+                                        case "accepted":
+                                            {
+                                                <div>
+                                                    <i class="fa fa-user-plus bg-olive"></i>
+                                                    <div class="timeline-item">
+                                                        <span class="time">
+                                                            <i class="fa fa-calendar">
+                                                                &nbsp;@dateAction
+                                                            </i>
+                                                        </span>
+                                                        <h3 class="timeline-header no-border">
+                                                            <small class="text-bold">
+                                                                <a href="@Url.Action("Track","ViewPatients", new { code = item.Code })" target="_blank">@item.Code</a>
+                                                            </small>
+                                                            <a href="#">@item.PatientName</a>
+                                                            was
+                                                            <span class="badge badge-success">
+                                                                accepted
+                                                            </span>
+                                                            by
+                                                            <span class="text-success">@item.ActionMd</span>
+                                                        </h3>
+                                                        <div class="timeline-footer">
+                                                            <div class="form-inline">
+                                                                <div class="form-group">
+                                                                    @if (item.SeenCount > 0)
+                                                                    {
+                                                                        <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })">
+                                                                            <i class="fa fa-user-md"></i>
+                                                                            &nbsp;Seen
+                                                                            <small class="badge bg-green" id="seen_@item.Code">@item.SeenCount</small>
+                                                                        </button>
+                                                                    }
+                                                                    @if (item.CallCount > 0)
+                                                                    {
+                                                                        <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                                                                            <i class="fa fa-phone"></i>
+                                                                            &nbsp;Caller
+
+                                                                            <small class="badge bg-blue">@item.CallCount</small>
+
+                                                                        </button>
+                                                                    }
+                                                                    <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                                                                        <i class="fa fa-comments"></i>
+                                                                        &nbsp;ReCo
+                                                                        @if (item.FeedbackCount > 0)
+                                                                        {
+                                                                            <small class="badge bg-blue" id=reco_@item.Code>@item.FeedbackCount</small>
+                                                                        }
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                break;
+                                            }
+                                        case "transferred":
+                                            {
+                                                <div>
+                                                    <i class="fa fa-user-plus bg-olive"></i>
+                                                    <div class="timeline-item">
+                                                        <span class="time">
+                                                            <i class="fa fa-calendar">
+                                                                &nbsp;@dateAction
+                                                            </i>
+                                                        </span>
+                                                        <h3 class="timeline-header no-border">
+                                                            <small class="text-bold">
+                                                                <a href="@Url.Action("Track","ViewPatients", new { code = item.Code })" target="_blank">@item.Code</a>
+                                                            </small>
+                                                            <a href="#">@item.PatientName</a>
+                                                            was transferred by
+                                                            <span class="text-success">@item.ActionMd</span>'s
+                                                        </h3>
+                                                        <div class="timeline-footer">
+                                                            <div class="form-inline">
+                                                                <div class="form-group">
+                                                                    @if (item.SeenCount > 0)
+                                                                    {
+                                                                        <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })">
+                                                                            <i class="fa fa-user-md"></i>
+                                                                            &nbsp;Seen
+                                                                            <small class="badge bg-green" id="seen_@item.Code">@item.SeenCount</small>
+                                                                        </button>
+                                                                    }
+                                                                    @if (item.CallCount > 0)
+                                                                    {
+                                                                        <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                                                                            <i class="fa fa-phone"></i>
+                                                                            &nbsp;Caller
+
+                                                                            <small class="badge bg-blue">@item.CallCount</small>
+
+                                                                        </button>
+                                                                    }
+                                                                    <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                                                                        <i class="fa fa-comments"></i>
+                                                                        &nbsp;ReCo
+                                                                        @if (item.FeedbackCount > 0)
+                                                                        {
+                                                                            <small class="badge bg-blue" id=reco_@item.Code>@item.FeedbackCount</small>
+                                                                        }
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                break;
+                                            }
+                                        case "arrived":
+                                            {
+                                                <div>
+                                                    <i class="fa fa-user-plus bg-olive"></i>
+                                                    <div class="timeline-item">
+                                                        <span class="time">
+                                                            <i class="fa fa-calendar">
+                                                                &nbsp;@dateAction
+                                                            </i>
+                                                        </span>
+                                                        <h3 class="timeline-header no-border">
+                                                            <small class="text-bold">
+                                                                <a href="@Url.Action("Track","ViewPatients", new { code = item.Code })" target="_blank">@item.Code</a>
+                                                            </small>
+                                                            <a href="#">@item.PatientName</a>
+                                                            has <span class="badge bg-success">arrived</span> in
+                                                            <span class="text-success">@item.ActionMd</span>'s
+                                                            department
+                                                        </h3>
+                                                        <div class="timeline-footer">
+                                                            <div class="form-inline">
+                                                                <div class="form-group">
+                                                                    @if (item.SeenCount > 0)
+                                                                    {
+                                                                        <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })">
+                                                                            <i class="fa fa-user-md"></i>
+                                                                            &nbsp;Seen
+                                                                            <small class="badge bg-green" id="seen_@item.Code">@item.SeenCount</small>
+                                                                        </button>
+                                                                    }
+                                                                    @if (item.CallCount > 0)
+                                                                    {
+                                                                        <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                                                                            <i class="fa fa-phone"></i>
+                                                                            &nbsp;Caller
+
+                                                                            <small class="badge bg-blue">@item.CallCount</small>
+
+                                                                        </button>
+                                                                    }
+                                                                    <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                                                                        <i class="fa fa-comments"></i>
+                                                                        &nbsp;ReCo
+                                                                        @if (item.FeedbackCount > 0)
+                                                                        {
+                                                                            <small class="badge bg-blue" id=reco_@item.Code>@item.FeedbackCount</small>
+                                                                        }
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                break;
+                                            }
+                                        case "cancelled":
+                                            {
+                                                <div>
+                                                    <i class="fa fa-ban bg-danger"></i>
+                                                    <div class="timeline-item">
+                                                        <span class="time">
+                                                            <i class="fa fa-calendar">
+                                                                &nbsp;@dateAction
+                                                            </i>
+                                                        </span>
+                                                        <h3 class="timeline-header no-border">
+                                                            <small class="text-bold">
+                                                                <a href="@Url.Action("Track","ViewPatients", new { code = item.Code })" target="_blank">@item.Code</a>
+                                                            </small>
+                                                            <a href="#">@item.PatientName</a>
+                                                            was
+                                                            <span class="badge badge-danger">
+                                                                cancelled
+                                                            </span>
+                                                            by
+                                                            <span class="text-success">@item.ActionMd</span>
+                                                        </h3>
+                                                        <div class="timeline-footer">
+                                                            <div class="form-inline">
+                                                                <div class="form-group">
+                                                                    @if (item.SeenCount > 0)
+                                                                    {
+                                                                        <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })">
+                                                                            <i class="fa fa-user-md"></i>
+                                                                            &nbsp;Seen
+                                                                            <small class="badge bg-green" id="seen_@item.Code">@item.SeenCount</small>
+                                                                        </button>
+                                                                    }
+                                                                    @if (item.CallCount > 0)
+                                                                    {
+                                                                        <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                                                                            <i class="fa fa-phone"></i>
+                                                                            &nbsp;Caller
+
+                                                                            <small class="badge bg-blue">@item.CallCount</small>
+
+                                                                        </button>
+                                                                    }
+                                                                    <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                                                                        <i class="fa fa-comments"></i>
+                                                                        &nbsp;ReCo
+                                                                        @if (item.FeedbackCount > 0)
+                                                                        {
+                                                                            <small class="badge bg-blue" id=reco_@item.Code>@item.FeedbackCount</small>
+                                                                        }
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                break;
+                                            }
+                                        case "admitted":
+                                            {
+                                                <div>
+                                                    <i class="fa fa-user-plus bg-olive"></i>
+                                                    <div class="timeline-item">
+                                                        <span class="time">
+                                                            <i class="fa fa-calendar">
+                                                                &nbsp;@dateAction
+                                                            </i>
+                                                        </span>
+                                                        <h3 class="timeline-header no-border">
+                                                            <small class="text-bold">
+                                                                <a href="@Url.Action("Track","ViewPatients", new { code = item.Code })" target="_blank">@item.Code</a>
+                                                            </small>
+                                                            <a href="#">@item.PatientName</a>
+                                                            was <span class="badge bg-success">admitted</span> by
+                                                            <span class="text-success">@item.ActionMd</span>
+                                                        </h3>
+                                                        <div class="timeline-footer">
+                                                            <div class="form-inline">
+                                                                <div class="form-group">
+                                                                    @if (item.SeenCount > 0)
+                                                                    {
+                                                                        <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })">
+                                                                            <i class="fa fa-user-md"></i>
+                                                                            &nbsp;Seen
+                                                                            <small class="badge bg-green" id="seen_@item.Code">@item.SeenCount</small>
+                                                                        </button>
+                                                                    }
+                                                                    @if (item.CallCount > 0)
+                                                                    {
+                                                                        <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                                                                            <i class="fa fa-phone"></i>
+                                                                            &nbsp;Caller
+
+                                                                            <small class="badge bg-blue">@item.CallCount</small>
+
+                                                                        </button>
+                                                                    }
+                                                                    <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                                                                        <i class="fa fa-comments"></i>
+                                                                        &nbsp;ReCo
+                                                                        @if (item.FeedbackCount > 0)
+                                                                        {
+                                                                            <small class="badge bg-blue" id=reco_@item.Code>@item.FeedbackCount</small>
+                                                                        }
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                break;
+                                            }
+                                        case "referred":
+                                            {
+                                                var bgColor = currentUserDepartment == item.DepartmentId ? "#ADFE95" : "#C2FCFE";
+                                                <div>
+                                                    <i class="fa fa-ambulance bg-gradient-blue"></i>
+                                                    <div class="timeline-item" style="background-color: @bgColor !important;">
+                                                        <span class="time">
+                                                            <i class="fa fa-ambulance">
+                                                                &nbsp;@dateAction
+                                                            </i>
+                                                        </span>
+                                                        <h3 class="timeline-header no-border">
+                                                            <small class="text-bold">
+                                                                <a href="@Url.Action("Track","ViewPatients", new { code = item.Code })" target="_blank">@item.Code</a>
+                                                            </small>
+                                                            <a href="#">@item.PatientName</a>
+                                                            <small class="text-muted">[@item.PatientSex, @item.PatientAge]</small>
+                                                            was <span class="badge bg-blue">referred</span> to
+                                                            <span class="text-danger">@item.Department</span>
+                                                            by
+                                                            <span class="text-success">@item.ReferringMd</span>
+                                                            of
+                                                            <span class="text-warning">@item.ReferredFrom</span>
+                                                        </h3>
+                                                        <div class="timeline-footer">
+                                                            <div class="form-inline">
+                                                                <div class="form-group">
+                                                                    @if (currentUserFacility == item.ReferredToId && currentUserDepartment == item.DepartmentId)
+                                                                    {
+                                                                        var dataTarget = item.Pregnant ? "pregnant-form-modal" : "patient-form-modal";
+                                                                        var dataUrl = item.Pregnant ? Url.Action("PregnantForm", "ViewForms", new { code = item.Code }) : Url.Action("PatientForm", "ViewForms", new { code = item.Code });
+
+                                                                        <button type="button" class="btn btn-warning btn-xs" data-toggle="ajax-modal" data-target="#@dataTarget" data-url="@dataUrl">
+                                                                            <i class="fa fa-user-md"></i>
+                                                                            &nbsp;View Form
+                                                                        </button>
+
+                                                                    }
+                                                                    @if (item.SeenCount > 0)
+                                                                    {
+                                                                        <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })">
+                                                                            <i class="fa fa-user-md"></i>
+                                                                            &nbsp;Seen
+                                                                            <small class="badge bg-green" id="seen_@item.Code">@item.SeenCount</small>
+                                                                        </button>
+                                                                    }
+                                                                    @if (item.CallCount > 0)
+                                                                    {
+                                                                        <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                                                                            <i class="fa fa-phone"></i>
+                                                                            &nbsp;Caller
+
+                                                                            <small class="badge bg-blue">@item.CallCount</small>
+
+                                                                        </button>
+                                                                    }
+                                                                    <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                                                                        <i class="fa fa-comments"></i>
+                                                                        &nbsp;ReCo
+                                                                        @if (item.FeedbackCount > 0)
+                                                                        {
+                                                                            <small class="badge bg-blue" id=reco_@item.Code>@item.FeedbackCount</small>
+                                                                        }
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                break;
+                                            }
+                                        case "seen":
+                                            {
+                                                var bgColor = currentUserDepartment == item.DepartmentId ? "#ADFE95" : "#C2FCFE";
+                                                <div>
+                                                    <i class="fa fa-ambulance bg-gradient-blue"></i>
+                                                    <div class="timeline-item" style="background-color: @bgColor !important;">
+                                                        <span class="time">
+                                                            <i class="fa fa-eye">
+                                                                &nbsp;@dateAction
+                                                            </i>
+                                                        </span>
+                                                        <h3 class="timeline-header no-border">
+                                                            <small class="text-bold">
+                                                                <a href="@Url.Action("Track","ViewPatients", new { code = item.Code })" target="_blank">@item.Code</a>
+                                                            </small>
+                                                            <a href="#">@item.PatientName</a>
+                                                            <small class="text-muted">[@item.PatientSex, @item.PatientAge]</small>
+                                                            was <span class="badge bg-blue">referred</span> to
+                                                            <span class="text-danger">@item.Department</span>
+                                                            by
+                                                            <span class="text-success">@item.ReferringMd</span>
+                                                            of
+                                                            <span class="text-warning">@item.ReferredFrom</span>
+                                                        </h3>
+                                                        <div class="timeline-footer">
+                                                            <div class="form-inline">
+                                                                <div class="form-group">
+                                                                    @if (currentUserFacility == item.ReferredToId && currentUserDepartment == item.DepartmentId)
+                                                                    {
+                                                                        var dataTarget = item.Pregnant ? "pregnant-form-modal" : "patient-form-modal";
+                                                                        var dataUrl = item.Pregnant ? Url.Action("PregnantForm", "ViewForms", new { code = item.Code }) : Url.Action("PatientForm", "ViewForms", new { code = item.Code });
+
+                                                                        <button type="button" class="btn btn-warning btn-xs" data-toggle="ajax-modal" data-target="#@dataTarget" data-url="@dataUrl">
+                                                                            <i class="fa fa-user-md"></i>
+                                                                            &nbsp;View Form
+                                                                        </button>
+
+                                                                    }
+                                                                    @if (item.SeenCount > 0)
+                                                                    {
+                                                                        <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })">
+                                                                            <i class="fa fa-user-md"></i>
+                                                                            &nbsp;Seen
+                                                                            <small class="badge bg-green" id="seen_@item.Code">@item.SeenCount</small>
+                                                                        </button>
+                                                                    }
+                                                                    @if (item.CallCount > 0)
+                                                                    {
+                                                                        <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                                                                            <i class="fa fa-phone"></i>
+                                                                            &nbsp;Caller
+
+                                                                            <small class="badge bg-blue">@item.CallCount</small>
+
+                                                                        </button>
+                                                                    }
+                                                                    <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                                                                        <i class="fa fa-comments"></i>
+                                                                        &nbsp;ReCo
+                                                                        @if (item.FeedbackCount > 0)
+                                                                        {
+                                                                            <small class="badge bg-blue" id=reco_@item.Code>@item.FeedbackCount</small>
+                                                                        }
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                break;
+                                            }
+                                        case "discharged":
+                                            {
+                                                <div>
+                                                    <i class="fa fa-user-plus bg-olive"></i>
+                                                    <div class="timeline-item">
+                                                        <span class="time">
+                                                            <i class="fa fa-calendar">
+                                                                &nbsp;@dateAction
+                                                            </i>
+                                                        </span>
+                                                        <h3 class="timeline-header no-border">
+                                                            <small class="text-bold">
+                                                                <a href="@Url.Action("Track","ViewPatients", new { code = item.Code })" target="_blank">@item.Code</a>
+                                                            </small>
+                                                            <a href="#">@item.PatientName</a>
+                                                            was
+                                                            <span class="badge badge-success">
+                                                                discharged
+                                                            </span>
+                                                            by
+                                                            <span class="text-success">@item.ActionMd</span>
+                                                        </h3>
+                                                        <div class="timeline-footer">
+                                                            <div class="form-inline">
+                                                                <div class="form-group">
+                                                                    @if (item.SeenCount > 0)
+                                                                    {
+                                                                        <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })">
+                                                                            <i class="fa fa-user-md"></i>
+                                                                            &nbsp;Seen
+                                                                            <small class="badge bg-green" id="seen_@item.Code">@item.SeenCount</small>
+                                                                        </button>
+                                                                    }
+                                                                    @if (item.CallCount > 0)
+                                                                    {
+                                                                        <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                                                                            <i class="fa fa-phone"></i>
+                                                                            &nbsp;Caller
+
+                                                                            <small class="badge bg-blue">@item.CallCount</small>
+
+                                                                        </button>
+                                                                    }
+                                                                    <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                                                                        <i class="fa fa-comments"></i>
+                                                                        &nbsp;ReCo
+                                                                        @if (item.FeedbackCount > 0)
+                                                                        {
+                                                                            <small class="badge bg-blue" id=reco_@item.Code>@item.FeedbackCount</small>
+                                                                        }
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                break;
+                                            }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning">
+                                    <span>
+                                        <i class="fa fa-exclamation-triangle"></i> No referrals!
+                                    </span>
+                                        <ul>
+                                            <li>
+                                                Filer List:
+                                                <ul>
+                                                    @if (!string.IsNullOrEmpty(ViewBag.CurrentSearch))
+                                                    {
+                                                        <li>Search - @ViewBag.CurrentSearch</li>
+                                                    }
+                                                    @if (!string.IsNullOrEmpty(dateRange))
+                                                    {
+                                                        <li>Date range - @startDate - @endDate</li>
+                                                    }
+                                                    @if (!string.IsNullOrEmpty(dep))
+                                                    {
+                                                        <li>Department - <span id="department"></span></li>
+                                                    }
+                                                    @if (!string.IsNullOrEmpty(status))
+                                                    {
+                                                        <li>Status  - <span id="status"></span></li>
+                                                    }
+                                                </ul>
+                                            </li>
+                                        </ul>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        @await Html.PartialAsync("~/Views/Shared/PartialViews/_PageList.cshtml", new PageListModel
+                       {
+                           Action = "Incoming",
+                           HasNextPage = Model.HasNextPage,
+                           HasPreviousPage = Model.HasPreviousPage,
+                           PageIndex = Model._pageIndex,
+                           TotalPages = Model._totalPages,
+                           Parameters = new Dictionary<string, string>
+                           {
+                               {"page",Model._pageIndex.ToString() },
+                               {"search", ViewBag.CurrentSearch },
+                               { "dateRange",dateRange },
+                               { "department", dep},
+                               { "status", status}
+                           }
+                       })
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" role="dialog" id="@accept">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4>Accept</h4>
+            </div>
+            <div id="accept_content">
+                <hr />
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" role="dialog" id="redirect-modal">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4>REFER TO OTHER FACILITY</h4>
+            </div>
+            <div id="redirect-content">
+                <hr />
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/socket.js"></script>
+<script>
+    Initialize("@Constants.Server_Link");
+    setTimeout(function () { SubmitUserInformation(@Html.Raw(JsonConvert.SerializeObject(UserInformation))); }, 200);
+    setTimeout(function () { EnveloperPatientInformation(@Html.Raw(JsonConvert.SerializeObject(NotifyPatient))); }, 200);
+
+    var x = 0;
+    setTimeout(function () { console.log(x++); }, 1000);
+    $(document).ready(function () {
+        $('input[name="daterange"]').daterangepicker({
+            format: 'YYYY/MM/DD',
+            startDate: '@startDate',
+            endDate: '@endDate'
+        });
+    });
+
+    var dep = $('.depselect option:selected').html();
+    var stat = $('.statselect option:selected').html();
+    $('#department').html(dep);
+    $('#status').html(stat);
+
+
+
+</script>

@@ -1,0 +1,123 @@
+﻿@model PaginatedList<ArchivedViewModel>
+
+@{
+    ViewData["Title"] = "Archived Patients";
+    var dateRange = ViewBag.StartDate + " - " + ViewBag.EndDate;
+
+}
+
+
+<div class="col-md-12">
+
+    <!-- CARD START-->
+    <div class="card">
+        <!-- CARD DANGER HEADER -->
+        <div class="card-header">
+            @await Html.PartialAsync("~/Views/Shared/PartialViews/_PatientSearchFilter.cshtml", new SearchModel
+            {
+                Action = "Archived",
+                StartDate = ViewBag.StartDate,
+                EndDate = ViewBag.EndDate,
+                Search = ViewBag.CurrentSearch
+            })
+            <div>
+                <h3 class="card-title">Archived Patients</h3><br />
+                <span class="text-sm text-muted">TOTAL: @ViewBag.Total</span>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        <!-- CARD DANGER BODY -->
+        <form method="post" action="">
+            <input type="hidden" name="_token" value="" autocomplete="off" />
+            <div class="card-body">
+                @if (Model.Count() > 0)
+                {
+                    <table class="table table-striped" width="100%">
+                        <thead>
+                            <tr class="bg-gray">
+                                <th width="25%">
+                                    <p>Referring Facility</p>
+                                </th>
+                                <th width="25%">
+                                    <p>Patient Name/Code</p>
+                                </th>
+                                <th width="25%">
+                                    <p>Date Archived</p>
+                                </th>
+                                <th width="25%">
+                                    <p>Reason</p>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                var facility = item.ReferringFacility.Length > 25 ? new string(item.ReferringFacility.Take(25).ToArray()) + "..." : item.ReferringFacility;
+                                var reason = string.IsNullOrEmpty(item.Reason) ? "N/A" : item.Reason;
+                                <tr>
+                                    <td class="facility-color" title="@item.ReferringFacility">
+                                        @facility<br />
+                                        <p class="small text-muted">@item.Type</p>
+                                    </td>
+                                    <td>
+                                        @if (item.Type.Equals("Non-Pregnant"))
+                                        {
+                                            <a class="text-info" style="cursor:pointer;" data-toggle="ajax-modal" data-target="#normal-form-modal" data-url="@Url.Action("PrintableNormalForm","ViewForms", new { code = item.Code })">
+                                                @item.PatientName
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a class="text-info" style="cursor:pointer;" data-toggle="ajax-modal" data-target="#print-pregnant-form-modal" data-url="@Url.Action("PrintablePregnantForm","ViewForms", new { code = item.Code })">
+                                                @item.PatientName
+                                            </a>
+                                        }
+                                        <br />
+                                        <span class="small text-muted">
+                                            @item.Code
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span>@item.DateArchive.GetDate("MMMM d, yyyy h:mm tt")</span>
+                                    </td>
+                                    <td>
+                                        @reason
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        <span class="text-lg">
+                            <i class="fa fa-exclamation-triangle"></i>
+                            &nbsp;No data found!
+                        </span>
+                    </div>
+                }
+
+            </div>
+            <!-- CARD FOOTER -->
+            <div class="card-footer">
+                @await Html.PartialAsync("~/Views/Shared/PartialViews/_PageList.cshtml", new PageListModel
+               {
+                   Action = "Archived",
+                   HasNextPage = Model.HasNextPage,
+                   HasPreviousPage = Model.HasPreviousPage,
+                   PageIndex = Model._pageIndex,
+                   TotalPages = Model._totalPages,
+                   Parameters = new Dictionary<string, string>
+                    {
+                       { "page", Model._pageIndex.ToString() },
+                       { "search", ViewBag.CurrentSearch },
+                       { "dateRange", dateRange }
+                    }
+                })
+            </div>
+        </form>
+    </div>
+</div>
+
+

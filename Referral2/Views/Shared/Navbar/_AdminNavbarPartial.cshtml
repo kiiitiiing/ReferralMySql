@@ -1,0 +1,118 @@
+﻿<ul class="navbar-nav">
+    <!-- DASHBOARD -->
+    <li class="nav-item">
+        <a class="nav-link" asp-area="" asp-controller="Admin" asp-action="AdminDashboard">
+            <i class="fa fa-home"></i>
+            &nbsp;Dashboard
+        </a>
+    </li>
+    <!-- MANAGE -->
+    <li class="nav-item dropdown">
+        <a href="#" class="dropdown-toggle nav-link" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+            <i class="fa fa-wrench"></i>
+            &nbsp;Manage
+        </a>
+        <ul class="dropdown-menu border-0 shadow">
+            <!-- IT SUPPORT -->
+            <li>
+                <a class="dropdown-item" asp-area="" asp-controller="Admin" asp-action="SupportUsers">
+                    <i class="fa fa-users"></i>
+                    &nbsp;IT Support
+                </a>
+            </li>
+            <!-- FACILITIES -->
+            <li>
+                <a class="dropdown-item" asp-area="" asp-controller="Admin" asp-action="Facilities">
+                    <i class="fa fa-hospital"></i>
+                    &nbsp;Facilities
+                </a>
+            </li>
+            <!-- REFERRAL -->
+            <li>
+                <a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="NotFound">
+                    <i class="far fa-file"></i>
+                    &nbsp;Referral
+                </a>
+            </li>
+        </ul>
+    </li>
+    <!-- REPORT(LAST) -->
+    <li class="nav-item dropdown">
+        <a href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="nav-link dropdown-toggle">
+            <i class="fa fa-print"></i>&nbsp;
+            Report
+        </a>
+        <ul class="dropdown-menu border-0 shadow">
+            <li>
+                <a class="dropdown-item" asp-controller="Admin" asp-action="OnlineUsers">
+                    <i class="fa fa-users"></i>&nbsp;
+                    Online Users
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" asp-controller="Admin" asp-action="ReferralStatus">
+                    <i class="fa fa-chart-line"></i>&nbsp;
+                    Referral Status
+                </a>
+            </li>
+
+            <li class="dropdown-divider"></li>
+
+            <li>
+                <a class="dropdown-item" asp-controller="Admin" asp-action="DailyUsers">
+                    <i class="fa fa-users"></i>&nbsp;
+                    Daily Users
+                </a>
+            </li>
+
+            <li>
+                <a class="dropdown-item" asp-controller="Admin" asp-action="DailyReferral">
+                    <i class="fa fa-hospital"></i>&nbsp;
+                    Daily Hospital
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" asp-action="Consolidated">
+                    <i class="far fa-file-archive"></i>&nbsp;
+                    Consolidated
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" asp-action="Graph">
+                    <i class="fa fa-chart-bar"></i>&nbsp;
+                    Graph
+                </a>
+            </li>
+        </ul>
+    </li>
+    <!-- LOGIN AS-->
+    <li class="nav-item">
+        <a class="nav-link" asp-area="" asp-controller="Admin" asp-action="Login">
+            <i class="nav-icon fa fa-sign-in-alt"></i>
+            &nbsp;Login As
+        </a>
+    </li>
+    <!-- SETTINGS -->
+    <li class="nav-item dropdown">
+        <a class="dropdown-toggle nav-link" href="#resetPasswordModal" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+            <i class="fa fa-cog"></i>
+            &nbsp;Settings
+        </a>
+        <ul class="dropdown-menu border-0 shadow">
+            <!-- CHANGE PASSWORD -->
+            <li>
+                <a class="dropdown-item" data-toggle="ajax-modal" data-target="#change-password-modal" data-url="@Url.Action("ChangePassword","Users")">
+                    <i class="fa fa-key"></i>
+                    &nbsp;Change Password
+                </a>
+            </li>
+            <!-- LOGOUT -->
+            <li>
+                <a class="dropdown-item" asp-controller="Account" asp-action="Logout">
+                    <i class="fa fa-sign-out-alt"></i>
+                    &nbsp;Logout
+                </a>
+            </li>
+        </ul>
+    </li>
+</ul>

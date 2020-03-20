@@ -1,0 +1,103 @@
+﻿<ul class="navbar-nav">
+    <!-- DASHBOARD -->
+    <li class="nav-item d-none d-sm-inline-block">
+        <a class="nav-link" asp-area="" asp-controller="Support" asp-action="SupportDashboard">
+            <i class="fa fa-home"></i>
+            &nbsp;Dashboard
+        </a>
+    </li>
+    <!-- MANAGE USERS -->
+    <li class="nav-item dropdown d-none d-sm-inline-block">
+        <a class="nav-link" asp-area="" asp-controller="Support" asp-action="ManageUsers">
+            <i class="fa fa-user-md"></i>
+            &nbsp;Manage Users
+        </a>
+    </li>
+    <!-- HOSPITAL INFO -->
+    <li class="nav-item dropdown">
+        <a class="nav-link" asp-area="" asp-controller="Support" asp-action="HospitalInfo">
+            <i class="fa fa-hospital"></i>
+            &nbsp;Hospital Info
+        </a>
+    </li>
+    <!-- REPORTS -->
+    <li class="nav-item dropdown">
+        <a class="dropdown-toggle nav-link" href="#resetPasswordModal" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+            <i class="fa fa-print"></i>
+            &nbsp;Reports
+            <span class="badge badge-bg">
+                <span class="supReport">0</span>
+            </span>
+        </a>
+        <ul class="dropdown-menu">
+            <!-- DAILY USERS -->
+            <li>
+                <a class="dropdown-item" data-target="modal" asp-area="" asp-controller="Support" asp-action="DailyUsers">
+                    <i class="fa fa-users"></i>
+                    &nbsp;Daily Users
+                </a>
+            </li>
+            <!-- DAILY REFERRALS -->
+            <li>
+                <a class="dropdown-item" data-target="modal" asp-area="" asp-controller="Support" asp-action="DailyReferrals">
+                    <i class="fa fa-wheelchair"></i>
+                    &nbsp;Daily Referrals
+                </a>
+            </li>
+            <!-- DIVIDER -->
+            <li class="dropdown-divider"></li>
+            <!-- INCOMING REFERRAL -->
+            <li>
+                <a class="dropdown-item" data-target="modal" asp-area="" asp-controller="Support" asp-action="IncomingReport">
+                    <i class="fa fa-ambulance"></i>
+                    &nbsp;Incoming Referrals
+                    <span class="badge badge-bg">
+                        <span class="supReport">0</span>
+                    </span>
+                </a>
+            </li>
+            <!-- IT SUPPORT: GROUP CHAT -->
+            <li>
+                <a class="dropdown-item" data-target="modal" asp-area="" asp-controller="Support" asp-action="Chat">
+                    <i class="fa fa-comments"></i>
+                    &nbsp;IT Support Group Chat
+                </a>
+            </li>
+        </ul>
+    </li>
+    <!-- SETTINGS -->
+    <li class="nav-item dropdown">
+        <a class="dropdown-toggle nav-link" href="#resetPasswordModal" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+            <i class="fa fa-cog"></i>
+            &nbsp;Settings
+        </a>
+        <ul class="dropdown-menu">
+            <!-- CHANGE PASSWORD -->
+            <li>
+                <a class="dropdown-item" data-toggle="ajax-modal" data-target="#change-password-modal" data-url="@Url.Action("ChangePassword","Users")">
+                    <i class="fa fa-key"></i>
+                    &nbsp;Change Password
+                </a>
+            </li>
+            <!-- DIVIDER -->
+            <li class="dropdown-divider"></li>
+            <!-- LOGOUT -->
+            <li>
+                <a class="dropdown-item" data-target="modal" asp-area="" asp-controller="Account" asp-action="Logout">
+                    <i class="fa fa-sign-out-alt"></i>
+                    &nbsp;Logout
+                </a>
+            </li>
+            <!-- BACK AS ADMIN-->
+            @if (User.FindFirstValue("RealRole").Equals("admin"))
+            {
+                <li>
+                    <a class="dropdown-item" data-target="modal" asp-area="" asp-controller="Account" asp-action="BackAsAdmin">
+                        <i class="fa fa-user-secret"></i>
+                        &nbsp;Back as Admin
+                    </a>
+                </li>
+            }
+        </ul>
+    </li>
+</ul>
