@@ -13,10 +13,10 @@ namespace Referral2.Models.ViewModels.Support
         [Required]
         public int ProvinceId { get; set; }
         [Required]
-        public int MuncityId { get; set; }
+        public int? MuncityId { get; set; }
         [Required]
         [Display(Name = "city/municipality")]
-        public int BarangayId { get; set; }
+        public int? BarangayId { get; set; }
         [Display(Name = "barangay")]
         public string Address { get; set; }
         [Required]

@@ -56,7 +56,9 @@
                                             </td>
                                             <td>
                                                 <div >
-                                                    <select id="muncityFilter" asp-for="MuncityId" class="form-control" asp-items="ViewBag.Muncities" required></select>
+                                                    <select id="muncityFilter" asp-for="MuncityId" class="form-control" asp-items="ViewBag.Muncities" required>
+                                                        <option value="">Select City/Municipality...</option>
+                                                    </select>
                                                     <span asp-validation-for="MuncityId" class="text-danger"></span>
                                                 </div>
                                             </td>
@@ -68,7 +70,9 @@
                                             </td>
                                             <td>
                                                 <div >
-                                                    <select id="barangay" asp-for="BarangayId" class="form-control" asp-items="ViewBag.Barangays" required></select>
+                                                    <select id="barangay" asp-for="BarangayId" class="form-control" asp-items="ViewBag.Barangays" required>
+                                                        <option value="">Select Barangays...</option>
+                                                    </select>
                                                     <span asp-validation-for="BarangayId" class="text-danger"></span>
                                                 </div>
                                             </td>
