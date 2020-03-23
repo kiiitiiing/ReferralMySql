@@ -1,24 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Keith\\Desktop\\doh\\Referral2\\Referral2\\Referral2.csproj": {}
+    "C:\\Users\\user\\Source\\Repos\\Referral\\Referral2\\Referral2.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Keith\\Desktop\\doh\\Referral2\\Referral2\\Referral2.csproj": {
+    "C:\\Users\\user\\Source\\Repos\\Referral\\Referral2\\Referral2.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Keith\\Desktop\\doh\\Referral2\\Referral2\\Referral2.csproj",
+        "projectUniqueName": "C:\\Users\\user\\Source\\Repos\\Referral\\Referral2\\Referral2.csproj",
         "projectName": "Referral2",
-        "projectPath": "C:\\Users\\Keith\\Desktop\\doh\\Referral2\\Referral2\\Referral2.csproj",
-        "packagesPath": "C:\\Users\\Keith\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Keith\\Desktop\\doh\\Referral2\\Referral2\\obj\\",
+        "projectPath": "C:\\Users\\user\\Source\\Repos\\Referral\\Referral2\\Referral2.csproj",
+        "packagesPath": "C:\\Users\\user\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\user\\Source\\Repos\\Referral\\Referral2\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "E:\\Microsoft\\Xamarin\\NuGet\\",
+          "C:\\Microsoft\\Xamarin\\NuGet\\",
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
         ],
         "configFilePaths": [
-          "C:\\Users\\Keith\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\user\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Xamarin.Offline.config"
         ],
@@ -27,7 +27,6 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "http://packagesource": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {

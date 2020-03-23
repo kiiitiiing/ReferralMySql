@@ -8,8 +8,8 @@ namespace Referral2.Helpers
     public class Constants
     {
         protected static string Address = "c8ee61fd";
-        protected static string Server_Address = "192.168.110.47";
-        protected static string Server_Port = "8080";
+        protected static string Server_Address = "192.168.254.107";
+        protected static string Server_Port = "8888";
         public static string Server_Link => $"ws://{Server_Address}:{Server_Port}";
 
         public static string DIRECTED_CLIENT_TAG = "direct_to";
