@@ -1,29 +1,36 @@
 ﻿@model RemarksViewModel
 
-<div class="modal fade" id="cancel-modal">
-    <div class="modal-dialog modal-sm" role="document">
-        <div class="modal-content">
+<div class="modal-content" id="cancel-modal">
+        <div class="modal-header">
+            <h4>
+                <i class="fa fa-user-times"></i>
+                Cancel Referral
+            </h4>
+        </div>
+        <div class="modal-body">
             <form asp-action="CancelRemark">
-                <div class="modal-header">
-                    <h4>
-                        <i class="fa fa-user-times"></i>
-                        Cancel Referral
-                    </h4>
+                <div class="">
+                    <input type="hidden" asp-for="Code" value="@ViewBag.Code" />
                 </div>
-                <div class="modal-body">
-                    <div class="">
-                        <input type="hidden" asp-for="Code" value="@ViewBag.Code" />
-                    </div>
-                    <div class="">
-                        <textarea asp-for="Remarks" placeholder="Reason for Cancellation" class="form-control" rows="5" required></textarea>
-                        <span asp-validation-for="Remarks" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="modal-footer justify-content-end">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-success">Submit</button>
+                <div class="">
+                    <textarea asp-for="Remarks" placeholder="Reason for Cancellation" class="form-control" rows="5" required></textarea>
                 </div>
             </form>
+            @if (ViewBag.Errors != null)
+            {
+                <div class="row" style="margin-top: 20px;">
+                    <div class="col-sm-12 center" style="align-content:center">
+                        <span class="text-danger text-sm">Please input the required fields.</span>
+                    </div>
+                </div>
+            }
         </div>
-    </div>
+        <div class="modal-footer" style="display: inline-block !important;">
+            <button class="btn btn-sm btn-danger fa-pull-left" type="button" data-dismiss="modal">
+                Close
+            </button>
+            <button class="btn btn-sm btn-success fa-pull-right" data-action="small_modal" data-save="modal">
+                Submit
+            </button>
+        </div>
 </div>

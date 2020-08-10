@@ -1,0 +1,570 @@
+﻿@model List<ConsolidatedViewModel>
+
+@{
+    ViewData["Title"] = "INCOMING REFERRAL CONSOLIDATION TABLE  (Within Province Wide Health System)";
+    var startDate = ViewBag.StartDate;
+    var endDate = ViewBag.EndDate;
+    var dateRange = startDate.ToString("dd/MM/yyyy") + " - " + endDate.ToString("dd/MM/yyyy");
+}
+    <style>
+        label{
+            padding: 6px 12px;
+            font-size: 14px;
+            height: 50px !important;
+        }
+    </style>
+    <div style="
+     width: 97.5vw;
+    position: relative;
+    left: 45%;
+    right: 45%;
+    margin-left: -45vw;
+    margin-right: -45vw;">
+        <form asp-action="Consolidated" method="post">
+            <div class="row" style="margin-top: -0.5%; margin-bottom: 1% ">
+                <div class="col-md-4">
+                    <input class="form-control form-control-sm" type="text" value="@dateRange" id="daterange" name="daterange" autocomplete="off">
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group-btn">
+                        <button type="submit" class="btn btn-sm btn-info">Filter</button>
+                        <a asp-action="Consolidated" asp-route-inexport="@true" asp-route-daterange="@dateRange" class="btn btn-sm btn-warning"><i class="fa fa-file-excel-o"></i> Incoming (Excel)</a>
+                        <a asp-action="Consolidated" asp-route-outexport="@true" asp-route-daterange="@dateRange" class="btn btn-sm btn-success"><i class="fa fa-file-excel-o"></i> Outgoing (Excel)</a>
+                        <a asp-action="Consolidated" asp-route-export="@true" asp-route-daterange="@dateRange" class="btn btn-sm  btn-primary"><i class="fa fa-file-excel-o"></i> All (Excel)</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        @foreach (var items in Model)
+        {
+            var logo = string.IsNullOrEmpty(items.FacilityLogo) ? "DOHLOGO.png" : items.FacilityLogo;
+            <div class="card card-outline card-success card-outline-tabs">
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="custom-content-above-tab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="custom-content-above-home-tab" data-toggle="pill" href="#incoming_@items.FacilitId" role="tab" aria-controls="custom-content-above-home">
+                                Incoming
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="pill" href="#outgoing_@items.FacilitId" role="tab" aria-controls="custom-content-above-profile">
+                                Outgoing
+                            </a>
+                        </li>
+                        <li class="text-bold text-primary custom-float-right">
+                            @startDate.ToString("MMMM (yyyy)") to @endDate.ToString("MMMM (yyyy)")
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <!-- INCOMING TAB -->
+                        <div class="tab-pane fade show active" id="incoming_@items.FacilitId" role="tabpanel" aria-labelledby="incoming_@items.FacilitId">
+                            <div class="row">
+                                <!-- HOSPITAL SIDE -->
+                                <div class="col-md-4">
+                                    <div class="title-form">
+                                        <img class="img-circle profile-user-img" src="~/assets/hospitallogos/@logo" />
+                                        <br />
+                                        @items.FacilityName
+                                    </div>
+                                    <!-- TRANSACTION -->
+                                    <strong>
+                                        <i class="fa fa-random"></i>&nbsp;
+                                        Transaction
+                                    </strong>
+                                    <p>
+                                        <label class="badge badge-warning">Incoming <span class="badge bg-red">@items.InIncoming</span></label>
+                                        <label class="badge badge-warning">Accepted <span class="badge bg-red">@items.InAccepted</span></label>
+                                        <a asp-action="ViewedOnly" 
+                                           asp-route-facility="@items.FacilitId"
+                                           asp-route-startDate="@ViewBag.StartDate"
+                                           asp-route-endDate="@ViewBag.EndDate"
+                                           asp-route-type="incoming"
+                                           target="_blank">
+                                            <label class="badge badge-warning" style="cursor: pointer;">
+                                                Viewed Only
+                                                <span class="badge bg-red">
+                                                    @items.InViewed
+                                                </span>
+                                            </label>
+                                        </a>
+                                        
+                                        <br />
+                                        <br />
+                                    </p>
+                                    <!-- TURNAROUND TIME -->
+                                    <strong>
+                                        <i class="far fa-clock"></i>&nbsp;
+                                        Turnaround time
+                                    </strong>
+                                    <p>
+                                        <label class="badge badge-primary">
+                                            Acceptance&nbsp;
+                                            <span class="badge bg-red">
+                                                <i class="far fa-clock"></i>&nbsp;
+                                                @items.InAcceptance.ToString("##.##") mins
+                                            </span>
+                                        </label>
+                                        <label class="badge badge-primary">
+                                            Arrival&nbsp;
+                                            <span class="badge bg-red">
+                                                <i class="fa fa-clock"></i>&nbsp;
+                                                @items.InArrival.ToString("##.##") mins
+                                            </span>
+                                        </label>
+                                        <br />
+                                        <br />
+                                    </p>
+                                    <!-- HOSPITAL LEVEL -->
+                                    <strong>
+                                        <i class="fa fa-book"></i>&nbsp;
+                                        Hospital Level
+                                    </strong>
+                                    <p>
+                                        <label class="badge badge-success">Horizontal <span class="badge bg-red">@items.InHorizontal</span></label>
+                                        <label class="badge badge-success">Vertical <span class="badge bg-red">@items.InVertical</span></label>
+                                    </p>
+                                </div>
+                                <!-- TABS SIDE -->
+                                <div class="col-md-8">
+                                    <ul class="nav nav-tabs" id="custom-content-above-tab" role="tablist">
+                                        <!-- REFERRING FACILITY -->
+                                        <li class="nav-item">
+                                            <a class="nav-link active" data-toggle="pill" href="#common-source_@items.FacilitId" role="tab" aria-selected="true">
+                                                <i class="text-success fa fa-ambulance"></i>
+                                                &nbsp;Referring Facility
+                                            </a>
+                                        </li>
+                                        <!-- REFERRING DOCTORS-->
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-toggle="pill" href="#common-referring_@items.FacilitId" role="tab">
+                                                <i class="text-blue fa fa-ambulance"></i>
+                                                &nbsp;Referring Doctors <small class="text-muted">(Top 10)</small>
+                                            </a>
+                                        </li>
+                                        <!-- DIAGNOSES AND REASONS -->
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-toggle="pill" href="#diagnosis-reason_@items.FacilitId" role="tab">
+                                                <i class="text-yellow fa fa-ambulance"></i>
+                                                &nbsp;Diagnoses & Reasons
+                                                <small class="text-muted">(Top 10)</small>
+                                            </a>
+                                        </li>
+                                        <!-- COMMON TRANSPORTATION -->
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-toggle="pill" href="#transportation_@items.FacilitId" role="tab">
+                                                <i class="text-red fa fa-ambulance"></i>
+                                                &nbsp;Common Transportation
+                                            </a>
+                                        </li>
+                                        <!-- DEPARTMENT -->
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-toggle="pill" href="#department_@items.FacilitId" role="tab">
+                                                <i class="text-info fa fa-ambulance"></i>
+                                                &nbsp;Department
+                                            </a>
+                                        </li>
+                                        <!-- REMARKS -->
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-toggle="pill" href="#issues_@items.FacilitId" role="tab">
+                                                <i class="text-orange fa fa-ambulance"></i>
+                                                &nbsp;Remarks
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <!-- TAB CONTENT -->
+                                    <div class="tab-content">
+                                        <!-- REFERRING FACILITY -->
+                                        <div class="tab-pane fade show active" id="common-source_@items.FacilitId" role="tabpanel" aria-labelledby="common-source_@items.FacilitId">
+                                            @if (items.InReferringFacilities.Count() > 0)
+                                            {
+                                                foreach (var item in items.InReferringFacilities)
+                                                {
+                                                    <label><span class="badge bg-maroon">@item.NoItem</span> @item.ItemName</label><br />
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <h1>Empty Record!</h1>
+                                            }
+                                        </div>
+                                        <!-- REFERRING DOCTORS-->
+                                        <div class="tab-pane fade" id="common-referring_@items.FacilitId" role="tabpanel" aria-labelledby="common-referring_@items.FacilitId">
+                                            @if (items.InReferringDoctors.Count() > 0)
+                                            {
+                                                foreach (var item in items.InReferringDoctors)
+                                                {
+                                                    if (!string.IsNullOrEmpty(item.ItemName))
+                                                    {
+                                                        <label><span class="badge bg-maroon">@item.NoItem</span> @item.ItemName</label><br />
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <h1>Empty Record!</h1>
+                                            }
+                                        </div>
+                                        <!-- DIAGNOSES AND REASONS -->
+                                        <div class="tab-pane fade" id="diagnosis-reason_@items.FacilitId" role="tabpanel" aria-labelledby="diagnosis-reason_@items.FacilitId">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <h4>Diagnosis</h4>
+                                                    @if (items.InDiagnosis.Count() > 0)
+                                                    {
+                                                        foreach (var item in items.InDiagnosis)
+                                                        {
+                                                            <label><span class="badge bg-maroon">@item.NoItem</span> @item.ItemName</label><br />
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <h1>Empty Record!</h1>
+                                                    }
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h4>Reason</h4>
+                                                    @if (items.InReason.Count() > 0)
+                                                    {
+                                                        foreach (var item in items.InReason)
+                                                        {
+                                                            <label><span class="badge bg-maroon">@item.NoItem</span> @item.ItemName</label><br />
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <h1>Empty Record!</h1>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- COMMON TRANSPORTATION -->
+                                        <div class="tab-pane fade" id="transportation_@items.FacilitId" role="tabpanel" aria-labelledby="transportation_@items.FacilitId">
+                                            @if (items.InTransportation.Count() > 0)
+                                            {
+                                                foreach (var item in items.InTransportation)
+                                                {
+                                                    if (!string.IsNullOrEmpty(item.ItemName))
+                                                    {
+                                                        <label><span class="badge bg-maroon">@item.NoItem</span> @ListContainer.TranspoMode[int.Parse(item.ItemName) - 1]</label><br />
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <h1>Empty Record!</h1>
+                                            }
+                                        </div>
+                                        <!-- DEPARTMENT -->
+                                        <div class="tab-pane fade" id="department_@items.FacilitId" role="tabpanel" aria-labelledby="department_@items.FacilitId">
+                                            @if (items.InDepartment.Count() > 0)
+                                            {
+                                                foreach (var item in items.InDepartment)
+                                                {
+                                                    if (!string.IsNullOrEmpty(item.ItemName))
+                                                    {
+                                                        <label><span class="badge bg-maroon">@item.NoItem</span> @item.ItemName</label><br />
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <h1>Empty Record!</h1>
+                                            }
+                                        </div>
+                                        <!-- REMARKS -->
+                                        <div class="tab-pane fade" id="issues_@items.FacilitId" role="tabpanel" aria-labelledby="issues_@items.FacilitId">
+                                            @if (items.InRemarks.Count() > 0)
+                                            {
+                                                foreach (var item in items.InRemarks)
+                                                {
+                                                    if (!string.IsNullOrEmpty(item.ItemName))
+                                                    {
+                                                        <label>@item.ItemName</label><br />
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <h1>Empty Record!</h1>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- OUTGOING TAB -->
+                        <div class="tab-pane fade show" id="outgoing_@items.FacilitId" role="tabpanel" aria-labelledby="outgoing_@items.FacilitId">
+                            <div class="row">
+                                <!-- HOSPITAL SIDE -->
+                                <div class="col-md-4">
+                                    <div class="title-form">
+                                        <img class="img-circle profile-user-img" src="~/assets/hospitallogos/@logo" />
+                                        <br />
+                                        @items.FacilityName
+                                    </div>
+                                    <!-- TRANSACTION -->
+                                    <strong>
+                                        <i class="fa fa-random"></i>&nbsp;
+                                        Transaction
+                                    </strong>
+                                    <p>
+                                        <label class="badge badge-warning">Outgoing <span class="badge bg-red">@items.OutOutgoing</span></label>
+                                        <label class="badge badge-warning">Accepted <span class="badge bg-red">@items.OutAccepted</span></label>
+                                        <a asp-action="ViewedOnly"
+                                           asp-route-facility="@items.FacilitId"
+                                           asp-route-startDate="@ViewBag.StartDate"
+                                           asp-route-endDate="@ViewBag.EndDate"
+                                           asp-route-type="outgoing"
+                                           target="_blank">
+                                            <label class="badge badge-warning" style="cursor: pointer;">
+                                                Viewed Only
+                                                <span class="badge bg-red">
+                                                    @items.OutViewed
+                                                </span>
+                                            </label>
+                                        </a>
+                                        <label class="badge badge-warning">Redirected  <span class="badge bg-red">@items.OutRedirected</span></label>
+                                        <label class="badge badge-warning">Archived  <span class="badge bg-red">@items.OutArchived</span></label>
+                                        <br />
+                                        <br />
+                                    </p>
+                                    <!-- TURNAROUND TIME -->
+                                    <strong>
+                                        <i class="far fa-clock"></i>&nbsp;
+                                        Turnaround time
+                                    </strong>
+                                    <p>
+                                        <label class="badge badge-primary">
+                                            Viewed Only Acceptance&nbsp;
+                                            <span class="badge bg-red">
+                                                <i class="far fa-clock"></i>&nbsp;
+                                                @items.OutViewedAcceptance mins
+                                            </span>
+                                        </label><br />
+                                        <label class="badge badge-primary">
+                                            Viewed Only Redirection&nbsp;
+                                            <span class="badge bg-red">
+                                                <i class="fa fa-clock"></i>&nbsp;
+                                                @items.OutViewedRedirection mins
+                                            </span>
+                                        </label><br />
+                                        <label class="badge badge-primary">
+                                            Acceptance&nbsp;
+                                            <span class="badge bg-red">
+                                                <i class="far fa-clock"></i>&nbsp;
+                                                @items.OutAcceptance mins
+                                            </span>
+                                        </label><br />
+                                        <label class="badge badge-primary">
+                                            Redirection&nbsp;
+                                            <span class="badge bg-red">
+                                                <i class="fa fa-clock"></i>&nbsp;
+                                                @items.OutRedirection mins
+                                            </span>
+                                        </label><br />
+                                        <label class="badge badge-primary">
+                                            To Transport&nbsp;
+                                            <span class="badge bg-red">
+                                                <i class="fa fa-clock"></i>&nbsp;
+                                                @items.OutTransport mins
+                                            </span>
+                                        </label>
+                                        <br />
+                                        <br />
+                                    </p>
+                                    <!-- HOSPITAL LEVEL -->
+                                    <strong>
+                                        <i class="fa fa-book"></i>&nbsp;
+                                        Hospital Level
+                                    </strong>
+                                    <p>
+                                        <label class="badge badge-success">Horizontal <span class="badge bg-red">@items.OutHorizontal</span></label>
+                                        <label class="badge badge-success">Vertical <span class="badge bg-red">@items.OutVertical</span></label>
+                                    </p>
+                                </div>
+                                <!-- TABS SIDE -->
+                                <div class="col-md-8">
+                                    <ul class="nav nav-tabs" id="custom-content-above-tab" role="tablist">
+                                        <!-- REFERRING FACILITY -->
+                                        <li class="nav-item">
+                                            <a class="nav-link active" data-toggle="pill" href="#common-source-out_@items.FacilitId" role="tab" aria-selected="true">
+                                                <i class="text-success fa fa-ambulance"></i>
+                                                &nbsp;Referred Facility
+                                            </a>
+                                        </li>
+                                        <!-- REFERRING DOCTORS-->
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-toggle="pill" href="#common-referred-out_@items.FacilitId" role="tab">
+                                                <i class="text-blue fa fa-ambulance"></i>
+                                                &nbsp;Referred Doctors <small class="text-muted">(Top 10)</small>
+                                            </a>
+                                        </li>
+                                        <!-- DIAGNOSES AND REASONS -->
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-toggle="pill" href="#diagnosis-reason-out_@items.FacilitId" role="tab">
+                                                <i class="text-yellow fa fa-ambulance"></i>
+                                                &nbsp;Diagnoses & Reasons
+                                                <small class="text-muted">(Top 10)</small>
+                                            </a>
+                                        </li>
+                                        <!-- COMMON TRANSPORTATION -->
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-toggle="pill" href="#transportation-out_@items.FacilitId" role="tab">
+                                                <i class="text-red fa fa-ambulance"></i>
+                                                &nbsp;Common Transportation
+                                            </a>
+                                        </li>
+                                        <!-- DEPARTMENT -->
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-toggle="pill" href="#department-out_@items.FacilitId" role="tab">
+                                                <i class="text-info fa fa-ambulance"></i>
+                                                &nbsp;Department
+                                            </a>
+                                        </li>
+                                        <!-- REMARKS -->
+                                        <li class="nav-item">
+                                            <a class="nav-link" data-toggle="pill" href="#issues-out_@items.FacilitId" role="tab">
+                                                <i class="text-orange fa fa-ambulance"></i>
+                                                &nbsp;Remarks
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <!-- TAB CONTENT -->
+                                    <div class="tab-content">
+                                        <!-- REFERRING FACILITY -->
+                                        <div class="tab-pane fade show active" id="common-source-out_@items.FacilitId" role="tabpanel" aria-labelledby="common-source-out_@items.FacilitId">
+                                            @if (items.OutReferredFacility.Count() > 0)
+                                            {
+                                                foreach (var item in items.OutReferredFacility)
+                                                {
+                                                    <label><span class="badge bg-maroon">@item.NoItem</span> @item.ItemName</label><br />
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <h1>Empty Record!</h1>
+                                            }
+                                        </div>
+                                        <!-- REFERRING DOCTORS-->
+                                        <div class="tab-pane fade" id="common-referred-out_@items.FacilitId" role="tabpanel" aria-labelledby="common-referred-out_@items.FacilitId">
+                                            @if (items.OutReferredDoctor.Count() > 0)
+                                            {
+                                                foreach (var item in items.OutReferredDoctor)
+                                                {
+                                                    if (!string.IsNullOrEmpty(item.ItemName))
+                                                    {
+                                                        <label><span class="badge bg-maroon">@item.NoItem</span> @item.ItemName</label><br />
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <h1>Empty Record!</h1>
+                                            }
+                                        </div>
+                                        <!-- DIAGNOSES AND REASONS -->
+                                        <div class="tab-pane fade" id="diagnosis-reason-out_@items.FacilitId" role="tabpanel" aria-labelledby="diagnosis-reason-out_@items.FacilitId">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <h4>Diagnosis</h4>
+                                                    @if (items.OutDiagnosis.Count() > 0)
+                                                    {
+                                                        foreach (var item in items.OutDiagnosis)
+                                                        {
+                                                            <label><span class="badge bg-maroon">@item.NoItem</span> @item.ItemName</label><br />
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <h1>Empty Record!</h1>
+                                                    }
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h4>Reason</h4>
+                                                    @if (items.OutReason.Count() > 0)
+                                                    {
+                                                        foreach (var item in items.OutReason)
+                                                        {
+                                                            <label><span class="badge bg-maroon">@item.NoItem</span> @item.ItemName</label><br />
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <h1>Empty Record!</h1>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- COMMON TRANSPORTATION -->
+                                        <div class="tab-pane fade" id="transportation-out_@items.FacilitId" role="tabpanel" aria-labelledby="transportation-out_@items.FacilitId">
+                                            @if (items.OutTransportation.Count() > 0)
+                                            {
+                                                foreach (var item in items.OutTransportation)
+                                                {
+                                                    if (!string.IsNullOrEmpty(item.ItemName))
+                                                    {
+                                                        <label><span class="badge bg-maroon">@item.NoItem</span> @ListContainer.TranspoMode[int.Parse(item.ItemName) - 1]</label><br />
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <h1>Empty Record!</h1>
+                                            }
+                                        </div>
+                                        <!-- DEPARTMENT -->
+                                        <div class="tab-pane fade" id="department-out_@items.FacilitId" role="tabpanel" aria-labelledby="department-out_@items.FacilitId">
+                                            @if (items.OutDepartment.Count() > 0)
+                                            {
+                                                foreach (var item in items.OutDepartment)
+                                                {
+                                                    if (!string.IsNullOrEmpty(item.ItemName))
+                                                    {
+                                                        <label><span class="badge bg-maroon">@item.NoItem</span> @item.ItemName</label><br />
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <h1>Empty Record!</h1>
+                                            }
+                                        </div>
+                                        <!-- REMARKS -->
+                                        <div class="tab-pane fade" id="issues-out_@items.FacilitId" role="tabpanel" aria-labelledby="issues-out_@items.FacilitId">
+                                            @if (items.OutRemarks.Count() > 0)
+                                            {
+                                                foreach (var item in items.OutRemarks)
+                                                {
+                                                    if (!string.IsNullOrEmpty(item.ItemName))
+                                                    {
+                                                        <label>@item.ItemName</label><br />
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <h1>Empty Record!</h1>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('input[name="daterange"]').daterangepicker({
+            format: 'DD/MM/YYYY',
+            startDate: '@startDate.ToString("dd/MM/yyyy")',
+            endDate: '@endDate.ToString("dd/MM/yyyy")',
+            opens: 'right'
+        });
+    });
+</script>

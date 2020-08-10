@@ -1,3 +1,19 @@
+﻿﻿input.input-validation-error {
+    border-color: red;
+}
+
+select.input-validation-error {
+    border-color: red;
+}
+
+ul>li>a{
+    white-space: nowrap;
+}
+
+textarea.input-validation-error {
+    border-color: red;
+}
+
 .img-responsive{
     width: auto;
     height: auto;

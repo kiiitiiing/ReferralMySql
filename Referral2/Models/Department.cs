@@ -17,8 +17,10 @@ namespace Referral2.Models
         }
 
         [Key]
+        [Column("id")]
         public int Id { get; set; }
         [Required]
+        [Column("description")]
         [StringLength(255)]
         public string Description { get; set; }
 

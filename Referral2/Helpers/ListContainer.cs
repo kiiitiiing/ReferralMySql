@@ -83,15 +83,29 @@ namespace Referral2.Helpers
             }
         }
 
-        public static List<KeyValuePair<int, string>> HospitalLevel
+        public static List<KeyValuePair<string, string>> HospitalLevel
+        {
+            get
+            {
+                return new List<KeyValuePair<string, string>>()
+                {
+                    new KeyValuePair<string, string>("1", "Level 1"),
+                    new KeyValuePair<string, string>("2", "Level 2"),
+                    new KeyValuePair<string, string>("3", "Level 3"),
+                    new KeyValuePair<string, string>("infirmary", "Infirmary"),
+                    new KeyValuePair<string, string>("CIU/TTMF", "CIU/TTMF"),
+                };
+            }
+        }
+
+        public static List<KeyValuePair<int, string>> HospitalStatus
         {
             get
             {
                 return new List<KeyValuePair<int, string>>()
                 {
-                    new KeyValuePair<int, string>(1, "Level 1"),
-                    new KeyValuePair<int, string>(2, "Level 2"),
-                    new KeyValuePair<int, string>(3, "Level 3")
+                    new KeyValuePair<int, string>(1, "Active"),
+                    new KeyValuePair<int, string>(0, "Inactive")
                 };
             }
         }

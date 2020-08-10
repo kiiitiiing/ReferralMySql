@@ -1,47 +1,43 @@
 ﻿@model ReferViewModel
 
-<div class="modal fade" role="dialog" id="refer-modal" style="font-size: 14px;">
-    <div class="modal-dialog modal-sm" role="document">
-        <div class="modal-content">
-            <form asp-action="ReferRemark">
-                <div class="modal-header">
-                    <h4>
-                        REFER TO OTHER FACILITY
-                    </h4>
-                </div>
-                <div class="modal-body">
-                    <div class="">
-                        <input type="hidden" asp-for="Code" />
-                    </div>
-                    <div class="">
-                        <textarea asp-for="Remarks" class="form-control" rows="5" required></textarea>
-                        <span asp-validation-for="Remarks" class="text-danger"></span>
-                    </div>
-                    <div class="">
-                        <span>Facility:</span>
-                        <select asp-for="FacilityId" asp-items="ViewBag.Facility" class="form-control select2 faciliyFilter" required>
-                            <option value="">Select Facility</option>
-                        </select>
-                        <span asp-validation-for="FacilityId" class="text-danger"></span>
-                    </div>
-                    <div class="">
-                        <span>Department:</span>
-                        <select asp-for="DepartmentId" asp-items="ViewBag.Department" class="form-control departmentFilter" required>
-                            <option value="">Select Department
-                            </option>
-                        </select>
-                        <span asp-validation-for="DepartmentId" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="modal-footer justify-content-end">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-success">Submit</button>
-                </div>
-            </form>
+<div class="modal-content" id="refer-modal">
+    <form asp-action="ReferRemark">
+        <div class="modal-header">
+            <h4>
+                REFER TO OTHER FACILITY
+            </h4>
         </div>
-    </div>
+        <div class="modal-body">
+            <div class="">
+                <input type="hidden" asp-for="Code" />
+            </div>
+            <div class="">
+                <label>Remarks:</label>
+                <textarea asp-for="Remarks" class="form-control" rows="5" required></textarea>
+                <span asp-validation-for="Remarks" class="text-danger"></span>
+            </div>
+            <div class="">
+                <label>Facility:</label>
+                <select asp-for="FacilityId" asp-items="ViewBag.Facility" class="form-control select2 faciliyFilter" required>
+                    <option value="">Select Facility</option>
+                </select>
+                <span asp-validation-for="FacilityId" class="text-danger"></span>
+            </div>
+            <div class="">
+                <label>Department:</label>
+                <select asp-for="DepartmentId" asp-items="ViewBag.Department" class="form-control departmentFilter" required>
+                    <option value="">Select Department
+                    </option>
+                </select>
+                <span asp-validation-for="DepartmentId" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="modal-footer justify-content-end">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-success">Submit</button>
+        </div>
+    </form>
 </div>
-
 
 <script type="text/javascript">
     

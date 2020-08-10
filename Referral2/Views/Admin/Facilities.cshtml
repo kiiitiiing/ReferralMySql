@@ -13,7 +13,13 @@
                         <i class="fa fa-search"></i>
                         &nbsp;Search
                     </button>
-                    <button type="button" class="btn btn-sm btn-primary" data-toggle="ajax-modal" data-target="#add-facility-modal" data-url="@Url.Action("AddFacility")">
+                    <button type="button"
+                            class="btn btn-sm btn-primary" 
+                            data-toggle="ajax-modal"
+                            data-target="#small_modal"
+                            data-action="#small_content"
+                            data-url="@Url.Action("AddFacility")"
+                            onclick="OpenModal($(this));">
                         <i class="fa fa-hospital"></i>
                         &nbsp;Add Facility
                     </button>
@@ -32,6 +38,7 @@
                             <th>Chief Hospital</th>
                             <th>Level</th>
                             <th>Type</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -41,10 +48,12 @@
                                 <td style="white-space: nowrap;">
                                     <a class="facilityId text-primary text-bold"
                                        style="cursor:pointer;" 
-                                       data-toggle="ajax-modal" 
+                                       data-toggle="ajax-modal"
+                                       data-target="#small_modal"
+                                       data-action="#small_content"
                                        data-id="@item.Id" 
-                                       data-target="#update-facility-modal" 
-                                       data-url="@Url.Action("UpdateFacility", "Admin", new { id = item.Id })">
+                                       data-url="@Url.Action("UpdateFacility", "Admin", new { id = item.Id })"
+                                       onclick="OpenModal($(this));">
                                         @item.Facility
                                     </a>
                                     <br />
@@ -66,13 +75,30 @@
                                     </small>
                                 </td>
                                 <td>
-                                    @if (item.Level != 0)
+                                    @if (item.Level != "0")
                                     {
-                                        <span class="badge bg-green">@item.Level</span>
+                                        <span class="badge bg-purple">@item.Level</span>
                                     }
                                 </td>
                                 <td>
-                                    <span class="badge bg-green">@item.Type</span>
+                                    @if (item.Type == "government")
+                                    {
+                                        <span class="badge bg-green">@item.Type</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-primary">@item.Type</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.Status)
+                                    {
+                                        <span class="badge bg-blue">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger" style="color: white !important;">Inactive</span>
+                                    }
                                 </td>
                             </tr>
                         }

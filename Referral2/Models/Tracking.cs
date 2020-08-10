@@ -14,33 +14,54 @@ namespace Referral2.Models
         }
 
         [Key]
+        [Column("id")]
         public int Id { get; set; }
         [Required]
-        [StringLength(50)]
+        [Column("code")]
+        [StringLength(255)]
         public string Code { get; set; }
+        [Column("patient_id")]
         public int PatientId { get; set; }
+        [Column("date_referred")]
         public DateTime DateReferred { get; set; }
+        [Column("date_transferred")]
         public DateTime DateTransferred { get; set; }
+        [Column("date_accepted")]
         public DateTime DateAccepted { get; set; }
+        [Column("date_arrived")]
         public DateTime DateArrived { get; set; }
+        [Column("date_seen")]
         public DateTime DateSeen { get; set; }
+        [Column("mode_transportation")]
         [StringLength(50)]
-        public string Transportation { get; set; }
-        public int? ReferredFrom { get; set; }
-        public int? ReferredTo { get; set; }
+        public string ModeTransportation { get; set; }
+        [Column("referred_from")]
+        public int ReferredFrom { get; set; }
+        [Column("referred_to")]
+        public int ReferredTo { get; set; }
+        [Column("department_id")]
         public int? DepartmentId { get; set; }
+        [Column("referring_md")]
         public int? ReferringMd { get; set; }
+        [Column("action_md")]
         public int? ActionMd { get; set; }
-        [Column(TypeName = "text")]
+        [Column("remarks", TypeName = "text")]
         public string Remarks { get; set; }
+        [Required]
+        [Column("status")]
         [StringLength(50)]
         public string Status { get; set; }
+        [Column("type")]
         [StringLength(50)]
         public string Type { get; set; }
+        [Column("walkin")]
         [StringLength(255)]
-        public string WalkIn { get; set; }
+        public string Walkin { get; set; }
+        [Column("form_id")]
         public int? FormId { get; set; }
-        public DateTime? CreatedAt { get; set; }
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
+        [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
 
         [ForeignKey(nameof(ActionMd))]

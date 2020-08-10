@@ -147,10 +147,10 @@ namespace Referral2.Controllers
 
             var users = _context.User
                 .Where(x => x.FacilityId.Equals(UserFacility) && x.Level.Equals(_roles.Value.DOCTOR))
-                .OrderBy(x => x.Lastname)
+                .OrderBy(x => x.Lname)
                 .Select(i => new DailyReferralSupport
                 {
-                    DoctorName = i.Firstname +" "+ (i.Middlename ?? "") + " " + i.Lastname,
+                    DoctorName = i.Fname +" "+ (i.Mname ?? "") + " " + i.Lname,
                     OutAccepted = activities.Where(x => x.ReferringMd.Equals(i.Id) && x.Status.Equals(_status.Value.ACCEPTED)).Count(),
                     OutRedirected = tract.Where(x => x.ReferringMd.Equals(i.Id) && x.Status.Equals(_status.Value.REJECTED)).Count(),
                     OutSeen = trackings.Where(x => x.ReferringMd.Equals(i.Id) && x.DateSeen == default).Count(),
@@ -246,10 +246,10 @@ namespace Referral2.Controllers
 
             var dailyUsers = _context.User
                 .Where(x => x.FacilityId.Equals(UserFacility) && x.Level.Equals(_roles.Value.DOCTOR))
-                .OrderBy(x => x.Lastname)
+                .OrderBy(x => x.Lname)
                 .Select(i => new DailyUsersViewModel
                 {
-                    MDName = i.Lastname + ", " + i.Firstname + " " + (i.Middlename ?? ""),
+                    MDName = i.Lname + ", " + i.Fname + " " + (i.Mname ?? ""),
                     OnDuty = i.LastLogin != default ? logins.Where(x => x.UserId == i.Id && x.Login1 >= StartDate && x.Login1 <= EndDate).First().Status : "",
                     LoggedIn = i.LastLogin != default ? logins.Where(x => x.UserId == i.Id && x.Login1 >= StartDate && x.Login1 <= EndDate).First().Login1 != default : false,
                     LoginTime = logins.Where(x => x.UserId == i.Id && x.Login1 >= StartDate && x.Login1 <= EndDate).First().Login1,
@@ -336,12 +336,12 @@ namespace Referral2.Controllers
             {
                 Id = facility.Id,
                 FacilityName = facility.Name,
-                Abbreviation = facility.Abbrevation,
-                ProvinceId = facility.ProvinceId,
+                Abbreviation = facility.Abbr,
+                ProvinceId = (int)facility.ProvinceId,
                 MuncityId = facility.MuncityId,
                 BarangayId = facility.BarangayId,
                 Address = facility.Address,
-                Contact = facility.Contact,
+                Contact = facility.ContactNo,
                 Email = facility.Email,
                 Status = (int)facility.Status
             };
@@ -386,7 +386,7 @@ namespace Referral2.Controllers
                 .Where(x => x.Status == _status.Value.SEEN || x.Status == _status.Value.REFERRED)
                 .Select(x => new IncomingReferralViewModel
                 {
-                    PatientName = x.Patient.FirstName+" "+x.Patient.MiddleName+" "+x.Patient.LastName,
+                    PatientName = x.Patient.Fname + " " + x.Patient.Mname + " " + x.Patient.Lname,
                     ReferringFacility = x.ReferredFromNavigation.Name,
                     Department = x.Department.Description,
                     DateReferred = x.DateReferred,
@@ -406,8 +406,8 @@ namespace Referral2.Controllers
                 .Select(y => new SupportManageViewModel
                 {
                     Id = y.Id,
-                    DoctorName = y.Firstname + " " + y.Middlename + " " + y.Lastname,
-                    Contact = string.IsNullOrEmpty(y.Contact) ? "N/A" : y.Contact,
+                    DoctorName = y.Fname + " " + y.Mname + " " + y.Lname,
+                    Contact = string.IsNullOrEmpty(y.ContactNo) ? "N/A" : y.ContactNo,
                     DepartmentName = y.Department.Description,
                     Username = y.Username,
                     Status = y.Status,
@@ -550,10 +550,10 @@ namespace Referral2.Controllers
         {
             var doctor = await _context.User.FindAsync(model.Id);
 
-            doctor.Firstname = model.Firstname;
-            doctor.Middlename = model.Middlename;
-            doctor.Lastname = model.Lastname;
-            doctor.Contact = model.ContactNumber;
+            doctor.Fname = model.Firstname;
+            doctor.Mname = model.Middlename;
+            doctor.Lname = model.Lastname;
+            doctor.ContactNo = model.ContactNumber;
             doctor.Email = model.Email;
             doctor.Designation = model.Designation;
             doctor.DepartmentId = model.Department;
@@ -570,10 +570,10 @@ namespace Referral2.Controllers
             var returnDoctor = new UpdateDoctorViewModel
             {
                 Id = doctor.Id,
-                Firstname = doctor.Firstname,
-                Middlename = doctor.Middlename,
-                Lastname = doctor.Lastname,
-                ContactNumber = doctor.Contact,
+                Firstname = doctor.Fname,
+                Middlename = doctor.Mname,
+                Lastname = doctor.Lname,
+                ContactNumber = doctor.ContactNo,
                 Email = doctor.Email,
                 Designation = doctor.Designation,
                 Department = (int)doctor.DepartmentId,
@@ -588,11 +588,11 @@ namespace Referral2.Controllers
         {
             var facility = _context.Facility.Find(UserFacility);
             facility.Name = model.FacilityName;
-            facility.Abbrevation = model.Abbreviation;
+            facility.Abbr= model.Abbreviation;
             facility.MuncityId = model.MuncityId;
             facility.BarangayId = model.BarangayId;
             facility.Address = model.Address;
-            facility.Contact = model.Contact;
+            facility.ContactNo = model.Contact;
             facility.Email = model.Email;
             facility.Status = model.Status;
 

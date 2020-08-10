@@ -1,59 +1,59 @@
 ﻿@model IssuesModel
 
-<div class="modal fade" id="issues-modal">
-    <div class="modal-dialog modal-sm" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4>
-                    <i class="fa fa-exclamation-triangle"></i>
-                    &nbsp;Issue and concern
-                </h4>
-            </div>
-            <form asp-action="Issues" method="post" id="issues-form">
-                <div class="modal-body">
-                    <input id="trackId" hidden asp-for="TrackingId" />
-                    <div class="form-group issue-body">
-                        @if (Model.Issues.Count() == 0)
-                        {
-                            Model.Issues.Add(new Issue());
-                            <input asp-for="Issues[0].TrackingId" id="track_@Model.Issues[0].Id" value="@Model.TrackingId" hidden />
-                            <input asp-for="Issues[0].Status" id="status_@Model.Issues[0].Id" value="outgoing" hidden />
-                            <input class="form-control" asp-for="Issues[0].Issue1" id="issue_@Model.Issues[0].Id" placeholder="Enter the issue here.." required><br />
-                        }
-                        else
-                        {
-                            for (int y = 0; y < Model.Issues.Count(); y++)
-                            {
-                                if (y == Model.Issues.Count() - 1)
-                                {
-                                    <input id="lastval" value="@y" hidden />
-                                }
-                                <input asp-for="Issues[y].Id" id="id_@Model.Issues[y].Id" hidden />
-                                <input asp-for="Issues[y].TrackingId" id="track_@Model.Issues[y].Id" hidden />
-                                <input asp-for="Issues[y].Status" id="status_@Model.Issues[y].Id" value="outgoing" hidden />
-                                <input class="form-control" asp-for="Issues[y].Issue1" id="issue_@Model.Issues[y].Id" placeholder="Enter the issue here.." required><br>
-                            }
-                        }
-                    </div>
-                    <a href="#" onclick="addIssue();" class="fa-pull-right"><i class="fa fa-plus"></i> Add</a><br><br>
-                    <span class="text-danger" asp-validation-for="Issues"></span>
-                </div>
-                <div class="modal-footer">
-                    <div class="pull-right">
-                        <button type="button" data-dismiss="modal" class="btn btn-default btn-sm">
-                            <i class="fa fa-times"></i> Close
-                        </button>
-                        <button type="submit" class="btn btn-success btn-sm" data-save="modal">
-                            <i class="fa fa-check"></i> Submit
-                        </button>
-                    </div>
-                </div>
-                <div class="clearfix"></div>
-            </form>
-        </div>
+<div class="modal-content" id="issues-modal">
+    <div class="modal-header">
+        <h4>
+            <i class="fa fa-exclamation-triangle"></i>
+            &nbsp;Issue and concern
+        </h4>
     </div>
+    <div class="modal-body">
+        <form asp-action="Issues" method="post" id="issues-form">
+            <input id="trackId" hidden asp-for="TrackingId" />
+            <div class="form-group issue-body">
+                @if (Model.Issues.Count() == 0)
+                {
+                    Model.Issues.Add(new Issue());
+                    <input asp-for="Issues[0].TrackingId" id="track_@Model.Issues[0].Id" value="@Model.TrackingId" hidden />
+                    <input asp-for="Issues[0].Status" id="status_@Model.Issues[0].Id" value="outgoing" hidden />
+                    <input class="form-control" asp-for="Issues[0].Issue1" id="issue_@Model.Issues[0].Id" placeholder="Enter the issue here.." required><br />
+                }
+                else
+                {
+                    for (int y = 0; y < Model.Issues.Count(); y++)
+                    {
+                        if (y == Model.Issues.Count() - 1)
+                        {
+                            <input id="lastval" value="@y" hidden />
+                        }
+                        <input asp-for="Issues[y].Id" id="id_@Model.Issues[y].Id" hidden />
+                        <input asp-for="Issues[y].TrackingId" id="track_@Model.Issues[y].Id" hidden />
+                        <input asp-for="Issues[y].Status" id="status_@Model.Issues[y].Id" value="outgoing" hidden />
+                        <input class="form-control" asp-for="Issues[y].Issue1" id="issue_@Model.Issues[y].Id" placeholder="Enter the issue here.." required><br>
+                    }
+                }
+            </div>
+            <a href="#" onclick="addIssue();" class="fa-pull-right"><i class="fa fa-plus"></i> Add</a><br><br>
+            @if (ViewBag.Errors != null)
+            {
+                <div class="row" style="margin-top: 20px;">
+                    <div class="col-sm-12 center" style="align-content:center">
+                        <span class="text-danger text-sm">Please input the required fields.</span>
+                    </div>
+                </div>
+            }
+        </form>
+    </div>
+    <div class="modal-footer" style="display: inline-block !important;">
+        <button class="btn btn-sm btn-danger fa-pull-left" type="button" data-dismiss="modal">
+            Close
+        </button>
+        <button class="btn btn-sm btn-success fa-pull-right" data-action="small_modal" data-save="modal">
+            Submit
+        </button>
+    </div>
+        <div class="clearfix"></div>
 </div>
-
 <script>
     $(document).ready(function () {
         var form = $('#issues-form');

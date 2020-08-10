@@ -1,0 +1,113 @@
+﻿@model IEnumerable<Inventory>
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+
+<div class="card">
+    <!-- CARD DANGER HEADER -->
+    <div class="card-header">
+        <div class="row">
+            <div class="col-md-6">
+                <h3 class="">Levels of Care Inventory</h3><br />
+            </div>
+            <div class="col-md-6">
+                <form class="fa-pull-right form-inline ml-3" asp-action="FacilityInventory" method="get">
+                    <div class="form-actions note-color">
+                        <!-- INPUT -->
+                        <input class="form-control form-control-sm"
+                               name="name"
+                               placeholder="Search inventory"
+                               type="text"
+                               value="@ViewBag.Search" />
+                        <button type="submit" value="Search" class="btn btn-sm btn-success">
+                            <i class="fa fa-search"></i>&nbsp;
+                            Search
+                        </button>
+                        <a class="btn btn-sm bg-gradient-orange" asp-action="FacilityInventory">
+                            <i class="fa fa-eye"></i>&nbsp;
+                            View All
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- CARD DANGER BODY -->
+    <div class="card-body">
+        @if (Model.Count() > 0)
+        {
+            var ctr = 1;
+            <table class="table table-striped" width="100%">
+                <tbody>
+                    @foreach (var item in Model.GroupBy(x => x.Facility.Name))
+                    {
+                        var inventory = item.FirstOrDefault(x => x.Name.Contains("Admission"));
+                        var numAdmission = inventory == null ? 0 : inventory.Capacity;
+                        <tr>
+                            <td>
+                                @ctr
+                            </td>
+                            <td colspan="5">
+                                <strong class="text-green">@item.Key</strong>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="6" class="text-black">
+                                <strong>
+                                    No.of Patients Waiting for Admission :
+                                </strong>
+                                <b class="text-red" style="font-size: 15pt;">@numAdmission</b>
+                            </td>
+                        </tr>
+                        <tr class="bg-black" style="background-color: #000 !important;">
+                            <th></th>
+                            <th>Description</th>
+                            <th>Capacity</th>
+                            <th>Occupied</th>
+                            <th>Available</th>
+                        </tr>
+                        @foreach(var itemInventory in item.Where(x=> !x.Name.Contains("Admission")))
+                        {
+                            <tr>
+                                <td></td>
+                                <td>@itemInventory.Name</td>
+                                <td>
+                                    <strong class="text-blue">
+                                        @itemInventory.Capacity
+                                    </strong>
+                                </td>
+                                <td>
+                                    <strong class="text-blue">
+                                        @itemInventory.Occupied
+                                    </strong>
+                                </td>
+                                <td>
+                                    <strong class="text-green">
+                                        @itemInventory.Available
+                                    </strong>
+                                </td>
+                            </tr>
+                        }
+                        <tr>
+                            <td colspan="6">
+                                 
+                            </td>
+                        </tr>
+                        ctr++;
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                <span class="text-lg">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    &nbsp;No data found!
+                </span>
+            </div>
+        }
+    </div>
+</div>

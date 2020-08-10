@@ -106,6 +106,52 @@
                 </li>
             </ul>
         </li>
+        <!-- REPORT -->
+        <li class="nav-item dropdown">
+            <a href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="nav-link dropdown-toggle">
+                <i class="fa fa-print"></i>&nbsp;
+                Report
+            </a>
+            <ul class="dropdown-menu border-0 shadow">
+                <li>
+                    <a class="dropdown-item" asp-controller="UserReport" asp-action="OnboardUsers">
+                        <i class="fa fa-users"></i>&nbsp;
+                        Onboard Users
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" asp-controller="UserReport" asp-action="OnlineFacilities">
+                        <i class="fa fa-hospital"></i>&nbsp;
+                        Online Facilities
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" asp-controller="UserReport" asp-action="OfflineFacilities">
+                        <i class="fa fa-times-circle-o"></i>&nbsp;
+                        Offline Facilities
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" asp-controller="UserReport" asp-action="OnboardFacilities">
+                        <i class="fa fa-ambulance"></i>&nbsp;
+                        Onboard Facilities
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" asp-controller="UserReport" asp-action="Consolidated">
+                        <i class="far fa-file-archive"></i>&nbsp;
+                        Consolidated
+                    </a>
+                </li>
+            </ul>
+        </li>
+        <!-- INVENTORY -->
+        <li class="nav-item">
+            <a class="nav-link" asp-controller="Inventory" asp-action="FacilityInventory">
+                <i class="nav-icon fa fa-calculator"></i>
+                &nbsp;Inventory
+            </a>
+        </li>
         <!-- WHO'S ONLINE -->
         <li class="nav-item">
             <a class="nav-link" asp-controller="Users" asp-action="WhosOnline">
@@ -122,7 +168,12 @@
             <ul class="dropdown-menu">
                 <!-- CHANGE PASSWORD -->
                 <li>
-                    <a class="dropdown-item" data-toggle="ajax-modal" data-target="#change-password-modal" data-url="@Url.Action("ChangePassword","Users")">
+                    <a class="dropdown-item"
+                       data-toggle="ajax-modal"
+                       data-target="#small_modal"
+                       data-action="#small_content"
+                       data-url="@Url.Action("ChangePassword","Users")"
+                       onclick="OpenModal($(this));">
                         <i class="fa fa-key"></i>
                         &nbsp;Change Password
                     </a>
@@ -138,7 +189,12 @@
                 <li class="dropdown-divider"></li>
                 <!-- SWITCH USER -->
                 <li>
-                    <a href="#" class="dropdown-item" data-toggle="ajax-modal" data-target="#switch-user-modal" data-url="@Url.Action("SwitchUser","Account")">
+                    <a class="dropdown-item"
+                       data-toggle="ajax-modal"
+                       data-target="#small_modal"
+                       data-action="#small_content"
+                       data-url="@Url.Action("SwitchUser","Account")"
+                       onclick="OpenModal($(this));">
                         <i class="fa fa-users"></i>
                         &nbsp;Switch User
                     </a>

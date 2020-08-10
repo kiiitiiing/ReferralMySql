@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Globalization;
+using Microsoft.AspNetCore.Http;
 
 namespace Referral2
 {
@@ -29,6 +30,14 @@ namespace Referral2
                 return "";
         }
 
+        public static bool CheckRole(this string role)
+        {
+            if (role == "doctor" || role == "support" || role == "admin")
+                return true;
+            else
+                return false;
+        }
+
         public static string NameToUpper(this string name)
         {
             if(!string.IsNullOrEmpty(name))
@@ -45,6 +54,11 @@ namespace Referral2
             {
                 return "";
             }
+        }
+
+        public static string Minimize(this string text, int length)
+        {
+            return text.Length > length ? new string(text.Take(length).ToArray()) + "..." : text;
         }
 
 
@@ -130,6 +144,22 @@ namespace Referral2
             return string.IsNullOrEmpty(text) ? "" : text;
         }
 
+        public static string HoursOnline(this double hours)
+        {
+            if(hours > 0)
+            {
+                var time = new double[2];
+                time[0] = Math.Floor(hours);
+                time[1] = Math.Ceiling((hours - time[0]) * 100);
+
+                return time[0] + " hours " + time[1] + " minutes";
+            }
+            else
+            {
+                return "";
+            }
+        }
+
 
         public static string GetAddress(this Facility facility)
         {
@@ -162,7 +192,7 @@ namespace Referral2
         public static string GetFullName(this Patient patient)
         {
             if (patient != null)
-                return patient.FirstName.CheckName() + " " + patient.MiddleName.CheckName() + " " + patient.LastName.CheckName();
+                return patient.Fname.CheckName() + " " + patient.Mname.CheckName() + " " + patient.Lname.CheckName();
             else
                 return "";
         }
@@ -170,21 +200,21 @@ namespace Referral2
         public static string GetFullLastName(User user)
         {
             if (user != null)
-                return user.Lastname.CheckName() + ", " + user.Firstname.CheckName() + " " + user.Middlename.CheckName();
+                return user.Lname.CheckName() + ", " + user.Fname.CheckName() + " " + user.Mname.CheckName();
             else
                 return "";
         }
         public static string GetFullLastName(this Patient patient)
         {
             if (patient != null)
-                return patient.LastName.CheckName() + ", " + patient.FirstName.CheckName() + " " + patient.MiddleName.CheckName();
+                return patient.Lname.CheckName() + ", " + patient.Fname.CheckName() + " " + patient.Mname.CheckName();
             else
                 return "";
         }
         public static string GetFullName(this User user)
         {
             if (user != null)
-                return user.Firstname.CheckName() + " " + user.Middlename.CheckName() + " " + user.Lastname.CheckName();
+                return user.Fname.CheckName() + " " + user.Mname.CheckName() + " " + user.Lname.CheckName();
             else
                 return "";
         }
@@ -192,7 +222,7 @@ namespace Referral2
         public static string GetMDFullName(this User doctor)
         {
             if (doctor != null)
-                FullName = "Dr. " + doctor.Firstname.CheckName() + " " + doctor.Middlename.CheckName() + " " + doctor.Lastname.CheckName();
+                FullName = "Dr. " + doctor.Fname.CheckName() + " " + doctor.Mname.CheckName() + " " + doctor.Lname.CheckName();
             else
                 FullName = "";
 

@@ -1,0 +1,39 @@
+﻿@model string
+
+@{
+    ViewData["Title"] = "Graph";
+    var dateRange = ViewBag.StartDate + " - " + ViewBag.EndDate;
+}
+
+<div class="card">
+    <!-- CARD DANGER HEADER -->
+    <div class="card-header">
+        <div class="row">
+            <div class="col-md-12">
+                <form class="form-inline" asp-action="Graph" method="get">
+                    <select name="facilities" class="select2" asp-items="@ViewBag.Facilties" multiple style="width: 50%" tabindex="-1" aria-hidden="true">
+                    </select>
+                    <input type="text" class="form-control" id="date_range" name="dr" value="@dateRange" placeholder="Enter date range" required autocomplete="off" />
+                    <button type="submit" class="btn btn-success btn-sm btn-flat">
+                        <i class="fa fa-search"></i> Filter
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        @Model
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('input[name="dr"]').daterangepicker({
+            format: 'MM/DD/YYYY',
+            startDate: '@ViewBag.StartDate',
+            endDate: '@ViewBag.EndDate',
+            opens: 'right'
+        });
+    });
+</script>

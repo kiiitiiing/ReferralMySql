@@ -8,25 +8,38 @@ namespace Referral2.Models
     public partial class Activity
     {
         [Key]
+        [Column("id")]
         public int Id { get; set; }
         [Required]
+        [Column("code")]
         [StringLength(255)]
         public string Code { get; set; }
+        [Column("patient_id")]
         public int PatientId { get; set; }
+        [Column("date_referred")]
         public DateTime DateReferred { get; set; }
+        [Column("date_seen")]
         public DateTime DateSeen { get; set; }
-        public int? ReferredFrom { get; set; }
+        [Column("referred_from")]
+        public int ReferredFrom { get; set; }
+        [Column("referred_to")]
         public int? ReferredTo { get; set; }
+        [Column("department_id")]
         public int? DepartmentId { get; set; }
+        [Column("referring_md")]
         public int? ReferringMd { get; set; }
+        [Column("action_md")]
         public int? ActionMd { get; set; }
-        [Column(TypeName = "text")]
+        [Column("remarks", TypeName = "text")]
         public string Remarks { get; set; }
+        [Required]
+        [Column("status")]
         [StringLength(255)]
         public string Status { get; set; }
-        public DateTime? CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
-
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; }
 
         [ForeignKey(nameof(ActionMd))]
         [InverseProperty(nameof(User.ActivityActionMdNavigation))]

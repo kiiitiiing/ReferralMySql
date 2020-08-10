@@ -1,4 +1,4 @@
-﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+﻿/*// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
 // for details on configuring this project to bundle and minify static web assets.
 
 // Write your JavaScript code.
@@ -138,7 +138,7 @@ $(function () {
                 else if (formId == 'switch-user-modal') {
                     location.href = '/Home/Index';
                 }
-                else if (formId == 'add-doctor-modal') {
+                else if (formId == 'add-doctor-modal') {    
                     //placeholderElement.find('.modal').modal('hide');
                     sessionStorage.setItem('onReload', 'addDoctor');
                     location.reload();
@@ -269,15 +269,6 @@ function Test() {
     console.log('wat');
 }
 
-function getDepartmentFiltered() {
-    var urls = "/NoReload/FilterDepartment?facilityId=" + facilityId;
-    return $.ajax({
-        url: urls,
-        type: 'get',
-        async: true
-    });
-}
-
 function ChangePasswordSuccess(type,message) {
     toastr.options = {
         "closeButton": false,
@@ -300,6 +291,15 @@ function ChangePasswordSuccess(type,message) {
 }
 
 
+
+function getDepartmentFiltered() {
+    var urls = "/NoReload/FilterDepartment?facilityId=" + facilityId;
+    return $.ajax({
+        url: urls,
+        type: 'get',
+        async: true
+    });
+}
 
 function getMdFiltered() {
     var urls = "/NoReload/FilterUser?facilityId=" + facilityId + "&departmentId=" + departmentId;
@@ -395,4 +395,4 @@ function GetBarangayFiltered(id) {
 }
 
 
-//----------------------- FUNCTIONS --------------------------
+//----------------------- FUNCTIONS --------------------------*/

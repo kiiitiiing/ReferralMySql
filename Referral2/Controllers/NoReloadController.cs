@@ -63,6 +63,8 @@ namespace Referral2.Controllers
             return incoming.Count();
         }
 
+        [HttpGet]
+        [Route("{controller}/{action}/{facilityId}")]
         public List<SelectDepartment> AvailableDepartments(int facilityId)
         {
             var availableDepartments = _context.User
@@ -77,6 +79,7 @@ namespace Referral2.Controllers
         }
 
         [HttpGet]
+        [Route("{controller}/{action}/{muncityId}")]
         public List<SelectAddress> FilteredBarangay(int? muncityId)
         {
             var filteredBarangay =  _context.Barangay.Where(x => x.MuncityId.Equals(muncityId))
@@ -90,6 +93,7 @@ namespace Referral2.Controllers
         }
         
         [HttpGet]
+        [Route("{controller}/{action}/{status}")]
         public void ChangeLoginStatus(string status)
         {
             var currentUser = _context.User.Find(UserId);
@@ -111,16 +115,18 @@ namespace Referral2.Controllers
 
         //  FilterDepartment?facilityId=
         [HttpGet]
+        [Route("{controller}/{action}/{facilityId}")]
         public SelectAddressDepartment FilterDepartment(int? facilityId)
         {
-            var facility = _context.Facility.Find(facilityId);
+            var facility = _context.Facility
+                .Include(x => x.Barangay)
+                .Include(x => x.Muncity)
+                .Include(x => x.Province)
+                .FirstOrDefault(x => x.Id == facilityId);
             if (facility == null)
                 return null;
             string facilityAddress = facility.Address == null ? "" : facility.Address + ", ";
-            string barangay = facility.Barangay == null ? "" : facility.Barangay.Description + ", ";
-            string muncity = facility.Muncity == null ? "" : facility.Muncity.Description + ", ";
-            string province = facility.Province == null ? "" : facility.Province.Description;
-            string address = facilityAddress + barangay + muncity + province;
+            string address = facilityAddress + facility.GetAddress();
 
             var departments = _context.Department.Select(x => new SelectDepartment
             {
@@ -161,6 +167,8 @@ namespace Referral2.Controllers
             return address;
         }
 
+        [HttpGet]
+        [Route("{controller}/{action}/{id}")]
         public async Task<List<SelectAddress>> GetMuncities(int? id)
         {
             var muncities = await _context.Muncity
@@ -189,13 +197,15 @@ namespace Referral2.Controllers
             return barangays;
         }
 
+        [HttpGet]
+        [Route("{controller}/{action}/{facilityId}/{departmentId}")]
         public List<SelectUser> FilterUser(int facilityId, int departmentId)
         {
             var getUser = _context.User.Where(x => x.FacilityId.Equals(facilityId) && x.DepartmentId.Equals(departmentId) && x.Level.Equals(_roles.Value.DOCTOR))
                 .Select(y => new SelectUser
                 {
                     MdId = y.Id,
-                    DoctorName = ("Dr. " + y.Firstname + " " + y.Middlename.CheckName() + " " + y.Lastname).NameToUpper() + " - " + y.Contact.CheckName()
+                    DoctorName = ("Dr. " + y.Fname + " " + y.Mname.CheckName() + " " + y.Lname).NameToUpper() + " - " + y.ContactNo.CheckName()
                 }); ;
 
             return getUser.ToList();
@@ -207,12 +217,14 @@ namespace Referral2.Controllers
                 .Select(y => new SelectUser
                 {
                     MdId = y.Id,
-                    DoctorName = string.IsNullOrEmpty(y.Contact) ? "Dr. " + y.Firstname + " " + y.Middlename + " " + y.Lastname + " - N/A" : "Dr. " + y.Firstname + " " + y.Middlename + " " + y.Lastname + " - " + y.Contact
+                    DoctorName = string.IsNullOrEmpty(y.ContactNo) ? "Dr. " + y.Fname + " " + y.Mname + " " + y.Lname + " - N/A" : "Dr. " + y.Fname + " " + y.Mname + " " + y.Lname + " - " + y.ContactNo
                 });
 
             return getUser.ToList();
         }
 
+        [HttpGet]
+        [Route("{controller}/{action}/{code}")]
         public async Task<int> RecoCount(string code)
         {
             var recoCtr = await _context.Feedback.Where(x => x.Code == code).CountAsync();
@@ -220,10 +232,13 @@ namespace Referral2.Controllers
             return recoCtr;
         }
 
+        [HttpGet]
+        [Route("{controller}/{action}/{level}")]
         public DashboardViewModel DashboardValues(string level)
         {
-            List<int> accepted = new List<int>();
-            List<int> redirected = new List<int>();
+            var referred = new int[13];
+            var accepted = new int[13];
+            var redirected = new int[13];
 
             IQueryable<Activity> activities = null;
 
@@ -233,10 +248,11 @@ namespace Referral2.Controllers
                 activities = _context.Activity.Where(x => x.DateReferred.Year.Equals(DateTime.Now.Year));
             for (int x = 1; x <= 12; x++)
             {
-                accepted.Add(activities.Where(i => i.DateReferred.Month.Equals(x) && (i.Status.Equals(_status.Value.ACCEPTED) || i.Status.Equals(_status.Value.ARRIVED) || i.Status.Equals(_status.Value.ADMITTED))).Count());
-                redirected.Add(activities.Where(i => i.DateReferred.Month.Equals(x) && (i.Status.Equals(_status.Value.REJECTED) || i.Status.Equals(_status.Value.TRANSFERRED))).Count());
+                referred[x] = (activities.Where(i => i.DateReferred.Month.Equals(x) && (i.Status.Equals(_status.Value.REFERRED))).Count());
+                accepted[x] = (activities.Where(i => i.DateReferred.Month.Equals(x) && (i.Status.Equals(_status.Value.ACCEPTED) || i.Status.Equals(_status.Value.ARRIVED) || i.Status.Equals(_status.Value.ADMITTED))).Count());
+                redirected[x] = (activities.Where(i => i.DateReferred.Month.Equals(x) && (i.Status.Equals(_status.Value.REJECTED) || i.Status.Equals(_status.Value.TRANSFERRED))).Count());
             }
-            var adminDashboard = new DashboardViewModel(accepted.ToArray(), redirected.ToArray());
+            var adminDashboard = new DashboardViewModel(accepted, redirected, referred);
             return adminDashboard;
         }
 

@@ -7,9 +7,10 @@ namespace Referral2.Helpers
 {
     public partial class ReferralRoles
     {
+        public string EOC { get; set; }
         public string MCC { get; set; }
         public string ADMIN { get; set; }
         public string DOCTOR { get; set; }
-        public string SUPPORT { get; set;}
+        public string SUPPORT { get; set; }
     }
 }

@@ -1,0 +1,169 @@
+﻿@model IEnumerable<OnboardModel>
+
+@{
+    ViewData["Title"] = "Onboard Facilities";
+
+}
+
+<div class="col-md-12">
+    <div class="card card-success card-outline">
+        <div class="card-header">
+            <h4>
+                Onboard Facilities
+            </h4>
+        </div>
+        <div class="card-body">
+            @if (Model.Count() != 0)
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr class="bg-black">
+                                <th> </th>
+                                <th>Facility Name</th>
+                                <th>Chief Hospital</th>
+                                <th>Contact No</th>
+                                <th>Registered At</th>
+                                <th>Login At</th>
+                                <th>Hospital Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.GroupBy(x => x.Province).Where(x => x.Key == "Cebu" || x.Key == "Bohol"))
+                            {
+                                var ctr = 1;
+                                var gob = (double)item.Where(x => x.Type == "government" && x.LoginAt != default).Count();
+                                var gr = (double)item.Where(x => x.Type == "government").Count();
+                                var gp = (gob / gr) * 100;
+                                var prob = (double)item.Where(x => x.Type == "private" && x.LoginAt != default).Count();
+                                var prr = (double)item.Where(x => x.Type == "private").Count();
+                                var prp = (prob / prr) * 100;
+                                var trans = item.Where(x => x.ActivitiesFrom == true || x.ActivitiesTo == true).Count();
+                                <tr>
+                                    <td colspan="7">
+                                        <div class="form-group">
+                                            <b style="color: #ff298e;font-size: 17pt;">@item.Key Province</b><br>
+                                            <div id="chartOverall_@item.Key" style="height: 200px; width: 100%;" onload="console.log('wooohooooo')">
+                                                <div class="canvasjs-chart-container" style="position: relative; text-align: left; cursor: auto;">
+                                                    <canvas class="canvasjs-chart-canvas" width="1315" height="250" style="width: 1052px; height: 200px; position: absolute; user-select: none;"></canvas>
+                                                    <canvas class="canvasjs-chart-canvas" width="1315" height="250" style="width: 1052px; height: 200px; position: absolute; -webkit-tap-highlight-color: transparent; user-select: none; cursor: default;"></canvas>
+                                                    <div class="canvasjs-chart-toolbar" style="position: absolute; right: 1px; top: 1px; border: 1px solid transparent;">
+                                                        <button state="menu" type="button" title="More Options" style="background-color: white; color: black; border: none; user-select: none; padding: 5px 12px; cursor: pointer; float: left; width: 40px; height: 25px; outline: 0px; vertical-align: baseline; line-height: 0;">
+                                                            <img style="height: 95%; pointer-events: none; filter: invert(0%);" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAeCAYAAABE4bxTAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADoSURBVFhH7dc9CsJAFATgRxIIBCwCqZKATX5sbawsY2MvWOtF9AB6AU8gguAJbD2AnZ2VXQT/Ko2TYGCL2OYtYQc+BuYA+1hCtnCVwMm27SGaXpDJIAiCvCkVR05hGOZNN3HkFMdx3nQRR06+76/R1IcFLJlNQEWlmWlBTwJtKLKHynehZqnjOGM0PYWRVXk61C37p7xlZ3Hk5HneCk1dmMH811xGoKLSzDiQwIBZB4ocoPJdqNkDt2yKlueWRVGUtzy3rPwo3sWRU3nLjuLI6OO67oZM00wMw3hrmpZx0XU9syxrR0T0BeMpb9dneSR2AAAAAElFTkSuQmCC" alt="More Options">
+                                                        </button>
+                                                        <div tabindex="-1" style="position: absolute; user-select: none; cursor: pointer; right: 0px; top: 25px; min-width: 120px; outline: 0px; font-size: 14px; font-family: Arial, Helvetica, sans-serif; padding: 5px 0px; text-align: left; line-height: 10px; background-color: white; box-shadow: rgb(136, 136, 136) 2px 2px 10px; display: none;">
+                                                            <div style="padding: 12px 8px; background-color: white; color: black;">
+                                                                Print
+                                                            </div>
+                                                            <div style="padding: 12px 8px; background-color: white; color: black;">
+                                                                Save as JPEG
+                                                            </div>
+                                                            <div style="padding: 12px 8px; background-color: white; color: black;">
+                                                                Save as PNG
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="canvasjs-chart-tooltip" style="position: absolute; height: auto; box-shadow: rgba(0, 0, 0, 0.1) 1px 1px 2px 2px; z-index: 1000; pointer-events: none; display: none; border-radius: 0px; left: 516px; bottom: -102px; transition: left 0.1s ease-out 0s, bottom 0.1s ease-out 0s;"><div style="width: auto; height: auto; min-width: 50px; margin: 0px; padding: 5px; font-family: &quot;Trebuchet MS&quot;, Helvetica, sans-serif; font-weight: normal; font-style: normal; font-size: 14px; color: black; text-shadow: rgba(0, 0, 0, 0.1) 1px 1px 1px; text-align: left; border: 1px solid rgb(255, 104, 107); background: rgba(255, 255, 255, 0.9); text-indent: 0px; white-space: nowrap; border-radius: 0px; user-select: none;">53%</div></div><a class="canvasjs-chart-credit" title="JavaScript Charts" style="outline:none;margin:0px;position:absolute;right:2px;top:186px;color:dimgrey;text-decoration:none;font-size:11px;font-family: Calibri, Lucida Grande, Lucida Sans Unicode, Arial, sans-serif" tabindex="-1" target="_blank" href="https://canvasjs.com/">CanvasJS.com</a>
+                                                </div>
+                                            </div>
+                                            <strong class="text-green">Overall - </strong>
+                                            <span class="progress-number"><b class="facility_onboard2">@(gob+prob)</b> <small class="text-blue">(ON BOARD)</small> / <b class="facility_total2">@(gr+prr)</b> <small class="text-blue">(REGISTER)</small></span> = <b class="text-red facility_percent2">@((gp+prr).ToString("##"))%</b>
+                                            <div class="progress progress-sm active">
+                                                <div class="progress-bar bg-success progress-bar-striped" role="progressbar" aria-valuenow="@(gp+prr)" aria-valuemin="0" aria-valuemax="100" style="width: 20%">
+                                                    <span class="sr-only">@((gp+prr).ToString("##"))% Complete</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div id="chartGovernment2" style="height: 200px; width: 100%;"><div class="canvasjs-chart-container" style="position: relative; text-align: left; cursor: auto;"><canvas class="canvasjs-chart-canvas" width="1315" height="250" style="width: 1052px; height: 200px; position: absolute; user-select: none;"></canvas><canvas class="canvasjs-chart-canvas" width="1315" height="250" style="width: 1052px; height: 200px; position: absolute; -webkit-tap-highlight-color: transparent; user-select: none; cursor: default;"></canvas><div class="canvasjs-chart-toolbar" style="position: absolute; right: 1px; top: 1px; border: 1px solid transparent;"><button state="menu" type="button" title="More Options" style="background-color: white; color: black; border: none; user-select: none; padding: 5px 12px; cursor: pointer; float: left; width: 40px; height: 25px; outline: 0px; vertical-align: baseline; line-height: 0;"><img style="height:95%; pointer-events: none;" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAeCAYAAABE4bxTAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADoSURBVFhH7dc9CsJAFATgRxIIBCwCqZKATX5sbawsY2MvWOtF9AB6AU8gguAJbD2AnZ2VXQT/Ko2TYGCL2OYtYQc+BuYA+1hCtnCVwMm27SGaXpDJIAiCvCkVR05hGOZNN3HkFMdx3nQRR06+76/R1IcFLJlNQEWlmWlBTwJtKLKHynehZqnjOGM0PYWRVXk61C37p7xlZ3Hk5HneCk1dmMH811xGoKLSzDiQwIBZB4ocoPJdqNkDt2yKlueWRVGUtzy3rPwo3sWRU3nLjuLI6OO67oZM00wMw3hrmpZx0XU9syxrR0T0BeMpb9dneSR2AAAAAElFTkSuQmCC" alt="More Options"></button><div tabindex="-1" style="position: absolute; user-select: none; cursor: pointer; right: 0px; top: 25px; min-width: 120px; outline: 0px; font-size: 14px; font-family: Arial, Helvetica, sans-serif; padding: 5px 0px; text-align: left; line-height: 10px; background-color: white; box-shadow: rgb(136, 136, 136) 2px 2px 10px; display: none;"><div style="padding: 12px 8px; background-color: white; color: black;">Print</div><div style="padding: 12px 8px; background-color: white; color: black;">Save as JPEG</div><div style="padding: 12px 8px; background-color: white; color: black;">Save as PNG</div></div></div><div class="canvasjs-chart-tooltip" style="position: absolute; height: auto; box-shadow: rgba(0, 0, 0, 0.1) 1px 1px 2px 2px; z-index: 1000; pointer-events: none; display: none; border-radius: 0px; left: 517px; bottom: -104px; transition: left 0.1s ease-out 0s, bottom 0.1s ease-out 0s;"><div style="width: auto; height: auto; min-width: 50px; margin: 0px; padding: 5px; font-family: &quot;Trebuchet MS&quot;, Helvetica, sans-serif; font-weight: normal; font-style: normal; font-size: 14px; color: black; text-shadow: rgba(0, 0, 0, 0.1) 1px 1px 1px; text-align: left; border: 1px solid rgb(255, 104, 107); background: rgba(255, 255, 255, 0.9); text-indent: 0px; white-space: nowrap; border-radius: 0px; user-select: none;">21%</div></div><a class="canvasjs-chart-credit" title="JavaScript Charts" style="outline:none;margin:0px;position:absolute;right:2px;top:186px;color:dimgrey;text-decoration:none;font-size:11px;font-family: Calibri, Lucida Grande, Lucida Sans Unicode, Arial, sans-serif" tabindex="-1" target="_blank" href="https://canvasjs.com/">CanvasJS.com</a></div></div>
+                                            <strong class="text-green">Government Hospital - </strong>
+                                            <span class="progress-number"><b class="government_hospital2">@gob</b> <small class="text-blue">(ON BOARD)</small> / <b class="government_hospital_total2">@gr</b><small class="text-blue">(REGISTER)</small></span> = <b class="text-red government_percent2">@gp.ToString("##")%</b>
+                                            <div class="progress progress-sm active">
+                                                <div class="progress-bar bg-success progress-bar-striped" role="progressbar" aria-valuenow="@gp" aria-valuemin="0" aria-valuemax="100" style="width: 20%">
+                                                    <span class="sr-only">@gp.ToString("##")% Complete</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <strong class="text-green">Private Hospital - </strong>
+                                            <span class="progress-number"><b class="private_hospital2">@prob</b> <small class="text-blue">(ON BOARD)</small> / <b class="private_hospital_total2">@prr</b> <small class="text-blue">(REGISTER)</small></span> = <b class="text-red private_percent2">@prp.ToString("##")%</b>
+                                            <div class="progress progress-sm active">
+                                                <div class="progress-bar bg-primary progress-bar-striped" role="progressbar" aria-valuenow="@prp" aria-valuemin="0" aria-valuemax="100" style="width: 20%">
+                                                    <span class="sr-only">@prp.ToString("##")% Complete</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @foreach (var facility in item.OrderBy(x => x.Type))
+                                {
+                                    var rowBg = "bg-yellow";
+                                    var nameBg = "";
+                                    var loginAt = "";
+                                    var registeredAt = facility.RegisteredAt == null ? "" : facility.RegisteredAt.GetDate("MMMM dd, yyyy (h:mm tt)");
+                                    if (facility.ActivitiesFrom || facility.ActivitiesTo)
+                                        nameBg = "bg-yellow";
+                                    else
+                                        nameBg = "bg-red";
+                                    if (facility.LoginAt == default)
+                                    {
+                                        rowBg = "";
+                                        loginAt = "NOT LOGIN";
+                                        nameBg = "";
+                                    }
+                                    else
+                                    {
+                                        loginAt = facility.LoginAt.GetDate("MMMM dd, yyyy (h:mm tt)");
+                                    }
+
+                                    <tr class="@rowBg">
+                                        <td>@ctr</td>
+                                        <td class="@nameBg">@facility.Name</td>
+                                        <td>@facility.Chief</td>
+                                        <td>@facility.ContactNo</td>
+                                        <td>
+                                            @registeredAt
+                                        </td>
+                                        <td>
+                                            @loginAt
+                                        </td>
+                                        <td>
+                                            @if (facility.Type == "private")
+                                            {
+                                                <span class="badge bg-blue">Private</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">Government</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                    ctr++;
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    <span class="">
+                        <i class="fa fa-warning"></i>
+                        &nbsp;No data found!
+                    </span>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        $('#datetimepicker').datepicker({
+            format: 'mm/dd/yyyy',
+            autoclose: true,
+            forceParse: true
+        });
+    })
+</script>

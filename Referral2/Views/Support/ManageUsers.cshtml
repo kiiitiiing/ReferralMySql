@@ -14,7 +14,13 @@
                         <i class="fa fa-search"></i>
                         &nbsp;Search
                     </button>
-                    <button type="button" class="btn btn-sm btn-primary" data-toggle="ajax-modal" data-target="#add-doctor-modal" data-url="@Url.Action("AddUser")">
+                    <button type="button" 
+                            class="btn btn-sm btn-primary"
+                            data-toggle="ajax-modal"
+                            data-target="#small_modal"
+                            data-action="#small_content"
+                            data-url="@Url.Action("AddUser")"
+                            onclick="OpenModal($(this));">
                         <i class="fa fa-user"></i>
                         &nbsp;Add User
                     </button>
@@ -41,10 +47,12 @@
                             <tr>
                                 <td>
                                     <a class="text-warning text-bold" 
-                                        style="cursor:pointer;" 
-                                        data-toggle="ajax-modal" 
-                                        data-target="#update-doctor-modal" 
-                                        data-url="@Url.Action("UpdateUser", new { id = item.Id })">
+                                       style="cursor:pointer;" 
+                                       data-toggle="ajax-modal"
+                                       data-target="#small_modal"
+                                       data-action="#small_content"
+                                       data-url="@Url.Action("UpdateUser", new { id = item.Id })"
+                                       onclick="OpenModal($(this));">
                                         Dr. @item.DoctorName.NameToUpper()
                                     </a>
                                 </td>

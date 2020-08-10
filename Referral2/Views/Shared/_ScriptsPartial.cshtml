@@ -1,0 +1,700 @@
+﻿<script>
+    // Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+    // for details on configuring this project to bundle and minify static web assets.
+
+    // Write your JavaScript code.
+    // Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+    // for details on configuring this project to bundle and minify static web assets.
+
+    // Write your JavaScript code.
+
+    $(function () {
+        //---------------------- NOTIF ---------------------------------
+
+
+
+        //--------------------------------------------------------------
+
+
+        var numberOfNotif = $('span.numberNotif');
+
+        if (numberOfNotif.length > 0) {
+            $.when(GetNumberNotif()).done(function (output) {
+                numberOfNotif.text(output);
+            });
+        }
+
+        $('.select2').select2({
+            theme: 'bootstrap4'
+        });
+
+        var supReport = $('span.supReport');
+
+        if (supReport.length > 0) {
+            $.when(GetSupportReport()).done(function (output) {
+                supReport.text("");
+                supReport.text(output);
+            });
+        }
+
+        //----------------------- TRY-----------------------------------
+
+
+        //---------------------- ADDRESS CHANGE -------------------------
+
+
+        //---------------------- ADDRESS CHANGE -------------------------
+
+
+
+        //---------------------- MODALS ---------------------------------
+
+        var placeholderElement = $('#modal-placeholders');
+
+        var modals = $('#all_modals');
+        modals.on('click', 'button[data-save="modal"]', function (event) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            var content = $($(this).parent()).parent();
+            var form = content.find('form');
+            var contentId = content.attr('id');
+            var actionUrl = form.attr('action');
+            var dataToSend = form.serialize();
+            console.log(contentId);
+            $.ajax({
+                url: actionUrl,
+                type: 'post',
+                async: true,
+                data: dataToSend,
+                success: function (output) {
+                    var newBody = $('.modal-body', output);
+                    var errors = newBody.find('span.text-danger').text();
+                    console.log(errors);
+                    if (errors == '') {
+                        console.log('wtf')
+                        $.when(modals.find('.modal.show').modal('hide')).done(function () {
+                            console.log(contentId);
+                            var modal = $('#' + contentId);
+                            LoadingModal(modal);
+                            if (contentId == 'update_inventory_modal') {
+                                sessionStorage.setItem('onReload', 'update_inventory');
+                                location.reload();
+                            }
+                            else if (contentId == 'issues-modal') {
+                                sessionStorage.setItem('onReload', 'updatedIssues');
+                                location.reload();
+                            }
+                            else if (formId == 'update-doctor-modal') {
+                                sessionStorage.setItem('onReload', 'updateDoctor');
+                                location.reload();
+                            }
+                            else if (formId == 'change-password-modal') {
+                                sessionStorage.setItem('onReload', 'passWordChanged');
+                                location.reload();
+                            }
+                            else if (formId == 'reco-modal') {
+                                var input = placeholderElement.find('.modal-footer').find('form').find('.code').val();
+                                console.log(input);
+                            }
+                            else if (formId == 'switch-user-modal') {
+                                location.href = '/Home/Index';
+                            }
+                            else if (formId == 'add-doctor-modal') {
+                                sessionStorage.setItem('onReload', 'addDoctor');
+                                location.reload();
+                            }
+                            else if (formId == 'add-support-modal') {
+                                sessionStorage.setItem('onReload', 'addSupport');
+                                location.reload();
+                            }
+                            else if (formId == 'update-support-modal') {
+                                sessionStorage.setItem('onReload', 'updateSupport');
+                                location.reload();
+                            }
+                            else if (formId == 'add-facility-modal') {
+                                sessionStorage.setItem('onReload', 'addFacility');
+                                location.reload();
+                            }
+                            else if (formId == 'update-facility-modal') {
+                                sessionStorage.setItem('onReload', 'updateFacility');
+                                location.reload();
+                            }
+                        });
+                    }
+                    else {
+                        content.find('.modal-body').replaceWith(newBody);
+                        if (contentId == 'new_sop') {
+                            var disabled = content.find('#notavailable');
+                            if (disabled.is(':checked') == true) {
+                                content.find('#dateOnset').attr('disabled', true);
+                            }
+                        }
+                        else if (contentId == 'add_patient_modal') {
+                            var disabled = content.find('#sameAddress');
+                            if (disabled.is(':checked') == true) {
+                                content.find('#permanent_address').css('display', 'none');
+                            }
+                        }
+                    }
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert(xhr.responseText);
+                    alert(thrownError);
+                }
+            })
+        });
+        var smallModal = $('#small_modal');
+        smallModal.on('hidden.bs.modal', function () {
+            var contentId = smallModal.find('.modal-dialog.modal-sm').attr('id');
+            LoadingModal('#' + contentId);
+        });
+        var largeModal = $('#large_modal');
+        largeModal.on('hidden.bs.modal', function () {
+            var contentId = largeModal.find('.modal-dialog.modal-lg').attr('id');
+            LoadingModal('#' + contentId);
+        });
+        var referModal = $('#refer_modal');
+        referModal.on('hidden.bs.modal', function () {
+            var contentId = referModal.find('.modal-dialog.modal-lg').attr('id');
+            LoadingModal('#' + contentId);
+            console.log(contentId);
+        });
+
+
+
+        placeholderElement.on('click', 'button[data-save="modal"]', function (event) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            var content = placeholderElement.find('.modal').find('.modal-content');
+            content.prepend('<div id="overlay_loading" class="overlay d-flex justify-content-center align-items-center"><i class="fas fa-2x fa-sync fa-spin"></i></div>');
+            var form = placeholderElement.find('.modal').find('form');
+            var formId = placeholderElement.find('.modal').attr('id');
+            var actionUrl = form.attr('action');
+            var dataToSend = form.serialize();
+            console.log(actionUrl);
+            $.ajax({
+                url: actionUrl,
+                type: 'post',
+                async: true,
+                data: dataToSend,
+                success: function (data) {
+                    var newBody = $('.modal-body', data);
+                    setTimeout(
+                        function () {
+                            placeholderElement.find('#overlay_loading').remove();
+                            placeholderElement.find('.modal-body').replaceWith(newBody);
+                            var validation = $('span.text-danger').text();
+                            $('.select2').select2({
+                                theme: 'bootstrap4'
+                            });
+                            if (formId == 'reco-modal') {
+                                console.log('chat sent');
+                                $('#chat').val('');
+                                $('div.direct-chat-messages').animate({ scrollTop: $('#last-item').position().top }, 0);
+                            }
+                            else if (validation == '') {
+                                placeholderElement.find('.modal').modal('hide');
+                                if (formId == 'update-doctor-modal') {
+                                    //placeholderElement.find('.modal').modal('hide');
+                                    sessionStorage.setItem('onReload', 'updateDoctor');
+                                    location.reload();
+                                }
+                                else if (formId == 'change-password-modal') {
+                                    //placeholderElement.find('.modal').modal('hide');
+                                    sessionStorage.setItem('onReload', 'passWordChanged');
+                                    location.reload();
+                                }
+                                else if (formId == 'reco-modal') {
+                                    var input = placeholderElement.find('.modal-footer').find('form').find('.code').val();
+                                    console.log(input);
+                                }
+                                else if (formId == 'switch-user-modal') {
+                                    location.href = '/Home/Index';
+                                }
+                                else if (formId == 'add-doctor-modal') {
+                                    //placeholderElement.find('.modal').modal('hide');
+                                    sessionStorage.setItem('onReload', 'addDoctor');
+                                    location.reload();
+                                }
+                                else if (formId == 'add-support-modal') {
+                                    //placeholderElement.find('.modal').modal('hide');
+                                    sessionStorage.setItem('onReload', 'addSupport');
+                                    location.reload();
+                                }
+                                else if (formId == 'update-support-modal') {
+                                    //placeholderElement.find('.modal').modal('hide');
+                                    sessionStorage.setItem('onReload', 'updateSupport');
+                                    location.reload();
+                                }
+                                else if (formId == 'add-facility-modal') {
+                                    //placeholderElement.find('.modal').modal('hide');
+                                    sessionStorage.setItem('onReload', 'addFacility');
+                                    location.reload();
+                                }
+                                else if (formId == 'update-facility-modal') {
+                                    //placeholderElement.find('.modal').modal('hide');
+                                    sessionStorage.setItem('onReload', 'updateFacility');
+                                    location.reload();
+                                }
+                                else if (formId == 'issues-modal') {
+                                    //placeholderElement.find('.modal').modal('hide');
+                                    sessionStorage.setItem('onReload', 'updatedIssues');
+                                    location.reload();
+                                }
+                            }
+                        }, 700);
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    if (xhr.status === 401) {
+                        location.reload();
+                    }
+                    else {
+                        console.log(xhr.status)
+                        alert(xhr.responseText);
+                        alert(thrownError);
+                    }
+                }
+            });
+        });
+
+
+        //---------------------- MODALS ---------------------------------
+
+        //-------------------- ADDRESS ON CHANGE -------------------
+
+
+
+
+        //-------------------- CHANGE LOGIN STATUS ----------------------------
+
+        var onDuty = $('button#btn-on-duty');
+        var offDuty = $('button#btn-off-duty');
+        var container = $('div#login-status-modal');
+
+        onDuty.on('click', function () {
+            SetLoginStatus('onDuty');
+            container.modal('hide');
+            location.reload();
+        });
+
+        offDuty.on('click', function () {
+            SetLoginStatus('offDuty');
+            container.modal('hide');
+            location.reload();
+        });
+
+
+
+        //-------------------- CHANGE LOGIN STATUS ----------------------------
+
+        //-------------------- DASHBOARD ----------------------------
+
+
+
+        //-------------------- END -----------------------------------
+
+
+    });
+
+    function LoadingModal(id) {
+        var urls = '@Url.Action("ModalLoading", "Account")';
+        return $.ajax({
+            url: urls,
+            type: 'get',
+            async: true,
+            success: function (output) {
+                $(id).empty();
+                $(id).html(output);
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(xhr.responseText);
+                alert(thrownError);
+            }
+        });
+        }
+
+
+    function ProvinceOnChange(id) {
+        var muncitySelect = $('#muncity-filter');
+        if (id != '') {
+            $.when(GetMuncitiesFiltered(id)).done(function (output) {
+                muncitySelect.empty()
+                    .append($('<option>', {
+                        value: '',
+                        text: 'Select City/Municipality'
+                    }));
+                jQuery.each(output, function (i, item) {
+                    muncitySelect.append($('<option>', {
+                        value: item.id,
+                        text: item.description
+                    }));
+                });
+            });
+        }
+        else {
+            muncitySelect.empty()
+                .append($('<option>', {
+                    value: '',
+                    text: 'Select City/Municipality'
+                }));
+        }
+    }
+
+    function MuncityOnChange(id) {
+        var barangaySelect = $('#barangay-filter');
+        if (id != '') {
+            $.when(GetBarangayFiltered(id)).done(function (output) {
+                barangaySelect.empty()
+                    .append($('<option>', {
+                        value: '',
+                        text: 'Select Barangay'
+                    }));
+                jQuery.each(output, function (i, item) {
+                    barangaySelect.append($('<option>', {
+                        value: item.id,
+                        text: item.description
+                    }));
+                });
+            });
+        }
+        else {
+            barangaySelect.empty()
+                .append($('<option>', {
+                    value: '',
+                    text: 'Select Barangay'
+                }));
+        }
+    }
+
+    function OpenModal(btn) {
+        var url = btn.data('url');
+        var target = btn.data('target');
+        var action = btn.data('action');
+        console.log(url);
+        var content = $(action);
+        $.when($(target).modal('show')).done(function () {
+            $.ajax({
+                url: url,
+                tpye: 'get',
+                async: true,
+                success: function (data) {
+                    setTimeout(function () {
+                        content.html(data);
+                    }, 500);
+                },
+                timeout: 60000,
+                error: function (xhr, ajaxOptions, thrownError) {
+                    if (xhr.status === 401) {
+                        location.reload();
+                    }
+                    else {
+                        console.log(xhr.status)
+                        $('body').find('#loadings').modal('toggle');
+                        alert(xhr.responseText);
+                        alert(thrownError);
+                    }
+                }
+            });
+        });
+    }
+
+    //----------------------- FUNCTIONS --------------------------
+    function FacilityOnChange(id) {
+        var facilityAddress = $('#facilityAddress');
+        var departmentSelect = $('#departmentFilter');
+        $.when(getDepartmentFiltered(id)).done(function (output) {
+            facilityAddress.text(output.address);
+
+            departmentSelect.empty()
+                .append($('<option>', {
+                    value: '',
+                    text: 'Select Department...'
+                }));
+
+            departmentSelect.empty()
+                .append($('<option>', {
+                    value: '',
+                    text: 'Any'
+                }));
+
+            jQuery.each(output.departments, function (i, item) {
+                departmentSelect.append($('<option>', {
+                    value: item.departmentId,
+                    text: item.departmentName
+                }))
+            });
+        });
+    }
+
+    function DepartmentOnChange(facId, depId) {
+        if (facId == '0') {
+            facId == '24';
+        }
+
+        $.when(getMdFiltered(facId, depId)).done(function (output) {
+            $('#doctorFiltered').empty()
+                .append($('<option>', {
+                    value: '',
+                    text: 'Any'
+                }));
+
+            jQuery.each(output, function (i, item) {
+                $('#doctorFiltered').append($('<option>', {
+                    value: item.mdId,
+                    text: item.doctorName
+                }));
+            });
+        });
+    }
+
+    function DashboardAPI(level) {
+
+        //var bar_chart = $('#barChart');
+
+        var link = '@Url.Action("DashboardValues", "NoReload")' + '/' + level;
+        $.ajax({
+            url: link,
+            type: "GET",
+            success: function (data) {
+                console.log(data)
+                var chartdata = {
+                    type: 'bar',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        // labels: month,
+                        datasets: [
+                            {
+                                label: 'Referred',
+                                backgroundColor: '#8e9cff',
+                                data: data.referred
+                            },
+                            {
+                                label: 'Accepted',
+                                backgroundColor: '#26B99A',
+                                data: data.accepted
+                            },
+                            {
+                                label: 'Redirected',
+                                backgroundColor: '#03586A',
+                                data: data.redirected
+                            }
+                        ]
+                    }
+                };
+
+
+                var ctx = document.getElementById('barChart').getContext('2d');
+                new Chart(ctx, chartdata);
+            }
+        });
+
+        @*if ($('div.chart').length > 0) {
+            $.when(GetDashboardValues(level)).done(function (output) {
+                console.log(output);
+                var areaChartData = {
+                    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                    datasets: [
+                        {
+                            label: 'Referred',
+                            backgroundColor: '#8e9cff',
+                            data: data.referred
+                        },
+                        {
+
+                            label: 'Accepted',
+                            backgroundColor: '#26B99A',
+                            data: output.accepted
+                        },
+                        {
+                            label: 'Redirected',
+                            backgroundColor: '#03586A',
+                            data: output.redirected
+                        },
+                    ]
+                };
+                var barChartCanvas = bar_chart.get(0).getContext('2d');
+                var barChartData = jQuery.extend(true, {}, areaChartData);
+                var temp0 = areaChartData.datasets[0];
+                var temp1 = areaChartData.datasets[1];
+                barChartData.datasets[0] = temp0;
+                barChartData.datasets[1] = temp1;
+
+                var barChart = new Chart(barChartCanvas, {
+                    type: 'bar',
+                    data: barChartData
+                });
+            });
+        }*@
+    }
+
+    function Toast(type, message) {
+        toastr.options = {
+            "closeButton": false,
+            "debug": false,
+            "newestOnTop": false,
+            "progressBar": false,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": "1000",
+            "hideDuration": "1500",
+            "timeOut": "1500",
+            "extendedTimeOut": "1500",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        }
+        Command: toastr[type](message)
+    }
+
+    function OnBoardChart(chart, trans, tot) {
+        var noTrans = tot - trans;
+        CanvasJS.addColorSet("greenShades",
+            [//colorSet Array
+                "#6762ff",
+                "#ff686b"
+            ]);
+        console.log(chart);
+
+        var with_transaction1 = Math.round((trans / tot) * 100);
+        var no_transaction1 = Math.round((noTrans/tot) * 100);
+        var options1 = {
+            colorSet: "greenShades",
+            exportEnabled: true,
+            animationEnabled: true,
+            title: {
+                text: "Overall"
+            },
+            data: [{
+                type: "pie",
+                startAngle: 45,
+                showInLegend: "true",
+                toolTipContent: "{y}%",
+                legendText: "{label}",
+                yValueFormatString: "#,##0.#" % "",
+                dataPoints: [
+                    { label: "With Transaction in " + with_transaction1 + "% in " + "15 out of 20", legendText: "With Transaction", y: with_transaction1 },
+                    { label: "No Transaction in " + no_transaction1 + "% in " + "5 out of 20", legendText: "No Transaction", y: no_transaction1 }
+                ]
+            }]
+        };
+        chart.CanvasJSChart(options1);
+    }
+
+    function GetDashboardValues(level) {
+        var urlss = '@Url.Action("DashboardValues", "NoReload")' + '/' + level;
+        return $.ajax({
+        url: urlss,
+        type: 'get',
+        async: true
+        });
+    }
+
+    function GetAvailableDepartments(id) {
+        var url = + id; '@Url.Action("AvailableDepartments", "NoReload")' + '/' + id;
+        return $.ajax({
+        url: url,
+        type: 'get',
+        async: true
+        });
+    }
+
+    function RemoveFacility(id) {
+        var url = '@Url.Action("RemoveFacility", "Admin")' + '/' + id;
+    $.ajax({
+        url: url,
+        tpye: 'post',
+        async: true
+    });
+    }
+
+    function SetLoginStatus(status) {
+        var urlss = '@Url.Action("ChangeLoginStatus", "NoReload")' + '/' + status;
+    $.ajax({
+        url: urlss,
+        tpye: 'get',
+        async: true
+    });
+    }
+
+    function CallRequest(code) {
+        var urlss = '@Url.Action("RequestCall", "Remarks")' + '/' + code;
+    $.ajax({
+        url: urlss,
+        tpye: 'get',
+        async: true
+    });
+    }
+
+    function GetNumberNotif() {
+        var urlss = '@Url.Action("NumberNotif", "NoReload")';
+        return $.ajax({
+        url: urlss,
+        tpye: 'get',
+        async: true
+        });
+    }
+
+    function GetSupportReport() {
+        var url = '@Url.Action("SupportReport", "NoReload")';
+        return $.ajax({
+        url: url,
+        type: 'get',
+        async: true
+        });
+    }
+
+    function UpdateRecoCount(code) {
+        var url = '@Url.Action("RecoCount", "NoReload")' + '/' + code;
+        $.ajax({
+            url: url,
+            type: 'get',
+            async: true,
+            success: function (output) {
+                $('#reco_' + code).html(output);
+                }
+            });
+        }
+
+    function GetBarangayFiltered(id) {
+        var urls = '@Url.Action("FilteredBarangay", "NoReload")' + '/' + id;
+        return $.ajax({
+        url: urls,
+        type: 'get',
+        async: true
+        });
+    }
+
+    function GetMuncitiesFiltered(id) {
+        var url = '@Url.Action("GetMuncities", "NoReload")' + '/' + id;
+        return $.ajax({
+            url: url,
+            tpye: 'get',
+            async: true
+        })
+    }
+
+    function getDepartmentFiltered(id) {
+        var urls = '@Url.Action("FilterDepartment", "NoReload")/' + id;
+        return $.ajax({
+            url: urls,
+            type: 'get',
+            async: true
+        });
+    }
+
+
+
+    function getMdFiltered(facId, depId) {
+        var urls = '@Url.Action("FilterUser", "NoReload")/' + facId + "/" + depId;
+        return $.ajax({
+            url: urls,
+            type: 'get',
+            async: true
+        });
+    }
+
+
+//----------------------- FUNCTIONS --------------------------
+</script>

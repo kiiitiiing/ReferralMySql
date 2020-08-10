@@ -1,0 +1,110 @@
+﻿@model UserFacilityOnline
+@{
+    ViewData["Title"] = "Online Doctors";
+}
+
+<div class="content">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+                <!-- ONLINE DOCTORS -->
+                <div class="card card-outline" style="background: rgba(255, 255, 255, 0.4)">
+                    <!-- DAILY USERS HEADER -->
+                    <div class="card-header with-border">
+                        <h5>
+                            Online Doctors
+                            <span class="badge bg-blue">@Model.Users.Count()</span>
+                        </h5>
+                    </div>
+                    <!-- DAILY USERS BODY -->
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach (var item in Model.Users)
+                            {
+                                var abbrv = item.FacilityAbrv ?? "";
+                                var contact = string.IsNullOrEmpty(item.Contact) ? "N/A" : item.Contact;
+                                var dutyTime = item.LoginTime.ToString("h:mm tt", System.Globalization.CultureInfo.InvariantCulture);
+                                string status;
+                                string widgetBg;
+                                if (item.LoginStatus)
+                                {
+                                    status = "ON DUTY";
+                                    widgetBg = "bg-gradient-success";
+                                }
+                                else
+                                {
+                                    status = "OFF DUTY";
+                                    widgetBg = "bg-gradient-warning";
+                                }
+                                <div class="col-md-4">
+                                    <div class="card card-widget widget-user-2">
+                                        <div class="widget-user-header @widgetBg" style="height: 160px;">
+                                            <small class="widget-user-username" style="margin-left: 0px!important;">@item.DoctorName.NameToUpper()</small>
+                                            <small class="widget-user-desc badge bg-maroon" style="position:absolute; bottom:45%; right:5%;" >@abbrv</small>
+                                        </div>
+                                        <div class="card-footer p-0">
+                                            <ul class="nav flex-column">
+                                                <li class="nav-item">
+                                                    <a href="#" class="nav-link">
+                                                        @contact
+                                                        <span class="float-right badge bg-primary">
+                                                            <i class="fa fa-phone"></i>
+                                                        </span>
+                                                    </a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a href="#" class="nav-link">
+                                                        @item.Department
+                                                        <span class="float-right badge bg-info">
+                                                            <i class="fa fa-hospital"></i>
+                                                        </span>
+                                                    </a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a href="#" class="nav-link">
+                                                        @status
+                                                        <span class="float-right badge bg-success">
+                                                            @dutyTime
+                                                        </span>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-success">
+                    <div class="card-header">
+                        <h5>
+                            Online Hospitals
+                            <span class="badge bg-blue">@Model.Facilities.Where(x=>x.Status == true).Count()</span>
+                        </h5>
+                    </div>
+                    <div class="card-body" style="height: 500px; overflow-y: auto;">
+                        @if (Model.Facilities.Count() != 0)
+                        {
+                            <div class="list-group">
+                                @foreach(var facility in Model.Facilities)
+                                {
+                                    var status = facility.Status ? "text-success" : "text-danger";
+                                    <a href="#" class="list-group-item clearfix " title="@facility.Name">
+                                        @facility.Name.Minimize(28)
+                                        <br><small class="text-yellow">(@facility.Province)</small>
+                                        <span class="fa-pull-right">
+                                            <i class="fa fa-circle @status"></i>
+                                        </span>
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

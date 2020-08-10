@@ -136,7 +136,7 @@
                     Filter Result
                 </h3>
                 <span class="badge badge-bg fa-pull-right">
-                    Result: @ViewBag.Total
+                    Result: @Model._itemCount
                 </span>
             </div>
             <!-- CARD DANGER BODY -->
@@ -551,13 +551,24 @@
                         var dataUrl = item.Pregnant ? Url.Action("PrintablePregnantForm", "ViewForms", new { code = item.Code }) : Url.Action("PrintableNormalForm", "ViewForms", new { code = item.Code });
                     }
                     <div class="card-footer card-custom-bg">
-                        <button class="btn btn-xs bg-gradient-warning" data-target="#@dataTarget" data-toggle="ajax-modal" data-url="@dataUrl">
+                        <button class="btn btn-xs bg-gradient-warning"
+                                data-toggle="ajax-modal"
+                                data-target="#large_modal"
+                                data-action="#large_content"
+                                data-url="@dataUrl"
+                                onclick="OpenModal($(this));">
                             <i class="fa fa-folder"></i>
                             &nbsp;View Form
                         </button>
                         @if (seenCount > 0)
                         {
-                            <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens", "Modals", new { trackingId = item.TrackingId })">
+                            <button type="button" 
+                                    class="btn btn-success btn-xs"
+                                    data-toggle="ajax-modal"
+                                    data-target="#small_modal"
+                                    data-action="#small_content"
+                                    data-url="@Url.Action("ViewSeens", "Modals", new { trackingId = item.TrackingId })"
+                                    onclick="OpenModal($(this));">
                                 <i class="fa fa-user-md"></i>
                                 &nbsp;Seen
 
@@ -567,14 +578,26 @@
                         }
                         @if (item.Status.Equals("accepted") && item.Travel)
                         {
-                            <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#travel-modal" data-url="@Url.Action("Travel", "Remarks", new { id = item.TrackingId })">
+                            <button type="button" 
+                                    class="btn btn-success btn-xs"
+                                    data-toggle="ajax-modal"
+                                    data-target="#small_modal"
+                                    data-action="#small_content"
+                                    data-url="@Url.Action("Travel", "Remarks", new { id = item.TrackingId })"
+                                    onclick="OpenModal($(this));">
                                 <i class="fa fa-ambulance"></i>
                                 &nbsp;Travel
                             </button>
                         }
                         @if (callerCount > 0)
                         {
-                            <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                            <button class="btn btn-xs bg-gradient-primary"
+                                    type="button"
+                                    data-toggle="ajax-modal"
+                                    data-target="#small_modal"
+                                    data-action="#small_content"
+                                    data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })"
+                                    onclick="OpenModal($(this));">
                                 <i class="fa fa-phone"></i>
                                 &nbsp;Caller
 
@@ -582,7 +605,13 @@
 
                             </button>
                         }
-                        <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                        <button type="button"
+                                class="btn btn-info btn-xs"
+                                data-toggle="ajax-modal"
+                                data-target="#small_modal"
+                                data-action="#small_content"
+                                data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })"
+                                onclick="OpenModal($(this));">
                             <i class="fa fa-comments"></i>
                             &nbsp;ReCo
                             @if (recoCount > 0)
@@ -590,7 +619,13 @@
                                 <small class="badge bg-blue" id="reco_@item.Code">@recoCount</small>
                             }
                         </button>
-                        <button type="button" class="btn btn-xs btn-danger" data-toggle="ajax-modal" data-target="#issues-modal" data-url="@Url.Action("Issues","Remarks", new { id = item.TrackingId })">
+                        <button type="button"
+                                class="btn btn-xs btn-danger"
+                                data-toggle="ajax-modal"
+                                data-target="#small_modal"
+                                data-action="#small_content"
+                                data-url="@Url.Action("Issues","Remarks", new { id = item.TrackingId })"
+                                onclick="OpenModal($(this));">
                             <i class="fa fa-exclamation-triangle"></i>
                             &nbsp;Issue and Concern
                             @if (item.IssueCount > 0)
@@ -600,7 +635,13 @@
                         </button>
                         @if (!item.Status.Equals("cancelled") && !item.Status.Equals("discharged"))
                         {
-                            <button type="button" class="btn btn-xs btn-default" data-toggle="ajax-modal" data-target="#cancel-modal" data-url="@Url.Action("CancelRemark","Remarks", new { code = item.Code })">
+                            <button type="button" 
+                                    class="btn btn-xs btn-default" 
+                                    data-toggle="ajax-modal"
+                                    data-target="#small_modal"
+                                    data-action="#small_content"
+                                    data-url="@Url.Action("CancelRemark","Remarks", new { code = item.Code })"
+                                    onclick="OpenModal($(this));">
                                 <i class="fa fa-times"></i>
                                 &nbsp;Cancel
                             </button>
@@ -639,13 +680,13 @@
 
 <script src="~/js/socket.js"></script>
 <script type="text/javascript">
-    Initialize("@Constants.Server_Link");//
+    @*Initialize("@Constants.Server_Link");//
     setTimeout(function () { SubmitUserInformation(@Html.Raw(JsonConvert.SerializeObject(UserInformation))); }, 200);//
     var getpatient = @Html.Raw(JsonConvert.SerializeObject(NotifyPatient));
 
     if (getpatient.PatientCode != null) {
         setTimeout(function () { EnveloperPatientInformation(@Html.Raw(JsonConvert.SerializeObject(NotifyPatient))); }, 200);
-    }
+    }*@
 
 
     $(document).ready(function () {

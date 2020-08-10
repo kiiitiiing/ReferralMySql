@@ -85,7 +85,7 @@ namespace Referral2.Controllers
             var activities = _context.Activity
                 .Where(x => x.DateReferred >= StartDate && x.DateReferred <= EndDate);
 
-            var trans = _context.Transportation;
+            var trans = _context.ModeTransportation;
 
             var departments = _context.Department;
 
@@ -118,7 +118,7 @@ namespace Referral2.Controllers
                 .Select(i => new ListItem
                 {
                     NoItem = i.Count(),
-                    ItemName = i.Key == null ? "" : GlobalFunctions.GetMDFullName(doctors.SingleOrDefault(x => x.Id == i.Key))
+                    ItemName = i.Key == null ? "" : doctors.SingleOrDefault(x => x.Id == i.Key).GetMDFullName(),
                 })
                 .Take(10)
                 .ToListAsync();
@@ -169,8 +169,8 @@ namespace Referral2.Controllers
                 .ToList();
             // INCOMING: TRANSPORTATIONS
             var inTransportation = await trackings
-                .Where(x => x.ReferredTo == UserFacility && !string.IsNullOrEmpty(x.Transportation))
-                .GroupBy(x => x.Transportation)
+                .Where(x => x.ReferredTo == UserFacility && !string.IsNullOrEmpty(x.ModeTransportation))
+                .GroupBy(x => x.ModeTransportation)
                 .Select(i => new ListItem
                 {
                     NoItem = i.Count(),
@@ -233,7 +233,7 @@ namespace Referral2.Controllers
                 .Select(i => new ListItem
                 {
                     NoItem = i.Count(),
-                    ItemName = i.Key == null ? "" : GlobalFunctions.GetMDFullName(doctors.SingleOrDefault(x => x.Id == i.Key))
+                    ItemName = i.Key == null ? "" : doctors.SingleOrDefault(x => x.Id == i.Key).GetMDFullName(),
                 })
                 .Take(10)
                 .ToListAsync();
@@ -242,7 +242,7 @@ namespace Referral2.Controllers
             // OUTGOING: DIAGNOSIS
 
             var outDiagnosis = patientForms
-                .Where(p => p.ReferringFacilityId == UserFacility)
+                .Where(p => p.ReferringFacility == UserFacility)
                 .Select(p => p.Diagnosis)
                 .AsEnumerable()
                 .Concat(
@@ -263,7 +263,7 @@ namespace Referral2.Controllers
 
             // OUTGOING: REASONS
             var outReason = patientForms
-                .Where(p => p.ReferringFacilityId == UserFacility)
+                .Where(p => p.ReferringFacility == UserFacility)
                 .Select(p => p.Reason)
                 .AsEnumerable()
                 .Concat(
@@ -283,8 +283,8 @@ namespace Referral2.Controllers
                 .ToList();
             // OUTGOING: TRANSPORTATIONS
             var outTransportation = await trackings
-                .Where(x => x.ReferredFrom == UserFacility && !string.IsNullOrEmpty(x.Transportation))
-                .GroupBy(x => x.Transportation)
+                .Where(x => x.ReferredFrom == UserFacility && !string.IsNullOrEmpty(x.ModeTransportation))
+                .GroupBy(x => x.ModeTransportation)
                 .Select(i => new ListItem
                 {
                     NoItem = i.Count(),
@@ -320,14 +320,14 @@ namespace Referral2.Controllers
 
             var inHorizontal = await trackings
                 .Where(x => x.ReferredTo.Equals(UserFacility) && x.DateReferred >= StartDate && x.DateReferred <= EndDate)
-                .Where(x => x.ReferredFromNavigation.HospitalLevel == x.ReferredToNavigation.HospitalLevel)
+                .Where(x => x.ReferredFromNavigation.Level == x.ReferredToNavigation.Level)
                 .CountAsync();
 
             var inVertical = inIncoming - inHorizontal;
 
             var outHorizontal = await trackings
                 .Where(x => x.ReferredFrom.Equals(UserFacility))
-                .Where(x => x.ReferredFromNavigation.HospitalLevel == x.ReferredToNavigation.HospitalLevel)
+                .Where(x => x.ReferredFromNavigation.Level == x.ReferredToNavigation.Level)
                 .CountAsync();
 
             var outVertical = outOutgoing - outHorizontal;
@@ -438,7 +438,7 @@ namespace Referral2.Controllers
                     worksheet.Cells["P" + row].Value = "Reasons for Redirection(Top 10)";
                     worksheet.Cells["Q" + row].Value = "Number of Horizontal referrals";
                     worksheet.Cells["R" + row].Value = "Number of Vertical Referrals";
-                    worksheet.Cells["S" + row].Value = "Common Methods of Transportation";
+                    worksheet.Cells["S" + row].Value = "Common Methods of ModeTransportation";
                     worksheet.Cells["T" + row].Value = "Department";
                     worksheet.Cells["U" + row].Value = "Remarks";
                     worksheet.Cells["A" + row + ":U" + row].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
@@ -534,7 +534,7 @@ namespace Referral2.Controllers
                     worksheet.Cells["J" + row].Value = "Reasons (Top 10)";
                     worksheet.Cells["K" + row].Value = "Number of Horizontal referrals";
                     worksheet.Cells["L" + row].Value = "Number of Vertical Referrals";
-                    worksheet.Cells["M" + row].Value = "Common Methods of Transportation";
+                    worksheet.Cells["M" + row].Value = "Common Methods of ModeTransportation";
                     worksheet.Cells["N" + row].Value = "Department";
                     worksheet.Cells["O" + row].Value = "Remarks";
                     worksheet.Cells["A" + row + ":O" + row].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
@@ -628,7 +628,7 @@ namespace Referral2.Controllers
                     worksheet.Cells["P" + row].Value = "Reasons for Redirection(Top 10)";
                     worksheet.Cells["Q" + row].Value = "Number of Horizontal referrals";
                     worksheet.Cells["R" + row].Value = "Number of Vertical Referrals";
-                    worksheet.Cells["S" + row].Value = "Common Methods of Transportation";
+                    worksheet.Cells["S" + row].Value = "Common Methods of ModeTransportation";
                     worksheet.Cells["T" + row].Value = "Department";
                     worksheet.Cells["U" + row].Value = "Remarks";
                     worksheet.Cells["A" + row + ":U" + row].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
@@ -872,24 +872,26 @@ namespace Referral2.Controllers
                 .Select(t => new ReferredViewModel
                 {
                     PatientId = t.PatientId,
-                    PatientName = t.Patient.FirstName + " " + t.Patient.MiddleName + " " + t.Patient.LastName,
+                    PatientName = t.Patient.Fname + " " + t.Patient.Mname + " " + t.Patient.Lname,
                     PatientSex = t.Patient.Sex,
-                    PatientAge = t.Patient.DateOfBirth.ComputeAge(),
-                    PatientAddress = GlobalFunctions.GetAddress(t.Patient),
-                    ReferredBy = GlobalFunctions.GetMDFullName(t.ReferringMdNavigation),
-                    ReferredTo = GlobalFunctions.GetMDFullName(t.ActionMdNavigation),
+                    PatientAge = t.Patient.Dob.ComputeAge(),
+                    Barangay = t.Patient.Barangay.Description,
+                    Muncity = t.Patient.Muncity.Description,
+                    Province = t.Patient.Province.Description,
+                    ReferredBy = t.ReferringMdNavigation.GetMDFullName(),
+                    ReferredTo = t.ActionMdNavigation.GetMDFullName(),
                     ReferredToId = t.ReferredTo,
                     TrackingId = t.Id,
                     SeenCount = t.Seen.Count(),
                     CallerCount = activities.Where(x => x.Code.Equals(t.Code) && x.Status.Equals(_status.Value.CALLING)).Count(),
                     IssueCount = _context.Issue.Where(x => x.TrackingId.Equals(t.Id)).Count(),
                     ReCoCount = feedbacks.Where(x => x.Code.Equals(t.Code)).Count(),
-                    Travel = string.IsNullOrEmpty(t.Transportation),
+                    Travel = string.IsNullOrEmpty(t.ModeTransportation),
                     Code = t.Code,
                     Status = t.Status,
                     Pregnant = t.Type.Equals("pregnant"),
                     Seen = t.DateSeen != default,
-                    Walkin = t.WalkIn.Equals("yes"),
+                    Walkin = t.Walkin.Equals("yes"),
                     UpdatedAt = t.DateReferred,
                     Activities = activities.Where(x => x.Code.Equals(t.Code) && x.Status != _status.Value.CALLING).OrderByDescending(x => x.CreatedAt)
                         .Select(i => new ActivityLess
@@ -897,11 +899,11 @@ namespace Referral2.Controllers
                             Status = i.Status,
                             DateAction = i.DateReferred.ToString("MMM dd, yyyy hh:mm tt", CultureInfo.InvariantCulture),
                             FacilityFrom = i.ReferredFromNavigation == null ? "" : i.ReferredFromNavigation.Name,
-                            FacilityFromContact = i.ReferredFromNavigation == null ? "" : i.ReferredFromNavigation.Contact,
+                            FacilityFromContact = i.ReferredFromNavigation == null ? "" : i.ReferredFromNavigation.ContactNo,
                             FacilityTo = t.ReferredToNavigation.Name,
-                            PatientName = i.Patient.FirstName + " " + i.Patient.MiddleName + " " + i.Patient.LastName,
-                            ActionMd = GlobalFunctions.GetMDFullName(i.ActionMdNavigation),
-                            ReferringMd = GlobalFunctions.GetMDFullName(i.ReferringMdNavigation),
+                            PatientName = "",//i.Patient.Fname + " " + i.Patient.Mname + " " + i.Patient.Lname,
+                            ActionMd = i.ActionMdNavigation.GetMDFullName(),
+                            ReferringMd = i.ReferringMdNavigation.GetMDFullName(),
                             Remarks = i.Remarks
                         })
                 })
@@ -927,9 +929,9 @@ namespace Referral2.Controllers
                 .Where(x => x.LoginStatus.Contains("login") && x.Level.Equals(_roles.Value.DOCTOR) && x.LastLogin.Date.Equals(DateTime.Now.Date) && x.FacilityId.Equals(UserFacility))
                 .Select(x => new WhosOnlineModel
                 {
-                    DoctorName = GlobalFunctions.GetMDFullName(x),
-                    FacilityAbrv = x.Facility.Abbrevation,
-                    Contact = x.Contact,
+                    DoctorName = x.GetMDFullName(),
+                    FacilityAbrv = x.Facility.Abbr,
+                    Contact = x.ContactNo,
                     Department = x.Department.Description,
                     LoginStatus = logins.Where(i => i.UserId.Equals(x.Id)).OrderByDescending(i => i.Login1).First().Status.Equals("login"),
                     LoginTime = logins.Where(i => i.UserId.Equals(x.Id)).OrderByDescending(i => i.Login1).First().Login1

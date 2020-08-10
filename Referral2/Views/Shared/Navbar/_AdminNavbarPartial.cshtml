@@ -44,9 +44,27 @@
         </a>
         <ul class="dropdown-menu border-0 shadow">
             <li>
-                <a class="dropdown-item" asp-controller="Admin" asp-action="OnlineUsers">
+                <a class="dropdown-item" asp-controller="UserReport" asp-action="OnboardUsers">
                     <i class="fa fa-users"></i>&nbsp;
-                    Online Users
+                    Onboard Users
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" asp-controller="UserReport" asp-action="OnlineFacilities">
+                    <i class="fa fa-hospital"></i>&nbsp;
+                    Online Facilities
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" asp-controller="UserReport" asp-action="OfflineFacilities">
+                    <i class="fa fa-times-circle-o"></i>&nbsp;
+                    Offline Facilities
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" asp-controller="UserReport" asp-action="OnboardFacilities">
+                    <i class="fa fa-ambulance"></i>&nbsp;
+                    Onboard Facilities
                 </a>
             </li>
             <li>
@@ -55,8 +73,6 @@
                     Referral Status
                 </a>
             </li>
-
-            <li class="dropdown-divider"></li>
 
             <li>
                 <a class="dropdown-item" asp-controller="Admin" asp-action="DailyUsers">
@@ -72,7 +88,7 @@
                 </a>
             </li>
             <li>
-                <a class="dropdown-item" asp-action="Consolidated">
+                <a class="dropdown-item" asp-controller="UserReport" asp-action="Consolidated">
                     <i class="far fa-file-archive"></i>&nbsp;
                     Consolidated
                 </a>
@@ -92,6 +108,13 @@
             &nbsp;Login As
         </a>
     </li>
+    <!-- WHO'S ONLINE -->
+    <li class="nav-item">
+        <a class="nav-link" asp-controller="Admin" asp-action="WhosOnline">
+            <i class="nav-icon fa fa-user-md"></i>
+            &nbsp;Who's Online
+        </a>
+    </li>
     <!-- SETTINGS -->
     <li class="nav-item dropdown">
         <a class="dropdown-toggle nav-link" href="#resetPasswordModal" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
@@ -101,7 +124,12 @@
         <ul class="dropdown-menu border-0 shadow">
             <!-- CHANGE PASSWORD -->
             <li>
-                <a class="dropdown-item" data-toggle="ajax-modal" data-target="#change-password-modal" data-url="@Url.Action("ChangePassword","Users")">
+                <a class="dropdown-item"
+                   data-toggle="ajax-modal"
+                   data-target="#small_modal"
+                   data-action="#small_content"
+                   data-url="@Url.Action("ChangePassword","Users")"
+                   onclick="OpenModal($(this));">
                     <i class="fa fa-key"></i>
                     &nbsp;Change Password
                 </a>

@@ -1,0 +1,51 @@
+﻿@model IEnumerable<InventoryLogs>
+
+@{ 
+    var startDate = ViewBag.StartDate;
+    var endDate = ViewBag.EndDate;
+}
+
+<table class="table table-hover">
+    <tbody>
+        @foreach (var facility in Model.GroupBy(x => x.Facility.Name))
+        {
+            var colspan = ViewBag.Colspan;
+            var date = startDate;
+            <tr>
+                <td colspan="@colspan">
+                    @facility.Key
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Name
+                </td>
+                @for (int x = 0; x <= colspan; x++)
+                {
+                    <td>
+                        @date.ToString("dd MMM")
+                    </td>
+                    date.AddDays(1);
+                }
+            </tr>
+            @foreach(var item in facility.Where(x => !x.Inventory.Name.Contains("Admission")))
+            {
+                var dates = startDate;
+                <tr>
+                    <td>
+                        @item.Inventory.Name
+                    </td>
+                    @for (int x = startDate.Day; x <= endDate.Day; x++)
+                    {
+                        var inven = facility.FirstOrDefault(x => x.CreatedAt.Date == dates.Date);
+                        var ocupied = inven == null ? 0 : inven.Occupied;
+                        <td>
+                            @ocupied
+                        </td>
+                        dates.AddDays(1);
+                    }
+                </tr>
+            }
+        }
+    </tbody>
+</table>

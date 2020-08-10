@@ -1,0 +1,51 @@
+﻿<ul class="navbar-nav">
+    <!-- DASHBOARD -->
+    <li class="nav-item">
+        <a class="nav-link" asp-area="" asp-controller="Eoc" asp-action="Dashboard">
+            <i class="fa fa-home"></i>
+            &nbsp;Dashboard
+        </a>
+    </li>
+    <!-- GRAPH -->
+    <li class="nav-item">
+        <a class="nav-link" asp-area="" asp-controller="Eoc" asp-action="Graph">
+            <i class="fas fa-chart-line"></i>
+            &nbsp;Graph
+        </a>
+    </li>
+    <!-- WHOS ONLINE -->
+    <li class="nav-item">
+        <a class="nav-link" asp-area="" asp-controller="Eoc" asp-action="WhosOnline">
+            <i class="fa fa-user-md"></i>
+            &nbsp;Who's Online
+        </a>
+    </li>
+    <!-- SETTINGS -->
+    <li class="nav-item dropdown">
+        <a class="dropdown-toggle nav-link" href="#resetPasswordModal" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+            <i class="fa fa-cog"></i>
+            &nbsp;Settings
+        </a>
+        <ul class="dropdown-menu border-0 shadow">
+            <!-- CHANGE PASSWORD -->
+            <li>
+                <a class="dropdown-item"
+                   data-toggle="ajax-modal"
+                   data-target="#small_modal"
+                   data-action="#small_content"
+                   data-url="@Url.Action("ChangePassword","Users")" accesskey=""
+                   onclick="OpenModal($(this));">
+                    <i class="fa fa-key"></i>
+                    &nbsp;Change Password
+                </a>
+            </li>
+            <!-- LOGOUT -->
+            <li>
+                <a class="dropdown-item" asp-controller="Account" asp-action="Logout">
+                    <i class="fa fa-sign-out-alt"></i>
+                    &nbsp;Logout
+                </a>
+            </li>
+        </ul>
+    </li>
+</ul>

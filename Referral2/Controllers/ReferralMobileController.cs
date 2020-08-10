@@ -66,7 +66,7 @@ namespace Referral2.Controllers
             var notification = new NotificationModel
             {
                 PatientCode = activity.Code,
-                PatientName = GlobalFunctions.GetFullName(activity.Patient),
+                //PatientName = GlobalFunctions.GetFullName(activity.Patient),
                 ReferringDoctor = GlobalFunctions.GetMDFullName(activity.ActionMdNavigation),
                 TrackStatus = activity.Status,
                 DisplayNotification = ""
@@ -96,9 +96,9 @@ namespace Referral2.Controllers
                 UserID = getuser.Id,
                 Department = departments,
                 Facility = facilities,
-                Firstname = getuser.Firstname,
-                Middlename = getuser.Middlename,
-                Lastname = getuser.Lastname,
+                Firstname = getuser.Fname,
+                Middlename = getuser.Mname,
+                Lastname = getuser.Lname,
             };
 
             return user;
@@ -106,8 +106,10 @@ namespace Referral2.Controllers
 
         public async Task<DashboardViewModel> DashboardValues(int? id)
         {
-            List<int> accepted = new List<int>();
-            List<int> redirected = new List<int>();
+
+            var referred = new int[12];
+            var accepted = new int[12];
+            var redirected = new int[12];
 
             IQueryable<Activity> activities = null;
 
@@ -117,12 +119,13 @@ namespace Referral2.Controllers
                 activities = _context.Activity.Where(x => x.DateReferred.Year.Equals(DateTime.Now.Year) && x.ReferredTo.Equals(getuser.FacilityId));
             else
                 activities = _context.Activity.Where(x => x.DateReferred.Year.Equals(DateTime.Now.Year));
-            for (int x = 1; x <= 12; x++)
+            for (int x = 0; x < 12; x++)
             {
-                accepted.Add(activities.Where(i => i.DateReferred.Month.Equals(x) && (i.Status.Equals(_status.Value.ACCEPTED) || i.Status.Equals(_status.Value.ARRIVED) || i.Status.Equals(_status.Value.ADMITTED))).Count());
-                redirected.Add(activities.Where(i => i.DateReferred.Month.Equals(x) && (i.Status.Equals(_status.Value.REJECTED) || i.Status.Equals(_status.Value.TRANSFERRED))).Count());
+                referred[x] = (activities.Where(i => i.DateReferred.Month.Equals(x) && (i.Status.Equals(_status.Value.REFERRED))).Count());
+                accepted[x] = (activities.Where(i => i.DateReferred.Month.Equals(x) && (i.Status.Equals(_status.Value.ACCEPTED) || i.Status.Equals(_status.Value.ARRIVED) || i.Status.Equals(_status.Value.ADMITTED))).Count());
+                redirected[x] = (activities.Where(i => i.DateReferred.Month.Equals(x) && (i.Status.Equals(_status.Value.REJECTED) || i.Status.Equals(_status.Value.TRANSFERRED))).Count());
             }
-            var adminDashboard = new DashboardViewModel(accepted.ToArray(), redirected.ToArray());
+            var adminDashboard = new DashboardViewModel(accepted, redirected, referred);
             return adminDashboard;
         }
     }

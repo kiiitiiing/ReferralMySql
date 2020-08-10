@@ -100,6 +100,7 @@ namespace Referral2.Controllers
 
         #region CALL
         [HttpGet]
+        [Route("{controller}/{action}/{code}")]
         public void RequestCall(string code)
         {
             var tracking = _context.Tracking.SingleOrDefault(x => x.Code == code);
@@ -141,8 +142,10 @@ namespace Referral2.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Issues([FromForm]IssuesModel model)
         {
+            var errors = ModelState.Values.SelectMany(x => x.Errors);
             if (ModelState.IsValid)
             {
                 foreach (var item in model.Issues)
@@ -169,11 +172,12 @@ namespace Referral2.Controllers
                     .Where(x => x.TrackingId == model.TrackingId).ToList(),
                     TrackingId = model.TrackingId
                 };
-                return PartialView("~/Views/Remarks/Issues.cshtml", issues);
+                return PartialView(issues);
             }
-            else
-                ModelState.AddModelError("Issues", "Please fill up input.");
-            return PartialView("~/Views/Remarks/Issues.cshtml", model);
+
+            ViewBag.Errors = errors;
+
+            return PartialView(model);
         }
 
         #endregion
@@ -182,7 +186,7 @@ namespace Referral2.Controllers
 
         public IActionResult Travel(int? id)
         {
-            var transportations = _context.Transportation;
+            var transportations = _context.ModeTransportation;
             ViewBag.TrackingId = id;
             ViewBag.Transpo = new SelectList(transportations, "Id", "Transportation1");
             return PartialView();
@@ -246,7 +250,6 @@ namespace Referral2.Controllers
         [HttpPost]
         public async Task<IActionResult> ArrivedRemark([Bind] RemarksViewModel model, string code)
         {
-            System.Diagnostics.Debug.WriteLine("@Code : " + code);
             if (ModelState.IsValid)
             {
                 var tracking = ArrivedTracking(model, _status.Value.ARRIVED);
@@ -264,11 +267,15 @@ namespace Referral2.Controllers
         [HttpGet]
         public IActionResult DidntArrivedRemark(string code)
         {
-            return PartialView();
+            var model = new RemarksViewModel
+            {
+                Code = code
+            };
+            return PartialView(model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> DidntArrivedRemark([Bind] RemarksViewModel model, string code)
+        public async Task<IActionResult> DidntArrivedRemark( RemarksViewModel model, string code)
         {
             if (ModelState.IsValid)
             {
@@ -391,12 +398,14 @@ namespace Referral2.Controllers
         public IActionResult CancelRemark(string code)
         {
             ViewBag.Code = code;
-            return PartialView("~/Views/Remarks/CancelRemark.cshtml");
+            return PartialView();
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CancelRemark([Bind]RemarksViewModel model)
         {
+            var errors = ModelState.Values.SelectMany(x => x.Errors);
             if(ModelState.IsValid)
             {
                 var tracking = CancelTracking(model, _status.Value.CANCELLED);
@@ -406,7 +415,8 @@ namespace Referral2.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction("Cancelled", "ViewPatients");
             }
-            return PartialView("~/Views/Remarks/CancelRemark.cshtml");
+            ViewBag.Errors = errors;
+            return PartialView(model);
         }
 
         #endregion
@@ -490,9 +500,9 @@ namespace Referral2.Controllers
             var tracking = _context.Tracking.Find(model.TrackingId);
 
             if (model.TranspoId != 5)
-                tracking.Transportation = model.TranspoId.ToString();
+                tracking.ModeTransportation = model.TranspoId.ToString();
             else
-                tracking.Transportation = model.TranspoId + " - " + model.Other;
+                tracking.ModeTransportation = model.TranspoId + " - " + model.Other;
 
             tracking.UpdatedAt = DateTime.Now;
 
@@ -507,7 +517,7 @@ namespace Referral2.Controllers
 
             newTracking.Code = tracking.Code;   
             newTracking.PatientId = tracking.PatientId;
-            newTracking.Transportation = null;
+            newTracking.ModeTransportation = null;
             newTracking.ReferredFrom = UserFacility;
             newTracking.ReferredTo = model.FacilityId;
             newTracking.DepartmentId = model.DepartmentId;
@@ -521,7 +531,7 @@ namespace Referral2.Controllers
             newTracking.Remarks = model.Remarks;
             newTracking.Status = _status.Value.REFERRED;
             newTracking.Type = tracking.Type;
-            newTracking.WalkIn = tracking.WalkIn;
+            newTracking.Walkin = tracking.Walkin;
             newTracking.FormId = tracking.FormId;
             newTracking.CreatedAt = DateTime.Now;
             newTracking.UpdatedAt = DateTime.Now;
@@ -617,7 +627,7 @@ namespace Referral2.Controllers
             activity.DepartmentId = UserDepartment;
             activity.ReferringMd = UserId;
             activity.ActionMd = UserId;
-            activity.Remarks = tracking.Transportation;
+            activity.Remarks = tracking.ModeTransportation;
             activity.Status = _status.Value.TRAVEL;
             return activity;
         }

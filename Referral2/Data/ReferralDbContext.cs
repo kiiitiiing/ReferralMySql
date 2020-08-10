@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Referral2.Models;
-using Referral2.Models.StoredProcedures;
 
 namespace Referral2.Data
 {
@@ -15,7 +14,6 @@ namespace Referral2.Data
         public ReferralDbContext(DbContextOptions<ReferralDbContext> options)
             : base(options)
         {
-            Database.SetCommandTimeout(20000);
         }
 
         public virtual DbSet<Activity> Activity { get; set; }
@@ -24,8 +22,11 @@ namespace Referral2.Data
         public virtual DbSet<Department> Department { get; set; }
         public virtual DbSet<Facility> Facility { get; set; }
         public virtual DbSet<Feedback> Feedback { get; set; }
+        public virtual DbSet<Inventory> Inventory { get; set; }
+        public virtual DbSet<InventoryLogs> InventoryLogs { get; set; }
         public virtual DbSet<Issue> Issue { get; set; }
         public virtual DbSet<Login> Login { get; set; }
+        public virtual DbSet<ModeTransportation> ModeTransportation { get; set; }
         public virtual DbSet<Muncity> Muncity { get; set; }
         public virtual DbSet<Patient> Patient { get; set; }
         public virtual DbSet<PatientForm> PatientForm { get; set; }
@@ -33,12 +34,15 @@ namespace Referral2.Data
         public virtual DbSet<Province> Province { get; set; }
         public virtual DbSet<Seen> Seen { get; set; }
         public virtual DbSet<Tracking> Tracking { get; set; }
-        public virtual DbSet<Transportation> Transportation { get; set; }
         public virtual DbSet<User> User { get; set; }
-        public virtual DbSet<Incoming> Incoming { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            if (!optionsBuilder.IsConfigured)
+            {
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
+                optionsBuilder.UseSqlServer("Data Source=LAPTOP-6I12DHEP\\SQLEXPRESS;Initial Catalog=Referral;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+            }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -86,6 +90,7 @@ namespace Referral2.Data
                 entity.HasOne(d => d.ReferredFromNavigation)
                     .WithMany(p => p.ActivityReferredFromNavigation)
                     .HasForeignKey(d => d.ReferredFrom)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Activity_Facility_From");
 
                 entity.HasOne(d => d.ReferredToNavigation)
@@ -108,7 +113,6 @@ namespace Referral2.Data
                 entity.HasOne(d => d.BabyNavigation)
                     .WithMany(p => p.BabyBabyNavigation)
                     .HasForeignKey(d => d.BabyId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Patient_BabyId");
 
                 entity.HasOne(d => d.Mother)
@@ -123,9 +127,6 @@ namespace Referral2.Data
                 entity.HasIndex(e => e.MuncityId)
                     .HasName("IX_IIBarangay_MuncityId");
 
-                entity.HasIndex(e => e.ProvinceId)
-                    .HasName("IX_IIBarangay_ProvinceId");
-
                 entity.Property(e => e.Description).IsUnicode(false);
 
                 entity.HasOne(d => d.Muncity)
@@ -137,7 +138,6 @@ namespace Referral2.Data
                 entity.HasOne(d => d.Province)
                     .WithMany(p => p.Barangay)
                     .HasForeignKey(d => d.ProvinceId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Barangay_Province");
             });
 
@@ -157,17 +157,27 @@ namespace Referral2.Data
                 entity.HasIndex(e => e.ProvinceId)
                     .HasName("IX_IIFacility_ProvinceId");
 
-                entity.Property(e => e.Abbrevation).IsUnicode(false);
+                entity.Property(e => e.Id).ValueGeneratedNever();
+
+                entity.Property(e => e.Abbr).IsUnicode(false);
 
                 entity.Property(e => e.Address).IsUnicode(false);
 
-                entity.Property(e => e.Contact).IsUnicode(false);
+                entity.Property(e => e.ChiefHospital).IsUnicode(false);
+
+                entity.Property(e => e.ContactNo).IsUnicode(false);
 
                 entity.Property(e => e.Email).IsUnicode(false);
+
+                entity.Property(e => e.FacilityCode).IsUnicode(false);
+
+                entity.Property(e => e.Level).IsUnicode(false);
 
                 entity.Property(e => e.Name).IsUnicode(false);
 
                 entity.Property(e => e.Picture).IsUnicode(false);
+
+                entity.Property(e => e.Type).IsUnicode(false);
 
                 entity.HasOne(d => d.Barangay)
                     .WithMany(p => p.Facility)
@@ -182,6 +192,7 @@ namespace Referral2.Data
                 entity.HasOne(d => d.Province)
                     .WithMany(p => p.Facility)
                     .HasForeignKey(d => d.ProvinceId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Facility_Province");
             });
 
@@ -189,12 +200,9 @@ namespace Referral2.Data
             {
                 entity.Property(e => e.Code).IsUnicode(false);
 
-                entity.Property(e => e.Message).IsUnicode(false);
-
                 entity.HasOne(d => d.Reciever)
                     .WithMany(p => p.FeedbackReciever)
                     .HasForeignKey(d => d.RecieverId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Feedback_MDReciever");
 
                 entity.HasOne(d => d.Sender)
@@ -202,6 +210,47 @@ namespace Referral2.Data
                     .HasForeignKey(d => d.SenderId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Feedback_MDSender");
+            });
+
+            modelBuilder.Entity<Inventory>(entity =>
+            {
+                entity.Property(e => e.Name).IsUnicode(false);
+
+                entity.Property(e => e.Status).IsUnicode(false);
+
+                entity.HasOne(d => d.EncodedByNavigation)
+                    .WithMany(p => p.Inventory)
+                    .HasForeignKey(d => d.EncodedBy)
+                    .HasConstraintName("FK_Inventory_User");
+
+                entity.HasOne(d => d.Facility)
+                    .WithMany(p => p.Inventory)
+                    .HasForeignKey(d => d.FacilityId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Inventory_Facility");
+            });
+
+            modelBuilder.Entity<InventoryLogs>(entity =>
+            {
+                entity.Property(e => e.Id).ValueGeneratedNever();
+
+                entity.HasOne(d => d.EncodedByNavigation)
+                    .WithMany(p => p.InventoryLogs)
+                    .HasForeignKey(d => d.EncodedBy)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Inventory_Logs_User");
+
+                entity.HasOne(d => d.Facility)
+                    .WithMany(p => p.InventoryLogs)
+                    .HasForeignKey(d => d.FacilityId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Inventory_Logs_Facility");
+
+                entity.HasOne(d => d.Inventory)
+                    .WithMany(p => p.InventoryLogs)
+                    .HasForeignKey(d => d.InventoryId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Inventory_Logs_Inventory");
             });
 
             modelBuilder.Entity<Issue>(entity =>
@@ -234,6 +283,11 @@ namespace Referral2.Data
                     .HasConstraintName("FK_Login_User_Id");
             });
 
+            modelBuilder.Entity<ModeTransportation>(entity =>
+            {
+                entity.Property(e => e.Transportation).IsUnicode(false);
+            });
+
             modelBuilder.Entity<Muncity>(entity =>
             {
                 entity.HasIndex(e => e.ProvinceId)
@@ -263,11 +317,11 @@ namespace Referral2.Data
 
                 entity.Property(e => e.CivilStatus).IsUnicode(false);
 
-                entity.Property(e => e.FirstName).IsUnicode(false);
+                entity.Property(e => e.Fname).IsUnicode(false);
 
-                entity.Property(e => e.LastName).IsUnicode(false);
+                entity.Property(e => e.Lname).IsUnicode(false);
 
-                entity.Property(e => e.MiddleName).IsUnicode(false);
+                entity.Property(e => e.Mname).IsUnicode(false);
 
                 entity.Property(e => e.PhicId).IsUnicode(false);
 
@@ -307,7 +361,7 @@ namespace Referral2.Data
                 entity.HasIndex(e => e.ReferredTo)
                     .HasName("IX_IIPatientForm_ReferredTo");
 
-                entity.HasIndex(e => e.ReferringFacilityId)
+                entity.HasIndex(e => e.ReferringFacility)
                     .HasName("IX_IIPatientForm_ReferringFacilityId");
 
                 entity.HasIndex(e => e.ReferringMd)
@@ -331,15 +385,27 @@ namespace Referral2.Data
                     .HasForeignKey(d => d.PatientId)
                     .HasConstraintName("FK_PatientForm_Patient_Id");
 
+                entity.HasOne(d => d.ReferredMdNavigation)
+                    .WithMany(p => p.PatientFormReferredMdNavigation)
+                    .HasForeignKey(d => d.ReferredMd)
+                    .HasConstraintName("FK_PatientForm_User_ReferredMd");
+
                 entity.HasOne(d => d.ReferredToNavigation)
                     .WithMany(p => p.PatientFormReferredToNavigation)
                     .HasForeignKey(d => d.ReferredTo)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_PatientForm_Facility_To");
 
-                entity.HasOne(d => d.ReferringFacility)
-                    .WithMany(p => p.PatientFormReferringFacility)
-                    .HasForeignKey(d => d.ReferringFacilityId)
+                entity.HasOne(d => d.ReferringFacilityNavigation)
+                    .WithMany(p => p.PatientFormReferringFacilityNavigation)
+                    .HasForeignKey(d => d.ReferringFacility)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_PatientForm_Facility_From");
+
+                entity.HasOne(d => d.ReferringMdNavigation)
+                    .WithMany(p => p.PatientFormReferringMdNavigation)
+                    .HasForeignKey(d => d.ReferringMd)
+                    .HasConstraintName("FK_PatientForm_User_ReferringMd");
             });
 
             modelBuilder.Entity<PregnantForm>(entity =>
@@ -359,15 +425,11 @@ namespace Referral2.Data
                 entity.HasIndex(e => e.ReferringFacility)
                     .HasName("IX_IIPregnantForm_ReferringFacility");
 
-                entity.Property(e => e.ArrivalDate).IsUnicode(false);
-
                 entity.Property(e => e.BabyBeforeTreatment).IsUnicode(false);
 
                 entity.Property(e => e.BabyDuringTransport).IsUnicode(false);
 
                 entity.Property(e => e.BabyInformationGiven).IsUnicode(false);
-
-                entity.Property(e => e.BabyMajorFindings).IsUnicode(false);
 
                 entity.Property(e => e.BabyReason).IsUnicode(false);
 
@@ -379,8 +441,6 @@ namespace Referral2.Data
 
                 entity.Property(e => e.UniqueId).IsUnicode(false);
 
-                entity.Property(e => e.WomanBeforeTreatment).IsUnicode(false);
-
                 entity.Property(e => e.WomanDuringTransport).IsUnicode(false);
 
                 entity.Property(e => e.WomanReason).IsUnicode(false);
@@ -388,7 +448,6 @@ namespace Referral2.Data
                 entity.HasOne(d => d.Department)
                     .WithMany(p => p.PregnantForm)
                     .HasForeignKey(d => d.DepartmentId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_PregnantForm_Department");
 
                 entity.HasOne(d => d.PatientBaby)
@@ -405,7 +464,6 @@ namespace Referral2.Data
                 entity.HasOne(d => d.ReferredByNavigation)
                     .WithMany(p => p.PregnantForm)
                     .HasForeignKey(d => d.ReferredBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_PregnantForm_User_From");
 
                 entity.HasOne(d => d.ReferredToNavigation)
@@ -472,13 +530,18 @@ namespace Referral2.Data
 
                 entity.Property(e => e.Code).IsUnicode(false);
 
-                entity.Property(e => e.Status).IsUnicode(false);
+                entity.Property(e => e.ModeTransportation).IsUnicode(false);
 
-                entity.Property(e => e.Transportation).IsUnicode(false);
+                entity.Property(e => e.Status).IsUnicode(false);
 
                 entity.Property(e => e.Type).IsUnicode(false);
 
-                entity.Property(e => e.WalkIn).IsUnicode(false);
+                entity.Property(e => e.Walkin).IsUnicode(false);
+
+                entity.HasOne(d => d.ActionMdNavigation)
+                    .WithMany(p => p.TrackingActionMdNavigation)
+                    .HasForeignKey(d => d.ActionMd)
+                    .HasConstraintName("FK_Tracking_User_ActionMd");
 
                 entity.HasOne(d => d.Department)
                     .WithMany(p => p.Tracking)
@@ -494,22 +557,23 @@ namespace Referral2.Data
                 entity.HasOne(d => d.ReferredFromNavigation)
                     .WithMany(p => p.TrackingReferredFromNavigation)
                     .HasForeignKey(d => d.ReferredFrom)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Tracking_Facility_From");
 
                 entity.HasOne(d => d.ReferredToNavigation)
                     .WithMany(p => p.TrackingReferredToNavigation)
                     .HasForeignKey(d => d.ReferredTo)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Tracking_Facility_To");
-            });
 
-            modelBuilder.Entity<Transportation>(entity =>
-            {
-                entity.Property(e => e.Transportation1).IsUnicode(false);
+                entity.HasOne(d => d.ReferringMdNavigation)
+                    .WithMany(p => p.TrackingReferringMdNavigation)
+                    .HasForeignKey(d => d.ReferringMd)
+                    .HasConstraintName("FK_Tracking_User_ReferringMd");
             });
 
             modelBuilder.Entity<User>(entity =>
             {
-
                 entity.HasIndex(e => e.DepartmentId)
                     .HasName("IX_IIUser_DepartmentId");
 
@@ -526,23 +590,23 @@ namespace Referral2.Data
 
                 entity.Property(e => e.AccreditationValidity).IsUnicode(false);
 
-                entity.Property(e => e.Contact).IsUnicode(false);
+                entity.Property(e => e.ContactNo).IsUnicode(false);
 
                 entity.Property(e => e.Designation).IsUnicode(false);
 
                 entity.Property(e => e.Email).IsUnicode(false);
 
-                entity.Property(e => e.Firstname).IsUnicode(false);
-
-                entity.Property(e => e.Lastname).IsUnicode(false);
+                entity.Property(e => e.Fname).IsUnicode(false);
 
                 entity.Property(e => e.Level).IsUnicode(false);
 
                 entity.Property(e => e.LicenseNo).IsUnicode(false);
 
+                entity.Property(e => e.Lname).IsUnicode(false);
+
                 entity.Property(e => e.LoginStatus).IsUnicode(false);
 
-                entity.Property(e => e.Middlename).IsUnicode(false);
+                entity.Property(e => e.Mname).IsUnicode(false);
 
                 entity.Property(e => e.Password).IsUnicode(false);
 
@@ -550,7 +614,7 @@ namespace Referral2.Data
 
                 entity.Property(e => e.Prefix).IsUnicode(false);
 
-                entity.Property(e => e.RemeberToken).IsUnicode(false);
+                entity.Property(e => e.RememberToken).IsUnicode(false);
 
                 entity.Property(e => e.Status).IsUnicode(false);
 
@@ -561,7 +625,6 @@ namespace Referral2.Data
                 entity.HasOne(d => d.Department)
                     .WithMany(p => p.User)
                     .HasForeignKey(d => d.DepartmentId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_User_Department");
 
                 entity.HasOne(d => d.Facility)
@@ -581,29 +644,6 @@ namespace Referral2.Data
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_User_Province");
             });
-
-            modelBuilder.Entity<Incoming>(entity =>
-            {
-                entity.HasNoKey();
-
-                entity.HasIndex(e => e.PatientId)
-                    .HasName("IX_IITracking_PatientId");
-
-                entity.HasIndex(e => e.ReferredFrom)
-                    .HasName("IX_IITracking_ReferredFrom");
-
-                entity.Property(e => e.Code).IsUnicode(false);
-
-                entity.Property(e => e.Status).IsUnicode(false);
-
-                entity.Property(e => e.Type).IsUnicode(false);
-
-                entity.Property(e => e.ReferringMd).IsUnicode(false);
-
-                entity.Property(e => e.ActionMd).IsUnicode(false);
-            });
-
-
 
             OnModelCreatingPartial(modelBuilder);
         }

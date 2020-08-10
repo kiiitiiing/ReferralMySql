@@ -34,9 +34,7 @@ namespace Referral2
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
             services.AddDbContext<ReferralDbContext>(options =>
-                options/*.UseLazyLoadingProxies()
-                        .ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.DetachedLazyLoadingWarning))*/
-                        .UseSqlServer(Configuration.GetConnectionString("ReferralConnection")));
+                options.UseSqlServer(Configuration.GetConnectionString("ReferralConnection")));
 
             services.AddCors();
 
@@ -60,13 +58,14 @@ namespace Referral2
                 options.LoginPath = "/Account/Login";
                 options.LogoutPath = "/Account/Logout";
                 options.AccessDeniedPath = "/Account/NotFound";
-                options.ExpireTimeSpan = TimeSpan.FromHours(3);
+                options.ExpireTimeSpan = TimeSpan.FromHours(5);
             });
 
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("Administrator", polBuilder => polBuilder.RequireClaim(ClaimTypes.Role, "admin"));
                 options.AddPolicy("Doctor", polBuilder => polBuilder.RequireClaim(ClaimTypes.Role, "doctor"));
+                options.AddPolicy("EOC", polBuilder => polBuilder.RequireClaim(ClaimTypes.Role, "eoc"));
                 options.AddPolicy("Support", polBuilder => polBuilder.RequireClaim(ClaimTypes.Role, "support"));
                 options.AddPolicy("MCC", polBuilder => polBuilder.RequireClaim(ClaimTypes.Role, "mcc"));
             });

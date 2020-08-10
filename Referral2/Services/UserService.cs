@@ -107,10 +107,10 @@ namespace Referral2.Services
                 var facility = _context.Facility.First(x => x.Id.Equals(model.FacilityId));
                 User newUser = new User();
                 string hashedPass = _hashPassword.HashPassword(newUser, model.Password);
-                newUser.Firstname = model.Firstname;
-                newUser.Middlename = model.Middlename;
-                newUser.Lastname = model.Lastname;
-                newUser.Contact = model.ContactNumber;
+                newUser.Fname = model.Firstname;
+                newUser.Mname = model.Middlename;
+                newUser.Lname = model.Lastname;
+                newUser.ContactNo= model.ContactNumber;
                 newUser.Email = model.Email;
                 newUser.FacilityId = model.FacilityId;
                 newUser.Designation = model.Designation;
@@ -120,7 +120,7 @@ namespace Referral2.Services
                 newUser.DepartmentId = null;
                 newUser.Title = null;
                 newUser.MuncityId = facility.MuncityId;
-                newUser.ProvinceId = facility.ProvinceId;
+                newUser.ProvinceId = (int)facility.ProvinceId;
                 newUser.Designation = model.Designation;
                 newUser.Status = "active";
                 newUser.LastLogin = default;
@@ -144,10 +144,10 @@ namespace Referral2.Services
                 var facility = _context.Facility.First(x => x.Id.Equals(facilityId));
                 User newUser = new User();
                 string hashedPass = _hashPassword.HashPassword(newUser, model.Password);
-                newUser.Firstname = model.Firstname.FixName();
-                newUser.Middlename = model.Middlename.FixName();
-                newUser.Lastname = model.Lastname.FixName();
-                newUser.Contact = model.ContactNumber;
+                newUser.Fname = model.Firstname.FixName();
+                newUser.Mname = model.Middlename.FixName();
+                newUser.Lname = model.Lastname.FixName();
+                newUser.ContactNo = model.ContactNumber;
                 newUser.Email = model.Email;
                 newUser.FacilityId = facilityId;
                 newUser.Designation = model.Designation;
@@ -157,7 +157,7 @@ namespace Referral2.Services
                 newUser.DepartmentId = model.Department;
                 newUser.Title = null;
                 newUser.MuncityId = facility.MuncityId;
-                newUser.ProvinceId = facility.ProvinceId;
+                newUser.ProvinceId = (int)facility.ProvinceId;
                 newUser.Designation = model.Designation;
                 newUser.Status = "active";
                 newUser.LastLogin = default;

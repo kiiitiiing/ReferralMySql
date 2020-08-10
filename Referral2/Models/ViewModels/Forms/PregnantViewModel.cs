@@ -12,15 +12,15 @@ namespace Referral2.Models.ViewModels.Forms
             RecordNumber = form.RecordNo;
             DateReferred = form.ReferredDate.GetDate("MMMM d, yyyy h:mm tt");
             DateArrived = form.ArrivalDate != default ? form.ArrivalDate.GetDate("MMMM d, yyyy h:mm tt") : "";
-            ReferringMdContact = form.ReferredByNavigation.Contact;
+            ReferringMdContact = form.ReferredByNavigation.ContactNo;
             Facility = form.ReferringFacilityNavigation == null ? "" : form.ReferringFacilityNavigation.Name;
-            FacilityContact = form.ReferringFacilityNavigation == null ? "" : form.ReferringFacilityNavigation.Contact;
+            FacilityContact = form.ReferringFacilityNavigation == null ? "" : form.ReferringFacilityNavigation.ContactNo;
             HealthWorker = form.HealthWorker;
             ReferredTo = form.ReferredToNavigation == null ? "" : form.ReferredToNavigation.Name;
             Department = form.Department == null ? "" : form.Department.Description;
             ReferredToAddress = GlobalFunctions.GetAddress(form.ReferredToNavigation);
             WomanName = GlobalFunctions.GetFullName(form.PatientWoman);
-            WomanAge = form.PatientWoman.DateOfBirth.ComputeAge();
+            WomanAge = form.PatientWoman.Dob.ComputeAge();
             WomanAddress = GlobalFunctions.GetAddress(form.PatientWoman);
             WomanReason = form.WomanReason;
             WomanFindings = form.WomanMajorFindings;
@@ -30,7 +30,7 @@ namespace Referral2.Models.ViewModels.Forms
             WomanDuringGivenTime = form.WomanTransportGivenTime.GetDate("dd/MM/yyyy");
             WomanInformationGiven = form.WomanInformationGiven;
             BabyName = form.PatientBaby == null? "" : GlobalFunctions.GetFullName(form.PatientBaby);
-            BabyDob = form.PatientBaby == null ? "" : form.PatientBaby.DateOfBirth.ToString("dd/MM/yyyy");
+            BabyDob = form.PatientBaby == null ? "" : form.PatientBaby.Dob.ToString("dd/MM/yyyy");
             BabyWeight = baby == null ? "" : baby.Weight == 0 ? "" : baby.Weight.ToString();
             BabyGestationAge = baby == null? "" : baby.GestationalAge.ToString();
             BabyReason = form.BabyReason;

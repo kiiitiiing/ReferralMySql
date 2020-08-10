@@ -13,7 +13,13 @@
                         <i class="fa fa-search"></i>
                         &nbsp;Search
                     </button>
-                    <button type="button" class="btn btn-sm btn-primary" data-toggle="ajax-modal" data-target="#add-support-modal" data-url="@Url.Action("AddSupport")">
+                    <button type="button"
+                            class="btn btn-sm btn-primary"
+                            data-toggle="ajax-modal"
+                            data-target="#small_modal"
+                            data-action="#small_content"
+                            data-url="@Url.Action("AddSupport")"
+                            onclick="OpenModal($(this));">
                         <i class="fa fa-user"></i>
                         &nbsp;Add User
                     </button>
@@ -46,9 +52,11 @@
                                 <td>
                                     <a class="text-warning text-bold" 
                                        style="cursor:pointer; font-size: 16px !important;"
-                                       data-toggle="ajax-modal" 
-                                       data-target="#update-support-modal" 
-                                       data-url="@Url.Action("UpdateSupport", new { id = item.Id })">
+                                       data-toggle="ajax-modal"
+                                       data-target="#small_modal"
+                                       data-action="#small_content" 
+                                       data-url="@Url.Action("UpdateSupport", new { id = item.Id })"
+                                       onclick="OpenModal($(this));">
                                         @item.Name
                                     </a>
                                 </td>

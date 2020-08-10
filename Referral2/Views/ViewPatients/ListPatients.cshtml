@@ -27,13 +27,13 @@
                             </div>
                             <!-- MUNICIPALITY -->
                             <div class="form-group">
-                                <select class="form-control form-control-sm" asp-items="ViewBag.Muncities" id="muncityFilter" name="muncityId" required>
+                                <select class="form-control form-control-sm" asp-items="ViewBag.Muncities" id="muncity-filter" name="muncityId" required onchange="MuncityOnChange($(this).val());">
                                     <option value="">Select City/Municipality...</option>
                                 </select>
                             </div>
                             <!-- BARANGAY -->
                             <div class="form-group">
-                                <select class="form-control form-control-sm" id="barangay" asp-items="ViewBag.Barangays" name="barangayId" required>
+                                <select class="form-control form-control-sm" id="barangay-filter" asp-items="ViewBag.Barangays" name="barangayId" required>
                                     <option value="">Select Barangay...</option>
                                 </select>
                             </div>
@@ -108,12 +108,22 @@
                                                 @if (item.PatientSex.Equals("Female") && (item.PatientAge > 14 && item.PatientAge < 50))
                                                 {
                                                     <!-- REFER -->
-                                                    <button type="button" id="refer-pregnant-btn" class="btn btn-primary btn-xs patientId" data-toggle="modal" data-target="#pregnant-refer-modal" data-patient_id="@item.PatientId">
+                                                    <button type="button" id="refer-pregnant-btn" 
+                                                            class="btn btn-primary btn-xs col-md-6 patientId" 
+                                                            data-toggle="modal"
+                                                            data-target="#pregnant-refer-modal"
+                                                            style="width: 100%;"
+                                                            data-patient_id="@item.PatientId">
                                                         <i class="fa fa-stethoscope"></i>
                                                         &nbsp;Refer
                                                     </button>
                                                     <!-- WALK IN -->
-                                                    <button type="button" id="refer-pregnant-btn" class="btn btn-warning btn-xs patientId" data-toggle="modal" data-target="#pregnant-walkin-modal" data-patient_id="@item.PatientId">
+                                                    <button type="button" id="refer-pregnant-btn"
+                                                            class="btn btn-warning btn-xs col-md-6 patientId"
+                                                            data-toggle="modal"
+                                                            data-target="#pregnant-walkin-modal"
+                                                            style="width: 100%;"
+                                                            data-patient_id="@item.PatientId">
                                                         <i class="fa fa-ambulance"></i>
                                                         &nbsp;Walk-In
                                                     </button>
@@ -121,12 +131,24 @@
                                                 else
                                                 {
                                                     <!-- REFER -->
-                                                    <button type="button" class="btn btn-primary btn-xs refer_modal patientId" data-toggle="modal" data-target="#refer_modal" data-patient_id="@item.PatientId">
+                                                    <button type="button" class="btn btn-primary btn-xs col-md-6 refer_modal"
+                                                            data-toggle="ajax-modal"
+                                                            data-target="#large_modal"
+                                                            data-action="#large_content"
+                                                            style="width: 100%;"
+                                                            data-url="@Url.Action("Refer", "AddPatients", new { id = item.PatientId })"
+                                                            onclick="OpenModal($(this));">
                                                         <i class="fa fa-stethoscope"></i>
                                                         &nbsp;Refer
                                                     </button>
                                                     <!-- WALK IN -->
-                                                    <button type="button" class="btn btn-warning btn-xs walkin_modal patientId" data-toggle="modal" data-target="#walkin_modal" data-patient_id="@item.PatientId">
+                                                    <button type="button" class="btn btn-warning btn-xs col-md-6 walkin_modal"
+                                                            data-toggle="ajax-modal"
+                                                            data-target="#large_modal"
+                                                            data-action="#large_content"
+                                                            style="width: 100%;"
+                                                            data-url="@Url.Action("Walkin", "AddPatients", new { id = item.PatientId })"
+                                                            onclick="OpenModal($(this));">
                                                         <i class="fa fa-ambulance"></i>
                                                         &nbsp;Walk-In
                                                     </button>
@@ -179,20 +201,54 @@
                 </h4>
             </div>
             <div class="modal-body clearfix">
-                <div class="preg-btn">
+                <div class="row">
+                    <div class="col-md-6">
+                        <button class="btn btn-warning col-xs-6"
+                                type="button"
+                                data-backdrop="static"
+                                data-toggle="modal"
+                                data-target="#refer_modal"
+                                onclick="ReferModalOnClick('walkin');"
+                                style="width: 100%;">
+                            Non-Pregnant
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button class="btn btn-info col-xs-6"
+                                type="button"
+                                data-backdrop="static"
+                                data-toggle="modal"
+                                data-target="#refer_modal"
+                                onclick="ReferModalOnClick('pregnant_walkin');"
+                                style="width: 100%;">
+                            Pregnant
+                        </button>
+                    </div>
+                </div>
+                <!--<div class="preg-btn row">-->
                     <!-- NON-PREGNENT WALKIN -->
-                    <button class="btn btn-warning col-xs-7" type="button" data-backdrop="static" data-toggle="modal" data-target="#walkin_modal">
-                        <img src="~/assets/dist/img/female.png" width="100" />
+                    <!--<button class="btn btn-warning col-xs-6" 
+                            type="button"
+                            data-backdrop="static"
+                            data-toggle="modal"
+                            data-target="#refer_modal" 
+                            onclick="ReferModalOnClick('walkin');">
+                        <img src="~/assets/dist/img/female.png" style="box-sizing: border-box; width 100%" />
                         <br />
                         Non-Pregnant
-                    </button>
+                    </button>-->
                     <!-- PREGNANT WALKIN -->
-                    <button class="btn btn-info col-xs-7" type="button" data-backdrop="static" data-target="#pregnant_walkin_modal" data-toggle="modal">
-                        <img src="~/assets/dist/img/pregnant.png" width="100" />
+                    <!--<button class="btn btn-info col-xs-6"
+                            type="button"
+                            data-backdrop="static"
+                            data-toggle="modal"
+                            data-target="#refer_modal"
+                            onclick="ReferModalOnClick('pregnant_walkin');">
+                        <img src="~/assets/dist/img/pregnant.png" style="box-sizing: border-box; width: 100%" />
                         <br />
                         Pregnant
                     </button>
-                </div>
+                </div>-->
             </div>
         </div>
     </div>
@@ -207,68 +263,118 @@
                     SELECT OPTION
                 </h4>
             </div>
-            <div class="modal-body clearfix">
-                <div class="preg-btn">
-                    <!-- NON-PREGNANT REFER -->
-                    <button type="button" class="btn btn-warning col-xs-7" data-backdrop="static" data-toggle="modal" data-target="#refer_modal">
-                        <img src="~/assets/dist/img/female.png" width="100" />
-                        <br />
-                        Non-Pregnant
-                    </button>
-                    <!-- PREGNENT REFER -->
-                    <button type="button" class="btn btn-info col-xs-7" data-backdrop="static" data-toggle="modal" data-target="#pregnant_refer_modal">
-                        <img src="~/assets/dist/img/pregnant.png" width="100" />
-                        <br />
-                        Pregnant
-                    </button>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <button class="btn btn-warning col-xs-6"
+                                type="button"
+                                data-backdrop="static"
+                                data-toggle="modal"
+                                data-target="#refer_modal"
+                                onclick="ReferModalOnClick('refer');"
+                                style="width: 100%;">
+                            Non-Pregnant
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button class="btn btn-info col-xs-6"
+                                type="button"
+                                data-backdrop="static"
+                                data-toggle="modal"
+                                data-target="#refer_modal"
+                                onclick="ReferModalOnClick('pregnant_refer');"
+                                style="width: 100%;">
+                            Pregnant
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<!-- NORMAL REFER MODAL -->
+
 <div class="modal fade" id="refer_modal">
+    <div class="modal-dialog modal-lg" role="dialog" id="normal-refer-content">
+        <div class="overlay d-flex justify-content-center align-items-center">
+            <i class="fas fa-2x fa-sync fa-spin"></i>
+        </div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <br /> 
+            </div>
+            <div class="modal-body">
+                <br />
+                <br />
+                <br />
+            </div>
+            <div class="modal-footer">
+                <br />
+            </div>
+        </div>
+    </div>
+</div>
+<!-- NORMAL REFER MODAL -->
+@*<div class="modal fade" id="refer_modal">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content" id="normal-refer-content">
-            <div class="clearfix"></div>
+            <div class="overlay d-flex justify-content-center align-items-center">
+                <i class="fas fa-2x fa-sync fa-spin"></i>
+            </div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <br />
+                </div>
+                <div class="modal-body">
+                    <br />
+                    <br />
+                    <br />
+                </div>
+                <div class="modal-footer">
+                    <br />
+                </div>
+            </div>
         </div>
     </div>
-</div>
-<!-- NORMAL WALKIN MODAL -->
-<div class="modal fade" id="walkin_modal">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content" id="normal-walkin-content">
-            <div class="clearfix"></div>
-        </div>
-    </div>
-</div>
-<!-- PREGNANT REFER MODAL -->
-<div class="modal fade" id="pregnant_refer_modal">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content" id="pregnant-refer-content">
-            <div class="clearfix"></div>
-        </div>
-    </div>
-</div>
-<!-- PREGNANT WALKIN MODAL -->
-<div class="modal fade" id="pregnant_walkin_modal">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content" id="pregnant-walkin-content">
-            <div class="clearfix"></div>
-        </div>
-    </div>
-</div>
-
+</div>*@
 <script>
     var patientId;
-    var url;
 
 
     $('.patientId').on('click', function () {
         patientId = $(this).data('patient_id');
     });
 
-    $('#refer_modal').on('show.bs.modal', function () {
+
+    function ReferModalOnClick(action) {
+        var url = '';
+        switch (action) {
+            case 'refer': {
+                url = '@Url.Action("Refer", "AddPatients")';
+                break;
+            }
+            case 'walkin': {
+                url = '@Url.Action("Walkin", "AddPatients")';
+                break;
+            }
+            case 'pregnant_refer': {
+                url = '@Url.Action("PregnantRefer", "AddPatients")';
+                break;
+            }
+            case 'pregnant_walkin': {
+                url = '@Url.Action("PregnantWalkin", "AddPatients")';
+                break;
+            }
+        }
+
+        url = url + '?id=' + patientId;
+        console.log(url);
+        $.get(url).done(function (data) {
+            $('#normal-refer-content').empty();
+            $('#normal-refer-content').html(data);
+        });
+    }
+
+    @*$('#refer_modal').on('show.bs.modal', function () {
         url = '/AddPatients/Refer?id=' + patientId;
         $.get(url).done(function (data) {
             $('#normal-refer-content').empty();
@@ -320,5 +426,5 @@
                 //location.reload();
             }
         });
-    });
+    });*@
 </script>

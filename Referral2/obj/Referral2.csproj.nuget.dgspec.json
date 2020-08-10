@@ -1,26 +1,21 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\user\\Source\\Repos\\Referral\\Referral2\\Referral2.csproj": {}
+    "G:\\DATA BACKUP\\PISTING YAWA\\Referral\\Referral2\\Referral2.csproj": {}
   },
   "projects": {
-    "C:\\Users\\user\\Source\\Repos\\Referral\\Referral2\\Referral2.csproj": {
+    "G:\\DATA BACKUP\\PISTING YAWA\\Referral\\Referral2\\Referral2.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\user\\Source\\Repos\\Referral\\Referral2\\Referral2.csproj",
+        "projectUniqueName": "G:\\DATA BACKUP\\PISTING YAWA\\Referral\\Referral2\\Referral2.csproj",
         "projectName": "Referral2",
-        "projectPath": "C:\\Users\\user\\Source\\Repos\\Referral\\Referral2\\Referral2.csproj",
-        "packagesPath": "C:\\Users\\user\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\user\\Source\\Repos\\Referral\\Referral2\\obj\\",
+        "projectPath": "G:\\DATA BACKUP\\PISTING YAWA\\Referral\\Referral2\\Referral2.csproj",
+        "packagesPath": "C:\\Users\\keith\\.nuget\\packages\\",
+        "outputPath": "G:\\DATA BACKUP\\PISTING YAWA\\Referral\\Referral2\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Microsoft\\Xamarin\\NuGet\\",
-          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
-        ],
         "configFilePaths": [
-          "C:\\Users\\user\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Xamarin.Offline.config"
+          "C:\\Users\\keith\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "netcoreapp3.0"
@@ -75,7 +70,7 @@
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
               "target": "Package",
-              "version": "[3.0.0, )"
+              "version": "[3.1.5, )"
             },
             "Microsoft.Extensions.Logging.Debug": {
               "target": "Package",
@@ -115,7 +110,7 @@
             },
             {
               "name": "Microsoft.NETCore.App.Host.win-x64",
-              "version": "[3.0.2, 3.0.2]"
+              "version": "[3.0.3, 3.0.3]"
             },
             {
               "name": "Microsoft.NETCore.App.Ref",
@@ -134,7 +129,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.101\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.302\\RuntimeIdentifierGraph.json"
         }
       }
     }

@@ -1,8 +1,6 @@
 ﻿@model PregnantViewModel
 
-<div class="modal fade" id="pregnant-form-modal">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
+        <div class="modal-content" id="pregnant-form-modal">
             <div class="title-form">BEmONC/ CEmONC REFERRAL FORM</div>
             <div class="modal-body">
                 @await Html.PartialAsync("~/Views/Shared/_pregnantForm.cshtml", Model)
@@ -30,9 +28,6 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
 <script>
 
     var acceptBtn = $('#accept-btn');

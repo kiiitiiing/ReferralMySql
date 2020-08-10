@@ -17,10 +17,11 @@ using Referral2.Models.ViewModels.Doctor;
 using MoreLinq.Extensions;
 using Newtonsoft.Json;
 using Referral2.Models.MobileModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Referral2.Controllers
 {
-    //[Authorize(Policy = "Doctor")]
+    [Authorize(Policy = "Doctor")]
     public class ViewPatientsController : Controller
     {
         public const string SessionKeySearch = "_search";
@@ -47,7 +48,7 @@ namespace Referral2.Controllers
         public int? DepartmentId { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-
+        #region LIST PATIENTS
         //GET: List Patients
         public async Task<IActionResult> ListPatients(string name, int? muncityId, int? barangayId, int? page)
         {
@@ -70,10 +71,10 @@ namespace Referral2.Controllers
             .Select(x => new PatientsViewModel
             {
                 PatientId = x.Id,
-                PatientName = x.FirstName + " " + x.MiddleName + " " + x.LastName,
+                PatientName = x.Fname + " " + x.Mname + " " + x.Lname,
                 PatientSex = x.Sex,
-                PatientAge = x.DateOfBirth.ComputeAge(),
-                DateofBirth = x.DateOfBirth,
+                PatientAge = x.Dob.ComputeAge(),
+                DateofBirth = x.Dob,
                 MuncityId = x.MuncityId,
                 Muncity = x.Muncity == null ? "" : x.Muncity.Description,
                 BarangayId = x.BarangayId,
@@ -90,7 +91,8 @@ namespace Referral2.Controllers
 
             return View(await PaginatedList<PatientsViewModel>.CreateAsync(patients.OrderBy(x => x.PatientName), page ?? 1, size));
         }
-
+        #endregion
+        #region ACCEPTED
         //GET: Accepted patients
         public async Task<IActionResult> Accepted(string search, string dateRange, int? page)
         {
@@ -99,8 +101,8 @@ namespace Referral2.Controllers
 
             if (!string.IsNullOrEmpty(dateRange))
             {
-                StartDate = DateTime.Parse(dateRange.Substring(0, dateRange.IndexOf(" ") + 1).Trim());
-                EndDate = DateTime.Parse(dateRange.Substring(dateRange.LastIndexOf(" ")).Trim()).AddDays(1).AddSeconds(-1);
+                StartDate = DateTime.ParseExact(dateRange.Substring(0, dateRange.IndexOf(" ") + 1).Trim(), "dd/MM/yyyy", CultureInfo.InvariantCulture);
+                EndDate = DateTime.ParseExact(dateRange.Substring(dateRange.LastIndexOf(" ")).Trim(), "dd/MM/yyyy", CultureInfo.InvariantCulture).AddDays(1).AddSeconds(-1);
             }
             else
             {
@@ -109,8 +111,8 @@ namespace Referral2.Controllers
             }
 
 
-            ViewBag.StartDate = StartDate.Date.ToString("yyyy/MM/dd");
-            ViewBag.EndDate = EndDate.Date.ToString("yyyy/MM/dd");
+            ViewBag.StartDate = StartDate.Date.ToString("dd/MM/yyyy");
+            ViewBag.EndDate = EndDate.Date.ToString("dd/MM/yyyy");
             #endregion
             #region Query
             var accepted = _context.Tracking
@@ -121,7 +123,7 @@ namespace Referral2.Controllers
                     ReferredTo = (int)x.ReferredTo,
                     ReferringFacility = x.ReferredFromNavigation.Name,
                     Type = x.Type == "normal" ? "Non-Pregnant" : "Pregnant",
-                    PatientName = x.Patient.FirstName + " " + x.Patient.MiddleName + " " + x.Patient.LastName,
+                    PatientName = x.Patient.Fname + " " + x.Patient.Mname + " " + x.Patient.Lname,
                     PatientCode = x.Code,
                     DateAction = x.DateAccepted,
                     Status = _context.Activity.Where(c => c.Code == x.Code).OrderByDescending(x => x.DateReferred).FirstOrDefault().Status
@@ -132,7 +134,7 @@ namespace Referral2.Controllers
 
             if (!string.IsNullOrEmpty(search))
             {
-                accepted = accepted.Where(s => s.PatientCode.Equals(search) || s.PatientName.Contains(search));
+                accepted = accepted.Where(s => s.PatientCode.Equals(search) || s.PatientName.ToUpper().Contains(search));
                 ViewBag.Total = accepted.Count();
             }
             else
@@ -145,7 +147,8 @@ namespace Referral2.Controllers
 
             return View(await PaginatedList<AcceptedViewModel>.CreateAsync(accepted.OrderByDescending(x => x.DateAction), page ?? 1, size));
         }
-
+        #endregion
+        #region DISCHARGED
         //GET: Dischagred Patients
         public async Task<IActionResult> Discharged(string search, string dateRange, int? page)
         {
@@ -154,26 +157,28 @@ namespace Referral2.Controllers
 
             if (!string.IsNullOrEmpty(dateRange))
             {
-                StartDate = DateTime.Parse(dateRange.Substring(0, dateRange.IndexOf(" ") + 1).Trim());
-                EndDate = DateTime.Parse(dateRange.Substring(dateRange.LastIndexOf(" ")).Trim()).AddDays(1).AddSeconds(-1);
+                StartDate = DateTime.ParseExact(dateRange.Substring(0, dateRange.IndexOf(" ") + 1).Trim(), "dd/MM/yyyy", CultureInfo.InvariantCulture);
+                EndDate = DateTime.ParseExact(dateRange.Substring(dateRange.LastIndexOf(" ")).Trim(), "dd/MM/yyyy", CultureInfo.InvariantCulture).AddDays(1).AddSeconds(-1);
             }
             else
             {
                 StartDate = new DateTime(DateTime.Now.Year, 1, 1);
                 EndDate = new DateTime(DateTime.Now.Year, 12, 31);
             }
-            ViewBag.StartDate = StartDate.Date.ToString("yyyy/MM/dd");
-            ViewBag.EndDate = EndDate.Date.ToString("yyyy/MM/dd");
+            ViewBag.StartDate = StartDate.Date.ToString("dd/MM/yyyy");
+            ViewBag.EndDate = EndDate.Date.ToString("dd/MM/yyyy");
             #endregion
             #region Query
             var discharge = _context.Tracking
+                .Include(x=>x.ReferredFromNavigation)
+                .Include(x=>x.Patient)
                 .Where(x => x.ReferredTo == UserFacility && x.DateReferred >= StartDate && x.DateReferred <= EndDate)
                 .Where(x => x.Status == _status.Value.DISCHARGED || x.Status == _status.Value.TRANSFERRED)
                 .Select(x => new DischargedViewModel
                 {
                     ReferringFacility = x.ReferredFromNavigation.Name,
                     Type = x.Type == "normal" ? "Non-Pregnant" : "Pregnant",
-                    PatientName = x.Patient.FirstName + " " + x.Patient.MiddleName + " " + x.Patient.LastName,
+                    PatientName = x.Patient.GetFullName(),
                     Code = x.Code,
                     DateAction = _context.Activity.Where(c => c.Code == x.Code && c.Status == x.Status).FirstOrDefault().DateReferred,
                     Status = _context.Activity.Where(c => c.Code == x.Code && c.Status == x.Status).FirstOrDefault().Status
@@ -192,7 +197,8 @@ namespace Referral2.Controllers
 
             return View(await PaginatedList<DischargedViewModel>.CreateAsync(discharge.OrderByDescending(x => x.DateAction), page ?? 1, size));
         }
-
+        #endregion
+        #region CANCELLED
         //GET: Cancelled Patients
         public async Task<IActionResult> Cancelled(string search, string dateRange, int? page)
         {
@@ -220,7 +226,7 @@ namespace Referral2.Controllers
                 {
                     ReferringFacility = x.ReferredFromNavigation.Name,
                     PatientType = x.Type == "pregnant" ? "Pregnant" : "Non-Pregnant",
-                    PatientName = x.Patient.FirstName + " " + x.Patient.MiddleName + " " + x.Patient.LastName,
+                    PatientName = x.Patient.Fname + " " + x.Patient.Mname + " " + x.Patient.Lname,
                     PatientCode = x.Code,
                     DateCancelled = _context.Activity.Where(c => c.Code == x.Code && c.Status == x.Status).FirstOrDefault().DateReferred,
                     ReasonCancelled = _context.Activity.Where(c => c.Code == x.Code && c.Status == x.Status).FirstOrDefault().Remarks
@@ -237,7 +243,8 @@ namespace Referral2.Controllers
             ViewBag.Total = cancelled.Count();
             return View(await PaginatedList<CancelledViewModel>.CreateAsync(cancelled.OrderByDescending(x => x.DateCancelled), page ?? 1, size));
         }
-
+        #endregion
+        #region ARCHIVED
         //GET: Archived patients
         public async Task<IActionResult> Archived(string search, string dateRange, int? page)
         {
@@ -267,7 +274,7 @@ namespace Referral2.Controllers
                 {
                     ReferringFacility = x.ReferredFromNavigation.Name,
                     Type = x.Type == "normal" ? "Non-Pregnant" : "Pregnant",
-                    PatientName = x.Patient.FirstName + " " + x.Patient.MiddleName + " " + x.Patient.LastName,
+                    PatientName = x.Patient.Fname + " " + x.Patient.Mname + " " + x.Patient.Lname,
                     Code = x.Code,
                     DateArchive = x.DateReferred.AddDays(3),
                     Reason = _context.Activity.Where(c => c.Code == x.Code).FirstOrDefault().Remarks
@@ -287,7 +294,8 @@ namespace Referral2.Controllers
             return View(await PaginatedList<ArchivedViewModel>.CreateAsync(archivedPatients.OrderByDescending(x => x.DateArchive), page ?? 1, pageSize));
 
         }
-
+        #endregion
+        #region TRACK
         //GET: Track patients
         public async Task<IActionResult> Track(string code)
         {
@@ -306,24 +314,26 @@ namespace Referral2.Controllers
                 .Select(t => new ReferredViewModel
                 {
                     PatientId = t.PatientId,
-                    PatientName = t.Patient.FirstName + " " + t.Patient.MiddleName + " " + t.Patient.LastName,
+                    PatientName = t.Patient.Fname + " " + t.Patient.Mname + " " + t.Patient.Lname,
                     PatientSex = t.Patient.Sex,
-                    PatientAge = t.Patient.DateOfBirth.ComputeAge(),
-                    PatientAddress = t.Patient.Barangay.Description.CheckAddress() + t.Patient.Muncity.Description.CheckAddress() + t.Patient.Province.Description,
-                    ReferredBy = GlobalFunctions.GetMDFullName(t.ReferringMdNavigation),
-                    ReferredTo = GlobalFunctions.GetMDFullName(t.ActionMdNavigation),
+                    PatientAge = t.Patient.Dob.ComputeAge(),
+                    Barangay = t.Patient.Barangay.Description,
+                    Muncity = t.Patient.Muncity.Description,
+                    Province = t.Patient.Province.Description,
+                    ReferredBy = t.ReferringMdNavigation.GetMDFullName(),
+                    ReferredTo = t.ActionMdNavigation.GetMDFullName(),
                     ReferredToId = t.ReferredTo,
                     TrackingId = t.Id,
                     SeenCount = t.Seen.Count(),
                     CallerCount = activities.Where(x => x.Code.Equals(t.Code) && x.Status.Equals(_status.Value.CALLING)).Count(),
                     IssueCount = _context.Issue.Where(x => x.TrackingId.Equals(t.Id)).Count(),
                     ReCoCount = feedbacks.Where(x => x.Code.Equals(t.Code)).Count(),
-                    Travel = string.IsNullOrEmpty(t.Transportation),
+                    Travel = string.IsNullOrEmpty(t.ModeTransportation),
                     Code = t.Code,
                     Status = t.Status,
                     Pregnant = t.Type.Equals("pregnant"),
                     Seen = t.DateSeen != default,
-                    Walkin = t.WalkIn.Equals("yes"),
+                    Walkin = t.Walkin.Equals("yes"),
                     UpdatedAt = t.DateReferred,
                     Activities = activities.Where(x => x.Code.Equals(t.Code) && x.Status != _status.Value.CALLING).OrderByDescending(x => x.CreatedAt)
                         .Select(i => new ActivityLess
@@ -331,9 +341,9 @@ namespace Referral2.Controllers
                             Status = i.Status,
                             DateAction = i.DateReferred.ToString("MMM dd, yyyy hh:mm tt", CultureInfo.InvariantCulture),
                             FacilityFrom = i.ReferredFromNavigation == null ? "" : i.ReferredFromNavigation.Name,
-                            FacilityFromContact = i.ReferredFromNavigation == null ? "" : i.ReferredFromNavigation.Contact,
+                            FacilityFromContact = i.ReferredFromNavigation == null ? "" : i.ReferredFromNavigation.ContactNo,
                             FacilityTo = t.ReferredToNavigation.Name,
-                            PatientName = i.Patient.FirstName + " " + i.Patient.MiddleName + " " + i.Patient.LastName,
+                            PatientName = i.Patient.Fname + " " + i.Patient.Mname + " " + i.Patient.Lname,
                             ActionMd = i.ActionMdNavigation.GetMDFullName(),
                             ReferringMd = i.ReferringMdNavigation.GetMDFullName(),
                             Remarks = i.Remarks
@@ -351,9 +361,10 @@ namespace Referral2.Controllers
 
             return View(track);
         }
-
-
+        #endregion
+        #region INCOMING
         //GET: Incoming patients
+        [HttpGet]
         public async Task<IActionResult> Incoming(string search, string dateRange, int? department, string status, int? page)
         {
             #region Initialize variables
@@ -391,6 +402,7 @@ namespace Referral2.Controllers
                 .Activity.Where(x => x.DateReferred >= StartDate && x.DateReferred <= EndDate);
 
             var incoming = _context.Tracking
+                .Include(x=>x.Seen)
                 .Where(t => t.DateReferred >= StartDate && t.DateReferred <= EndDate)
                 .Where(t => t.ReferredTo == UserFacility)
                 .Select(t => new IncomingViewModel()
@@ -398,9 +410,9 @@ namespace Referral2.Controllers
                     Pregnant = t.Type.Equals("pregnant"),
                     TrackingId = t.Id,
                     Code = t.Code,
-                    PatientName = t.Patient.GetFullName().NameToUpper(),
+                    PatientName = t.Patient.Fname + " " + (t.Patient.Mname ?? "") + " " + t.Patient.Lname,
                     PatientSex = t.Patient.Sex,
-                    PatientAge = t.Patient.DateOfBirth.ComputeAge(),
+                    PatientAge = t.Patient.Dob.ComputeAge(),
                     Status = t.Status,
                     ReferringMd = t.ReferringMdNavigation.GetMDFullName().NameToUpper(),
                     ActionMd = activities.OrderByDescending(x => x.DateReferred).Where(x => x.Status == t.Status && x.Code == t.Code).First().ActionMdNavigation.GetMDFullName().NameToUpper(),
@@ -416,8 +428,8 @@ namespace Referral2.Controllers
                     DepartmentId = (int)t.DepartmentId
                 });
 
-            #endregion
 
+            #endregion
             if (department != null)
             {
                 incoming = incoming.Where(x => x.DepartmentId.Equals(department));
@@ -427,7 +439,7 @@ namespace Referral2.Controllers
 
             if (!string.IsNullOrEmpty(search))
             {
-                incoming = incoming.Where(s => s.Code.Equals(search));
+                incoming = incoming.Where(s => s.Code.Equals(search) || s.PatientName.ToUpper().Contains(search));
             }
 
             if (!string.IsNullOrEmpty(status))
@@ -445,7 +457,8 @@ namespace Referral2.Controllers
             ViewBag.Total = incoming.Count();
             return View(await PaginatedList<IncomingViewModel>.CreateAsync(incoming.OrderByDescending(x => x.DateAction), page ?? 1, size));
         }
-        // GET: Referred
+        #endregion
+        #region REFERRED
         public async Task<IActionResult> Referred(string search, string dateRange, int? facilityId, string status, int? page)
         {
             #region Initialize variables
@@ -468,29 +481,34 @@ namespace Referral2.Controllers
             var feedbacks = _context.Feedback.Where(x => x.CreatedAt >= StartDate && x.CreatedAt <= EndDate);
             var facilities = _context.Facility.Where(x => x.Id != UserFacility);
             var referred = _context.Tracking
-                .Include(x=>x.Patient)
+                .Include(x => x.Patient).ThenInclude(x => x.Barangay)
+                .Include(x => x.Patient).ThenInclude(x => x.Muncity)
+                .Include(x => x.Patient).ThenInclude(x => x.Province)
                 .Where(x => x.ReferredFrom == UserFacility && x.DateReferred >= StartDate && x.DateReferred <= EndDate)
+                .OrderByDescending(x => x.UpdatedAt)
                 .Select(t => new ReferredViewModel
                 {
                     PatientId = t.PatientId,
-                    PatientName = t.Patient.FirstName + " " + t.Patient.MiddleName + " " + t.Patient.LastName,
+                    PatientName = t.Patient.Fname + " " + (t.Patient.Mname ?? "") + " " + t.Patient.Lname,
                     PatientSex = t.Patient.Sex,
-                    PatientAge = t.Patient.DateOfBirth.ComputeAge(),
-                    PatientAddress = /*t.Patient.Barangay.Description+", "+(t.Patient.Barangay.Muncity.Description)+", "+t.Patient.Province.Description, //*/t.Patient.GetAddress(),
-                    ReferredBy = GlobalFunctions.GetMDFullName(t.ReferringMdNavigation),
-                    ReferredTo = GlobalFunctions.GetMDFullName(t.ActionMdNavigation),
+                    PatientAge = t.Patient.Dob.ComputeAge(),
+                    Barangay = t.Patient.Barangay.Description,
+                    Muncity = t.Patient.Muncity.Description,
+                    Province = t.Patient.Province.Description,
+                    ReferredBy = t.ReferringMdNavigation.GetMDFullName(),
+                    ReferredTo = t.ActionMdNavigation.GetMDFullName(),
                     ReferredToId = t.ReferredTo,
                     TrackingId = t.Id,
                     SeenCount = _context.Seen.Where(x => x.TrackingId.Equals(t.Id)).Count(),
                     CallerCount = activities.Where(x => x.Code.Equals(t.Code) && x.Status.Equals(_status.Value.CALLING)).Count(),
                     IssueCount = _context.Issue.Where(x => x.TrackingId.Equals(t.Id)).Count(),
                     ReCoCount = feedbacks.Where(x => x.Code.Equals(t.Code)).Count(),
-                    Travel = string.IsNullOrEmpty(t.Transportation),
+                    Travel = string.IsNullOrEmpty(t.ModeTransportation),
                     Code = t.Code,
                     Status = t.Status,
                     Pregnant = t.Type.Equals("pregnant"),
                     Seen = t.DateSeen != default,
-                    Walkin = t.WalkIn.Equals("yes"),
+                    Walkin = t.Walkin.Equals("yes"),
                     UpdatedAt = t.UpdatedAt,
                     Activities = activities.Where(x => x.Code.Equals(t.Code)).OrderByDescending(x => x.CreatedAt)
                         .Select(i => new ActivityLess
@@ -498,16 +516,15 @@ namespace Referral2.Controllers
                             Status = i.Status,
                             DateAction = i.DateReferred.ToString("MMM dd, yyyy hh:mm tt", CultureInfo.InvariantCulture),
                             FacilityFrom = i.ReferredFromNavigation == null ? "" : i.ReferredFromNavigation.Name,
-                            FacilityFromContact = i.ReferredFromNavigation == null ? "" : i.ReferredFromNavigation.Contact,
+                            FacilityFromContact = i.ReferredFromNavigation == null ? "" : i.ReferredFromNavigation.ContactNo,
                             FacilityTo = t.ReferredToNavigation.Name,
-                            PatientName = i.Patient.FirstName + " " + i.Patient.MiddleName + " " + i.Patient.LastName,
-                            ActionMd = GlobalFunctions.GetMDFullName(i.ActionMdNavigation),
-                            ReferringMd = GlobalFunctions.GetMDFullName(i.ReferringMdNavigation),
+                            PatientName = i.Patient.Fname + " " + i.Patient.Mname + " " + i.Patient.Lname,
+                            ActionMd = i.ActionMdNavigation.GetMDFullName(),
+                            ReferringMd = i.ReferringMdNavigation.GetMDFullName(),
                             Remarks = i.Remarks
                         })
                 });
             #endregion
-            ViewBag.Total = referred.Count();
             ViewBag.Facilities = new SelectList(facilities, "Id", "Name");
             ViewBag.ListStatus = new SelectList(ListContainer.ListStatus, "Key", "Value");
 
@@ -537,8 +554,9 @@ namespace Referral2.Controllers
 
             int size = 3;
 
-            return View(await PaginatedList<ReferredViewModel>.CreateAsync(referred.OrderByDescending(x => x.UpdatedAt), page ?? 1, size));
+            return View(await PaginatedList<ReferredViewModel>.CreateAsync(referred, page ?? 1, size));
         }
+        #endregion
 
         #region View Patients Socket Components
 

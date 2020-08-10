@@ -19,39 +19,51 @@ namespace Referral2.Models
         }
 
         [Key]
+        [Column("id")]
         public int Id { get; set; }
+        [Column("unique_id")]
         [StringLength(50)]
         public string UniqueId { get; set; }
         [Required]
+        [Column("fname")]
         [StringLength(50)]
-        public string FirstName { get; set; }
-        [Required]
+        public string Fname { get; set; }
+        [Column("mname")]
         [StringLength(50)]
-        public string MiddleName { get; set; }
-        [Required]
+        public string Mname { get; set; }
+        [Column("lname")]
         [StringLength(50)]
-        public string LastName { get; set; }
-        [Column(TypeName = "date")]
-        [DataType(DataType.Date)]
-        public DateTime DateOfBirth { get; set; }
-        [Required]
+        public string Lname { get; set; }
+        [Column("dob", TypeName = "date")]
+        public DateTime Dob { get; set; }
+        [Column("sex")]
         [StringLength(50)]
         public string Sex { get; set; }
         [Required]
+        [Column("civil_status")]
         [StringLength(50)]
         public string CivilStatus { get; set; }
+        [Column("phic_id")]
         [StringLength(50)]
         public string PhicId { get; set; }
+        [Column("phic_status")]
         [StringLength(50)]
         public string PhicStatus { get; set; }
+        [Column("barangay_id")]
+        public int? BarangayId { get; set; }
+        [Column("muncity_id")]
+        public int? MuncityId { get; set; }
+        [Column("province_id")]
+        public int? ProvinceId { get; set; }
+        [Column("address")]
         [StringLength(50)]
         public string Address { get; set; }
-        public int? BarangayId { get; set; }
-        public int? MuncityId { get; set; }
-        public int? ProvinceId { get; set; }
+        [Column("tsekap_patient")]
         public int? TsekapPatient { get; set; }
-        public DateTime? CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; }
 
         [ForeignKey(nameof(BarangayId))]
         [InverseProperty("Patient")]

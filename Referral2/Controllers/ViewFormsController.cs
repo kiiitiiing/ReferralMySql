@@ -26,7 +26,7 @@ namespace Referral2.Controllers
             _roles = roles;
             _status = status;
         }
-
+        #region PATIENT FORM
         public async Task<IActionResult> PatientForm(string code)
         {
             if (code == null)
@@ -39,17 +39,19 @@ namespace Referral2.Controllers
                 .Include(x => x.ReferredToNavigation).ThenInclude(x => x.Barangay)
                 .Include(x => x.ReferredToNavigation).ThenInclude(x => x.Muncity)
                 .Include(x => x.ReferredToNavigation).ThenInclude(x => x.Province)
-                .Include(x => x.ReferringFacility).ThenInclude(x => x.Barangay)
-                .Include(x => x.ReferringFacility).ThenInclude(x => x.Muncity)
-                .Include(x => x.ReferringFacility).ThenInclude(x => x.Province)
+                .Include(x => x.ReferringFacilityNavigation).ThenInclude(x => x.Barangay)
+                .Include(x => x.ReferringFacilityNavigation).ThenInclude(x => x.Muncity)
+                .Include(x => x.ReferringFacilityNavigation).ThenInclude(x => x.Province)
+                .Include(x => x.ReferringMdNavigation)
+                .Include(x => x.ReferredMdNavigation)
                 .Include(x => x.Department)
                 .Single(x => x.Code.Equals(code));
 
             if (patientForm == null)
                 return NotFound();
 
-            var tracking = _context.Tracking.Single(x => x.Code.Equals(code));
-            var activity = _context.Activity.Single(x => x.Code.Equals(code) && x.Status.Equals(_status.Value.REFERRED));
+            var tracking = await _context.Tracking.FirstOrDefaultAsync(x => x.Code.Equals(code));
+            var activity = await _context.Activity.FirstOrDefaultAsync(x => x.Code.Equals(code) && x.Status.Equals(_status.Value.REFERRED));
 
             if (!activity.Status.Equals(_status.Value.REFERRED))
                 activity.Status = _status.Value.REFERRED;
@@ -71,6 +73,8 @@ namespace Referral2.Controllers
             await _context.SaveChangesAsync();
             return PartialView(patientForm);
         }
+        #endregion
+        #region PREGNANT FORM
         public async Task<IActionResult> PregnantForm(string code)
         {
             var form = _context.PregnantForm
@@ -121,7 +125,8 @@ namespace Referral2.Controllers
             await _context.SaveChangesAsync();
             return PartialView(pregnantForm);
         }
-
+        #endregion
+        #region PRINT NORMAL FORM
         public async Task<IActionResult> PrintableNormalForm(string code)
         {
             var form = await _context.PatientForm
@@ -131,24 +136,27 @@ namespace Referral2.Controllers
                 .Include(x => x.ReferredToNavigation).ThenInclude(x => x.Barangay)
                 .Include(x => x.ReferredToNavigation).ThenInclude(x => x.Muncity)
                 .Include(x => x.ReferredToNavigation).ThenInclude(x => x.Province)
-                .Include(x => x.ReferringFacility).ThenInclude(x => x.Barangay)
-                .Include(x => x.ReferringFacility).ThenInclude(x => x.Muncity)
-                .Include(x => x.ReferringFacility).ThenInclude(x => x.Province)
+                .Include(x => x.ReferringFacilityNavigation).ThenInclude(x => x.Barangay)
+                .Include(x => x.ReferringFacilityNavigation).ThenInclude(x => x.Muncity)
+                .Include(x => x.ReferringFacilityNavigation).ThenInclude(x => x.Province)
+                .Include(x => x.ReferringMdNavigation)
+                .Include(x => x.ReferredMdNavigation)
                 .Include(x => x.Department)
                 .SingleOrDefaultAsync(x => x.Code.Equals(code));
 
             return PartialView(form);
         }
-
+        #endregion
+        #region PRINT PREGNANT FORM
         public async Task<IActionResult> PrintablePregnantForm(string code)
         {
             var form = _context.PregnantForm
                 .Include(x => x.PatientBaby)
                 .Include(x => x.Department)
-                .Include(x => x.PatientWoman).ThenInclude(x=>x.Barangay)
+                .Include(x => x.PatientWoman).ThenInclude(x => x.Barangay)
                 .Include(x => x.PatientWoman).ThenInclude(x => x.Muncity)
                 .Include(x => x.PatientWoman).ThenInclude(x => x.Province)
-                .Include(x => x.ReferredToNavigation).ThenInclude(x=>x.Barangay)
+                .Include(x => x.ReferredToNavigation).ThenInclude(x => x.Barangay)
                 .Include(x => x.ReferredToNavigation).ThenInclude(x => x.Muncity)
                 .Include(x => x.ReferredToNavigation).ThenInclude(x => x.Province)
                 .Include(x => x.ReferringFacilityNavigation).ThenInclude(x => x.Barangay)
@@ -156,17 +164,17 @@ namespace Referral2.Controllers
                 .Include(x => x.ReferringFacilityNavigation).ThenInclude(x => x.Province)
                 .Include(x => x.ReferredByNavigation)
                 .FirstOrDefault(x => x.Code.Equals(code));
-
+                
             Baby baby = null;
 
-            if(form.PatientBabyId != null)
-                baby = await _context.Baby.SingleOrDefaultAsync(x => x.BabyId.Equals(form.PatientBabyId));
+            if (form.PatientBabyId != null)
+                baby = await _context.Baby.FirstOrDefaultAsync(x => x.BabyId.Equals(form.PatientBabyId));
 
             var pregnantForm = new PregnantViewModel(form, baby);
 
             return PartialView(pregnantForm);
         }
-
+        #endregion
         #region HELPERS
         public int UserId()
         {

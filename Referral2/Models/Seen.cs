@@ -8,12 +8,18 @@ namespace Referral2.Models
     public partial class Seen
     {
         [Key]
+        [Column("id")]
         public int Id { get; set; }
+        [Column("tracking_id")]
         public int TrackingId { get; set; }
+        [Column("facility_id")]
         public int FacilityId { get; set; }
+        [Column("user_md")]
         public int UserMd { get; set; }
-        public DateTime? CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; }
 
         [ForeignKey(nameof(FacilityId))]
         [InverseProperty("Seen")]

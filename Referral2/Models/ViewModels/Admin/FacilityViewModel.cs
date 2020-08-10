@@ -39,9 +39,12 @@ namespace Referral2.Models.ViewModels.Admin
         public string Chief { get; set; }
         [Required]
         [Display(Name = "level")]
-        public int? Level { get; set; }
+        public string Level { get; set; }
         [Required]
         [Display(Name = "type")]
         public string Type { get; set; }
+        [Required]
+        [Display(Name = "status")]
+        public string Status { get; set; }
     }
 }

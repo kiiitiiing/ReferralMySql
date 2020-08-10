@@ -17,7 +17,7 @@
                             <tr class="has-group">
                                 <td>Facility :</td>
                                 <td>
-                                    <select class="form-control" name="facility" asp-items="ViewBag.Facilities" required>
+                                    <select class="form-control select2" name="facility" asp-items="ViewBag.Facilities" required>
                                         <option value="">Select Facility</option>
                                     </select>
                                 </td>
@@ -54,3 +54,9 @@
     </div>
     <!-- MONTHLY ACTIVITY -->
 </div>
+
+<script>
+    $('.select2').select2({
+        theme: 'bootstrap4'
+    })
+</script>

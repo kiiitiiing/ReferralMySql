@@ -27,16 +27,24 @@
         Lastname = User.FindFirstValue(ClaimTypes.Surname)
     };
 
-    if (GetFirstPatient.Status.Equals("accepted", StringComparison.OrdinalIgnoreCase))
+    if(GetFirstPatient != null)
     {
-        NotifyPatient = new NotificationModel
+        if (GetFirstPatient.Status.Equals("accepted", StringComparison.OrdinalIgnoreCase))
         {
-            PatientCode = GetFirstPatient.Code,
-            TrackStatus = GetFirstPatient.Status,
-            UpdatedAt = DateTime.Now
-        };
+            NotifyPatient = new NotificationModel
+            {
+                PatientCode = GetFirstPatient.Code,
+                TrackStatus = GetFirstPatient.Status,
+                UpdatedAt = DateTime.Now
+            };
+        }
     }
 }
+<style>
+    .form-group>button{
+        margin-right: 4px !important;
+    }
+</style>
 
 <div class="content">
     <div class="container">
@@ -56,7 +64,7 @@
                     </div>
                     <!-- CARD DANGER BODY -->
                     <div class="card-body">
-                        <form asp-action="Incoming" method="post">
+                        <form asp-action="Incoming" method="get">
                             <!-- SEARCH -->
                             <div class="form-group ">
                                 <input class="form-control" type="text" placeholder="Code, Firstname, Lastname" name="search" value="@ViewBag.CurrentSearch" autocomplete="off" />
@@ -138,7 +146,13 @@
                                                                 <div class="form-group">
                                                                     @if (item.SeenCount > 0)
                                                                     {
-                                                                        <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })">
+                                                                        <button type="button" 
+                                                                                class="btn btn-success btn-xs" 
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#small_modal"
+                                                                                data-action="#small_content"
+                                                                                data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-user-md"></i>
                                                                             &nbsp;Seen
                                                                             <small class="badge bg-green" id="seen_@item.Code">@item.SeenCount</small>
@@ -146,7 +160,12 @@
                                                                     }
                                                                     @if (item.CallCount > 0)
                                                                     {
-                                                                        <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                                                                        <button class="btn btn-xs bg-gradient-primary" 
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#small_modal"
+                                                                                data-action="#small_content"
+                                                                                data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-phone"></i>
                                                                             &nbsp;Caller
 
@@ -154,7 +173,12 @@
 
                                                                         </button>
                                                                     }
-                                                                    <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                                                                    <button type="button" class="btn btn-info btn-xs" 
+                                                                            data-toggle="ajax-modal"
+                                                                            data-target="#small_modal"
+                                                                            data-action="#small_content"
+                                                                            data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })"
+                                                                            onclick="OpenModal($(this));">
                                                                         <i class="fa fa-comments"></i>
                                                                         &nbsp;ReCo
                                                                         @if (item.FeedbackCount > 0)
@@ -196,7 +220,13 @@
                                                                 <div class="form-group">
                                                                     @if (item.SeenCount > 0)
                                                                     {
-                                                                        <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })">
+                                                                        <button type="button" 
+                                                                                class="btn btn-success btn-xs" 
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#small_modal"
+                                                                                data-action="#small_content"
+                                                                                data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-user-md"></i>
                                                                             &nbsp;Seen
                                                                             <small class="badge bg-green" id="seen_@item.Code">@item.SeenCount</small>
@@ -204,7 +234,12 @@
                                                                     }
                                                                     @if (item.CallCount > 0)
                                                                     {
-                                                                        <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                                                                        <button class="btn btn-xs bg-gradient-primary" 
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#small_modal"
+                                                                                data-action="#small_content"
+                                                                                data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-phone"></i>
                                                                             &nbsp;Caller
 
@@ -212,7 +247,12 @@
 
                                                                         </button>
                                                                     }
-                                                                    <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                                                                    <button type="button" class="btn btn-info btn-xs" 
+                                                                            data-toggle="ajax-modal"
+                                                                            data-target="#small_modal"
+                                                                            data-action="#small_content"
+                                                                            data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })"
+                                                                            onclick="OpenModal($(this));">
                                                                         <i class="fa fa-comments"></i>
                                                                         &nbsp;ReCo
                                                                         @if (item.FeedbackCount > 0)
@@ -250,7 +290,13 @@
                                                                 <div class="form-group">
                                                                     @if (item.SeenCount > 0)
                                                                     {
-                                                                        <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })">
+                                                                        <button type="button" 
+                                                                                class="btn btn-success btn-xs" 
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#small_modal"
+                                                                                data-action="#small_content"
+                                                                                data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-user-md"></i>
                                                                             &nbsp;Seen
                                                                             <small class="badge bg-green" id="seen_@item.Code">@item.SeenCount</small>
@@ -258,7 +304,12 @@
                                                                     }
                                                                     @if (item.CallCount > 0)
                                                                     {
-                                                                        <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                                                                        <button class="btn btn-xs bg-gradient-primary" 
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#small_modal"
+                                                                                data-action="#small_content"
+                                                                                data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-phone"></i>
                                                                             &nbsp;Caller
 
@@ -266,7 +317,12 @@
 
                                                                         </button>
                                                                     }
-                                                                    <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                                                                    <button type="button" class="btn btn-info btn-xs" 
+                                                                            data-toggle="ajax-modal"
+                                                                            data-target="#small_modal"
+                                                                            data-action="#small_content"
+                                                                            data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })"
+                                                                            onclick="OpenModal($(this));">
                                                                         <i class="fa fa-comments"></i>
                                                                         &nbsp;ReCo
                                                                         @if (item.FeedbackCount > 0)
@@ -305,7 +361,13 @@
                                                                 <div class="form-group">
                                                                     @if (item.SeenCount > 0)
                                                                     {
-                                                                        <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })">
+                                                                        <button type="button" 
+                                                                                class="btn btn-success btn-xs" 
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#small_modal"
+                                                                                data-action="#small_content"
+                                                                                data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-user-md"></i>
                                                                             &nbsp;Seen
                                                                             <small class="badge bg-green" id="seen_@item.Code">@item.SeenCount</small>
@@ -313,7 +375,12 @@
                                                                     }
                                                                     @if (item.CallCount > 0)
                                                                     {
-                                                                        <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                                                                        <button class="btn btn-xs bg-gradient-primary" 
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#small_modal"
+                                                                                data-action="#small_content"
+                                                                                data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-phone"></i>
                                                                             &nbsp;Caller
 
@@ -321,7 +388,12 @@
 
                                                                         </button>
                                                                     }
-                                                                    <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                                                                    <button type="button" class="btn btn-info btn-xs"
+                                                                            data-toggle="ajax-modal"
+                                                                            data-target="#small_modal"
+                                                                            data-action="#small_content"
+                                                                            data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })"
+                                                                            onclick="OpenModal($(this));">
                                                                         <i class="fa fa-comments"></i>
                                                                         &nbsp;ReCo
                                                                         @if (item.FeedbackCount > 0)
@@ -363,7 +435,13 @@
                                                                 <div class="form-group">
                                                                     @if (item.SeenCount > 0)
                                                                     {
-                                                                        <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })">
+                                                                        <button type="button" 
+                                                                                class="btn btn-success btn-xs" 
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#small_modal"
+                                                                                data-action="#small_content"
+                                                                                data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-user-md"></i>
                                                                             &nbsp;Seen
                                                                             <small class="badge bg-green" id="seen_@item.Code">@item.SeenCount</small>
@@ -371,7 +449,12 @@
                                                                     }
                                                                     @if (item.CallCount > 0)
                                                                     {
-                                                                        <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                                                                        <button class="btn btn-xs bg-gradient-primary" 
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#small_modal"
+                                                                                data-action="#small_content"
+                                                                                data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-phone"></i>
                                                                             &nbsp;Caller
 
@@ -379,7 +462,12 @@
 
                                                                         </button>
                                                                     }
-                                                                    <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                                                                    <button type="button" class="btn btn-info btn-xs" 
+                                                                            data-toggle="ajax-modal"
+                                                                            data-target="#small_modal"
+                                                                            data-action="#small_content"
+                                                                            data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })"
+                                                                            onclick="OpenModal($(this));">
                                                                         <i class="fa fa-comments"></i>
                                                                         &nbsp;ReCo
                                                                         @if (item.FeedbackCount > 0)
@@ -417,7 +505,13 @@
                                                                 <div class="form-group">
                                                                     @if (item.SeenCount > 0)
                                                                     {
-                                                                        <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })">
+                                                                        <button type="button" 
+                                                                                class="btn btn-success btn-xs" 
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#small_modal"
+                                                                                data-action="#small_content"
+                                                                                data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-user-md"></i>
                                                                             &nbsp;Seen
                                                                             <small class="badge bg-green" id="seen_@item.Code">@item.SeenCount</small>
@@ -425,7 +519,12 @@
                                                                     }
                                                                     @if (item.CallCount > 0)
                                                                     {
-                                                                        <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                                                                        <button class="btn btn-xs bg-gradient-primary" 
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#small_modal"
+                                                                                data-action="#small_content"
+                                                                                data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-phone"></i>
                                                                             &nbsp;Caller
 
@@ -433,7 +532,12 @@
 
                                                                         </button>
                                                                     }
-                                                                    <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                                                                    <button type="button" class="btn btn-info btn-xs" 
+                                                                            data-toggle="ajax-modal"
+                                                                            data-target="#small_modal"
+                                                                            data-action="#small_content"
+                                                                            data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })"
+                                                                            onclick="OpenModal($(this));">
                                                                         <i class="fa fa-comments"></i>
                                                                         &nbsp;ReCo
                                                                         @if (item.FeedbackCount > 0)
@@ -480,7 +584,13 @@
                                                                         var dataTarget = item.Pregnant ? "pregnant-form-modal" : "patient-form-modal";
                                                                         var dataUrl = item.Pregnant ? Url.Action("PregnantForm", "ViewForms", new { code = item.Code }) : Url.Action("PatientForm", "ViewForms", new { code = item.Code });
 
-                                                                        <button type="button" class="btn btn-warning btn-xs" data-toggle="ajax-modal" data-target="#@dataTarget" data-url="@dataUrl">
+                                                                        <button type="button"
+                                                                                class="btn btn-warning btn-xs"
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#large_modal"
+                                                                                data-action="#large_content"
+                                                                                data-url="@dataUrl"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-user-md"></i>
                                                                             &nbsp;View Form
                                                                         </button>
@@ -488,7 +598,13 @@
                                                                     }
                                                                     @if (item.SeenCount > 0)
                                                                     {
-                                                                        <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })">
+                                                                        <button type="button" 
+                                                                                class="btn btn-success btn-xs" 
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#small_modal"
+                                                                                data-action="#small_content"
+                                                                                data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-user-md"></i>
                                                                             &nbsp;Seen
                                                                             <small class="badge bg-green" id="seen_@item.Code">@item.SeenCount</small>
@@ -496,7 +612,12 @@
                                                                     }
                                                                     @if (item.CallCount > 0)
                                                                     {
-                                                                        <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                                                                        <button class="btn btn-xs bg-gradient-primary" 
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#small_modal"
+                                                                                data-action="#small_content"
+                                                                                data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-phone"></i>
                                                                             &nbsp;Caller
 
@@ -504,7 +625,12 @@
 
                                                                         </button>
                                                                     }
-                                                                    <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                                                                    <button type="button" class="btn btn-info btn-xs" 
+                                                                            data-toggle="ajax-modal"
+                                                                            data-target="#small_modal"
+                                                                            data-action="#small_content"
+                                                                            data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })"
+                                                                            onclick="OpenModal($(this));">
                                                                         <i class="fa fa-comments"></i>
                                                                         &nbsp;ReCo
                                                                         @if (item.FeedbackCount > 0)
@@ -551,7 +677,13 @@
                                                                         var dataTarget = item.Pregnant ? "pregnant-form-modal" : "patient-form-modal";
                                                                         var dataUrl = item.Pregnant ? Url.Action("PregnantForm", "ViewForms", new { code = item.Code }) : Url.Action("PatientForm", "ViewForms", new { code = item.Code });
 
-                                                                        <button type="button" class="btn btn-warning btn-xs" data-toggle="ajax-modal" data-target="#@dataTarget" data-url="@dataUrl">
+                                                                        <button type="button" 
+                                                                                class="btn btn-warning btn-xs"
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#large_modal"
+                                                                                data-action="#large_content"
+                                                                                data-url="@dataUrl"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-user-md"></i>
                                                                             &nbsp;View Form
                                                                         </button>
@@ -559,7 +691,13 @@
                                                                     }
                                                                     @if (item.SeenCount > 0)
                                                                     {
-                                                                        <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })">
+                                                                        <button type="button" 
+                                                                                class="btn btn-success btn-xs" 
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#small_modal"
+                                                                                data-action="#small_content"
+                                                                                data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-user-md"></i>
                                                                             &nbsp;Seen
                                                                             <small class="badge bg-green" id="seen_@item.Code">@item.SeenCount</small>
@@ -567,7 +705,12 @@
                                                                     }
                                                                     @if (item.CallCount > 0)
                                                                     {
-                                                                        <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                                                                        <button class="btn btn-xs bg-gradient-primary" 
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#small_modal"
+                                                                                data-action="#small_content"
+                                                                                data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-phone"></i>
                                                                             &nbsp;Caller
 
@@ -575,7 +718,12 @@
 
                                                                         </button>
                                                                     }
-                                                                    <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                                                                    <button type="button" class="btn btn-info btn-xs" 
+                                                                            data-toggle="ajax-modal"
+                                                                            data-target="#small_modal"
+                                                                            data-action="#small_content"
+                                                                            data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })"
+                                                                            onclick="OpenModal($(this));">
                                                                         <i class="fa fa-comments"></i>
                                                                         &nbsp;ReCo
                                                                         @if (item.FeedbackCount > 0)
@@ -617,7 +765,13 @@
                                                                 <div class="form-group">
                                                                     @if (item.SeenCount > 0)
                                                                     {
-                                                                        <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })">
+                                                                        <button type="button" 
+                                                                                class="btn btn-success btn-xs" 
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#small_modal"
+                                                                                data-action="#small_content"
+                                                                                data-url="@Url.Action("ViewSeens","Modals", new { trackingId = item.TrackingId })"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-user-md"></i>
                                                                             &nbsp;Seen
                                                                             <small class="badge bg-green" id="seen_@item.Code">@item.SeenCount</small>
@@ -625,7 +779,12 @@
                                                                     }
                                                                     @if (item.CallCount > 0)
                                                                     {
-                                                                        <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })">
+                                                                        <button class="btn btn-xs bg-gradient-primary" 
+                                                                                data-toggle="ajax-modal"
+                                                                                data-target="#small_modal"
+                                                                                data-action="#small_content"
+                                                                                data-url="@Url.Action("ViewCalls","Modals", new { code = item.Code })"
+                                                                                onclick="OpenModal($(this));">
                                                                             <i class="fa fa-phone"></i>
                                                                             &nbsp;Caller
 
@@ -633,7 +792,12 @@
 
                                                                         </button>
                                                                     }
-                                                                    <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#reco-modal" data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })">
+                                                                    <button type="button" class="btn btn-info btn-xs" 
+                                                                            data-toggle="ajax-modal"
+                                                                            data-target="#small_modal"
+                                                                            data-action="#small_content"
+                                                                            data-url="@Url.Action("ViewReco","Modals", new { code = item.Code })"
+                                                                            onclick="OpenModal($(this));">
                                                                         <i class="fa fa-comments"></i>
                                                                         &nbsp;ReCo
                                                                         @if (item.FeedbackCount > 0)

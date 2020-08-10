@@ -13,6 +13,8 @@ namespace Referral2.Models
             ActivityReferringMdNavigation = new HashSet<Activity>();
             FeedbackReciever = new HashSet<Feedback>();
             FeedbackSender = new HashSet<Feedback>();
+            Inventory = new HashSet<Inventory>();
+            InventoryLogs = new HashSet<InventoryLogs>();
             Login = new HashSet<Login>();
             PatientFormReferredMdNavigation = new HashSet<PatientForm>();
             PatientFormReferringMdNavigation = new HashSet<PatientForm>();
@@ -23,60 +25,82 @@ namespace Referral2.Models
         }
 
         [Key]
+        [Column("id")]
         public int Id { get; set; }
+        [Column("username")]
         [StringLength(50)]
         public string Username { get; set; }
         [Required]
+        [Column("password")]
         [StringLength(255)]
-        [DataType(DataType.Password)]
         public string Password { get; set; }
         [Required]
+        [Column("level")]
         [StringLength(50)]
         public string Level { get; set; }
+        [Column("facility_id")]
         public int FacilityId { get; set; }
+        [Column("department_id")]
         public int? DepartmentId { get; set; }
         [Required]
+        [Column("fname")]
         [StringLength(50)]
-        public string Firstname { get; set; }
+        public string Fname { get; set; }
+        [Column("mname")]
+        [StringLength(50)]
+        public string Mname { get; set; }
         [Required]
+        [Column("lname")]
         [StringLength(50)]
-        public string Middlename { get; set; }
-        [Required]
-        [StringLength(50)]
-        public string Lastname { get; set; }
+        public string Lname { get; set; }
+        [Column("title")]
         [StringLength(50)]
         public string Title { get; set; }
         [Required]
+        [Column("contact_no")]
         [StringLength(50)]
-        public string Contact { get; set; }
+        public string ContactNo { get; set; }
         [Required]
+        [Column("email")]
         [StringLength(50)]
-        [DataType(DataType.EmailAddress)]
         public string Email { get; set; }
+        [Column("muncity_id")]
         public int? MuncityId { get; set; }
+        [Column("province_id")]
         public int ProvinceId { get; set; }
+        [Column("accreditation_no")]
         [StringLength(255)]
         public string AccreditationNo { get; set; }
+        [Column("accreditation_validity")]
         [StringLength(255)]
         public string AccreditationValidity { get; set; }
+        [Column("license_no")]
         [StringLength(255)]
         public string LicenseNo { get; set; }
+        [Column("prefix")]
         [StringLength(255)]
         public string Prefix { get; set; }
+        [Column("picture")]
         [StringLength(255)]
         public string Picture { get; set; }
+        [Column("designation")]
         [StringLength(255)]
         public string Designation { get; set; }
+        [Column("status")]
         [StringLength(255)]
         public string Status { get; set; }
+        [Column("last_login")]
         public DateTime LastLogin { get; set; }
+        [Column("login_status")]
         [StringLength(255)]
         public string LoginStatus { get; set; }
+        [Column("remember_token")]
         [StringLength(255)]
-        public string RemeberToken { get; set; }
+        public string RememberToken { get; set; }
+        [Column("created_at")]
         public DateTime? CreatedAt { get; set; }
+        [Column("updated_at")]
         public DateTime? UpdatedAt { get; set; }
-
 
         [ForeignKey(nameof(DepartmentId))]
         [InverseProperty("User")]
@@ -98,6 +122,10 @@ namespace Referral2.Models
         public virtual ICollection<Feedback> FeedbackReciever { get; set; }
         [InverseProperty(nameof(Feedback.Sender))]
         public virtual ICollection<Feedback> FeedbackSender { get; set; }
+        [InverseProperty("EncodedByNavigation")]
+        public virtual ICollection<Inventory> Inventory { get; set; }
+        [InverseProperty("EncodedByNavigation")]
+        public virtual ICollection<InventoryLogs> InventoryLogs { get; set; }
         [InverseProperty("User")]
         public virtual ICollection<Login> Login { get; set; }
         [InverseProperty(nameof(PatientForm.ReferredMdNavigation))]

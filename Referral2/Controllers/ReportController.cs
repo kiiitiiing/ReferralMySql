@@ -164,7 +164,7 @@ namespace Referral2.Controllers
             var patientForm = await _context.PatientForm
                 .Include(x => x.Patient)
                 .Include(x => x.ReferredToNavigation)
-                .Include(x => x.ReferringFacility)
+                .Include(x => x.ReferringFacilityNavigation)
                 .Include(x => x.Department)
                 .Include(x => x.ReferredToNavigation)
                 .Include(x => x.ReferringMdNavigation)
@@ -843,27 +843,27 @@ namespace Referral2.Controllers
                         </div>
                     </body>
                 </html>",
-                form.ReferringFacility.Name,
-                form.ReferringFacility.Contact,
-                GlobalFunctions.GetAddress(form.ReferringFacility),
+                form.ReferringFacilityNavigation.Name,
+                form.ReferringFacilityNavigation.ContactNo,
+                GlobalFunctions.GetAddress(form.ReferringFacilityNavigation),
                 form.ReferredToNavigation.Name,
                 form.Department.Description,
                 GlobalFunctions.GetAddress(form.ReferredToNavigation),
-                form.TimeReferred.ToString("MMMM d, yyyy h:mm tt",CultureInfo.InvariantCulture),
-                form.TimeTransferred == default? "" : form.TimeTransferred.ToString("MMMM d, yyyy h:mm tt", CultureInfo.InvariantCulture),
+                form.TimeReferred.GetDate("MMMM d, yyyy h:mm tt"),
+                form.TimeTransferred == default? "" : form.TimeTransferred.GetDate("MMMM d, yyyy h:mm tt"),
                 GlobalFunctions.GetFullName(form.Patient),
-                form.Patient.DateOfBirth.ComputeAge(),
+                form.Patient.Dob.ComputeAge(),
                 form.Patient.Sex,
                 form.Patient.CivilStatus,
                 GlobalFunctions.GetAddress(form.Patient),
                 form.Patient.PhicStatus,
                 form.Patient.PhicId,
                 form.CaseSummary,
-                form.RecommendSummary,
+                form.RecoSummary,
                 form.Diagnosis,
                 form.Reason,
                 GlobalFunctions.GetMDFullName(form.ReferringMdNavigation),
-                form.ReferringMdNavigation.Contact,
+                form.ReferringMdNavigation.ContactNo,
                 GlobalFunctions.GetMDFullName(form.ReferredMdNavigation),
                 form.Code);
             return pdf.ToString();
@@ -932,9 +932,9 @@ namespace Referral2.Controllers
                 form.ReferredDate.ToString("MMMM d, yyyy hh:mm tt",CultureInfo.InvariantCulture),
                 GlobalFunctions.GetMDFullName(form.ReferredByNavigation),
                 form.ArrivalDate == default ? "" : form.ArrivalDate.ToString("MMMM d, yyyy hh:mm tt", CultureInfo.InvariantCulture),
-                form.ReferredByNavigation.Contact,
+                form.ReferredByNavigation.ContactNo,
                 form.ReferringFacilityNavigation.Name,
-                form.ReferringFacilityNavigation.Contact,
+                form.ReferringFacilityNavigation.ContactNo,
                 form.HealthWorker,
                 form.ReferredToNavigation.Name,
                 form.Department.Description,
@@ -988,7 +988,7 @@ namespace Referral2.Controllers
                 </tbody>
             </table>",
             GlobalFunctions.GetFullName(form.PatientWoman),
-            form.PatientWoman.DateOfBirth.ComputeAge(),
+            form.PatientWoman.Dob.ComputeAge(),
             GlobalFunctions.GetAddress(form.PatientWoman),
             form.WomanReason,
             form.WomanMajorFindings,
@@ -1056,7 +1056,7 @@ namespace Referral2.Controllers
                     </tbody>
                 </table>",
                 GlobalFunctions.GetFullName(form.PatientBaby),
-                form.PatientBaby.DateOfBirth.ToString("MMMM d, yyyy hh:mm tt", CultureInfo.InvariantCulture),
+                form.PatientBaby.Dob.ToString("MMMM d, yyyy hh:mm tt", CultureInfo.InvariantCulture),
                 baby.Weight,
                 baby.GestationalAge,
                 form.BabyReason,

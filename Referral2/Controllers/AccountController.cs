@@ -45,8 +45,12 @@ namespace Referral2.Controllers
             public string UserLastname { get; set; }
         }
 
-        
-
+        public IActionResult ModalLoading()
+        {
+            return PartialView();
+        }
+        #region SWITCH USER
+        [Authorize(Policy = "Doctor")]
         public IActionResult SwitchUser()
         {
             var users = _context.User
@@ -54,13 +58,14 @@ namespace Referral2.Controllers
                 .Select(x => new ChangeLoginViewModel
                 {
                     Id = x.Id,
-                    UserLastname = x.Lastname + ", " + x.Firstname
+                    UserLastname = x.Lname + ", " + x.Fname
                 });
 
             ViewBag.Users = new SelectList(users, "Id", "UserLastname", UserId);
             return PartialView("~/Views/Account/SwitchUser.cshtml");
         }
 
+        [Authorize(Policy = "Doctor")]
         [HttpPost]
         public async Task<IActionResult> SwitchUser([Bind] SwitchUserModel model)
         {
@@ -69,7 +74,7 @@ namespace Referral2.Controllers
                 .Select(x => new ChangeLoginViewModel
                 {
                     Id = x.Id,
-                    UserLastname = (x.Lastname + ", " + x.Firstname).NameToUpper()
+                    UserLastname = (x.Lname + ", " + x.Fname).NameToUpper()
                 });
             if (ModelState.IsValid)
             {
@@ -91,8 +96,8 @@ namespace Referral2.Controllers
             ViewBag.Users = new SelectList(users, "Id", "UserLastname", UserId);
             return PartialView("~/Views/Account/SwitchUser.cshtml", model);
         }
-
-
+        #endregion
+        #region LOGIN
         // GET
         [HttpGet]
         public IActionResult Login(string returnUrl)
@@ -119,6 +124,10 @@ namespace Referral2.Controllers
                 else if (User.FindFirstValue(ClaimTypes.Role).Equals(_roles.Value.MCC))
                 {
                     return RedirectToAction("MccDashboard", "MedicalCenterChief");
+                }
+                else if (User.FindFirstValue(ClaimTypes.Role).Equals(_roles.Value.EOC))
+                {
+                    return RedirectToAction("Dashboard", "Eoc");
                 }
                 else
                     return NotFound();
@@ -154,6 +163,10 @@ namespace Referral2.Controllers
                     {
                         return RedirectToAction("MccDashboard", "MedicalCenterChief");
                     }
+                    else if (user.Level.Equals(_roles.Value.EOC))
+                    {
+                        return RedirectToAction("Dashboard", "Eoc");
+                    }
                 }
                 else
                 {
@@ -172,7 +185,7 @@ namespace Referral2.Controllers
             ViewBag.Result = false;
             return View(model);
         }
-
+        #endregion
         [Authorize]
         public async Task<ActionResult> BackAsAdmin()
         {
@@ -277,10 +290,10 @@ namespace Referral2.Controllers
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.GivenName, user.Firstname),
-                new Claim(ClaimTypes.Surname, user.Lastname),
+                new Claim(ClaimTypes.GivenName, user.Fname),
+                new Claim(ClaimTypes.Surname, user.Lname),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.MobilePhone, user.Contact),
+                new Claim(ClaimTypes.MobilePhone, user.ContactNo),
                 new Claim(ClaimTypes.Role, level),
                 new Claim("Facility", facilityId.ToString()),
                 new Claim("FacilityName", user.Facility.Name),
@@ -310,8 +323,8 @@ namespace Referral2.Controllers
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.GivenName, user.Firstname),
-                new Claim(ClaimTypes.Surname, user.Lastname),
+                new Claim(ClaimTypes.GivenName, user.Fname),
+                new Claim(ClaimTypes.Surname, user.Lname),
                 new Claim(ClaimTypes.Role, user.Level),
                 new Claim("Facility", user.FacilityId.ToString()),
                 new Claim("FacilityName", user.Facility.Name),

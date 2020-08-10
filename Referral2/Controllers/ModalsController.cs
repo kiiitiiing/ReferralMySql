@@ -28,7 +28,7 @@ namespace Referral2.Controllers
             _status = status;
         }
 
-        
+        #region SEEN
         // Get Seens
         public async Task<IActionResult> ViewSeens(int trackingId)
         {
@@ -38,12 +38,13 @@ namespace Referral2.Controllers
                 {
                     MdName = GlobalFunctions.GetMDFullName(x.UserMdNavigation),
                     SeenDate = (DateTime)x.CreatedAt,
-                    MdContact = x.UserMdNavigation.Contact
+                    MdContact = x.UserMdNavigation.ContactNo
                 });
 
             return PartialView(await seens.AsNoTracking().ToListAsync());
         }
-
+        #endregion
+        #region CALLS
         // Get calls
         public async Task<IActionResult> ViewCalls(string code)
         {
@@ -53,12 +54,13 @@ namespace Referral2.Controllers
                 {
                     MdName = GlobalFunctions.GetMDFullName(x.ActionMdNavigation),
                     SeenDate = (DateTime)x.DateReferred,
-                    MdContact = x.ActionMdNavigation.Contact
+                    MdContact = x.ActionMdNavigation.ContactNo
                 });
 
             return PartialView(await calls.AsNoTracking().ToListAsync());
         }
-
+        #endregion
+        #region RECO
         // Get Feedback
         public IActionResult ViewReco(string code)
         {
@@ -74,7 +76,6 @@ namespace Referral2.Controllers
 
             return PartialView("~/Views/Modals/ViewReco.cshtml", chats);
         }
-
         // POST Feedback
         [HttpPost]
         public async Task<IActionResult> ViewReco([Bind] ChatsModel model)
@@ -103,7 +104,7 @@ namespace Referral2.Controllers
             ViewBag.IsValid = false;
             return PartialView(chatsModel);
         }
-
+        #endregion
 
         #region HELPERS
 

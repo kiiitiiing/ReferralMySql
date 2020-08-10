@@ -4,16 +4,26 @@ namespace Referral2.Models.ViewModels.Doctor
 {
     public partial class ReferPatientViewModel
     {
-        [Required]
-        public int PatientId { get; set; }
+        public string FacilityName { get; set; }
+        public string FacilityAddress { get; set; }
+        public string Name { get; set; }
+        public int Age { get; set; }
+        public string Sex { get; set; }
+        public string CivilStatus { get; set; }
+        public string Address { get; set; }
+        public string PhicStatus { get; set; }
+        public string PhicId { get; set; }
         //Send form
         [Required]
-        [Display(Name ="facility")]
-        public int ReferredTo { get; set; }
+        public int PatientId { get; set; }
         [Required]
+        [Display(Name = "facility")]
+        public int Facility { get; set; }
+        [Required]
+        [Display(Name = "department")]
         public int Department { get; set; }
         [Required]
-        [Display(Name ="case summary")]
+        [Display(Name = "case summary")]
         public string CaseSummary { get; set; }
         [Required]
         [Display(Name = "summary of reco")]

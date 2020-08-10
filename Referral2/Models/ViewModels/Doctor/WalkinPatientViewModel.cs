@@ -10,7 +10,7 @@ namespace Referral2.Models.ViewModels.Doctor
         public int PatientId { get; set; }
         [Required]
         [Display(Name = "facility")]
-        public int ReferringFacility { get; set; }
+        public int Facility { get; set; }
         [Required]
         [Display(Name = "department")]
         public int Department { get; set; }

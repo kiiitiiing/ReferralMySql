@@ -1,8 +1,6 @@
 ﻿@model FacilityViewModel
 
-<div class="modal fade" id="update-facility-modal">
-    <div class="modal-dialog modal-sm" role="document">
-        <div class="modal-content">
+        <div class="modal-content" id="update-facility-modal">
             <div class="modal-header">
                 <fieldset>
                     <legend>
@@ -24,11 +22,12 @@
                     <div class="form-group">
                         <label>Abbr:</label>
                         <input class="form-control" type="text" asp-for="Abbrevation">
+                        <span class="text-danger" asp-validation-for="Abbrevation"></span>
                     </div>
                     <!-- PROVINCE -->
                     <div class="form-group">
                         <label>Province:</label>
-                        <select class="form-control" id="province-filter" asp-for="Province" asp-items="ViewBag.Provinces" required>
+                        <select class="form-control" id="province-filter" asp-for="Province" asp-items="ViewBag.Provinces" onchange="ProvinceOnChange($(this).val());">
                             <option value="">Select Province</option>
                         </select>
                         <span class="text-danger" asp-validation-for="Province"></span>
@@ -36,7 +35,7 @@
                     <!-- MUNCITY -->
                     <div class="form-group">
                         <label>Municipality:</label>
-                        <select class="form-control" id="muncity-filter" asp-for="Muncity" asp-items="ViewBag.Muncities">
+                        <select class="form-control" id="muncity-filter" asp-for="Muncity" asp-items="ViewBag.Muncities" onchange="MuncityOnChange($(this).val());">
                             <option value="">Select Municipality</option>
                         </select>
                         <span class="text-danger" asp-validation-for="Muncity"></span>
@@ -89,6 +88,14 @@
                         </select>
                         <span class="text-danger" asp-validation-for="Type"></span>
                     </div>
+                    <!-- STATUS -->
+                    <div class="form-group">
+                        <label>Hospital Status:</label>
+                        <select class="form-control" asp-for="Status" asp-items="ViewBag.Status">
+                            <option value="">Select Hospital Type</option>
+                        </select>
+                        <span class="text-danger" asp-validation-for="Status"></span>
+                    </div>
                     <hr>
                 </form>
             </div>
@@ -105,68 +112,3 @@
                 </button>
             </div>
         </div>
-    </div>
-</div>
-
-
-
-<script type="text/javascript">
-    var province = $('#province-filter');
-    var muncity = $('#muncity-filter');
-    var barangay = $('#barangay-filter');
-    var provinceId = 0;
-    var muncityId = 0;
-
-    province.on('change', function () {
-        provinceId = province.val();
-        $.when(GetMuncities(provinceId)).done(function (output) {
-            muncity.empty()
-                .append($('<option>', {
-                    value: '0',
-                    text: 'Select Municipality/City'
-                }));
-            jQuery.each(output, function (i, item) {
-                muncity.append($('<option>', {
-                    value: item.id,
-                    text: item.description
-                }));
-            });
-        });
-    });
-
-    muncity.on('change', function () {
-        muncityId = muncity.val();
-        $.when(GetBarangays(muncityId)).done(function (output) {
-            barangay
-                .empty()
-                .append($('<option>', {
-                    value: '0',
-                    text: 'Select Barangay'
-                }));
-            jQuery.each(output, function (i, item) {
-                barangay.append($('<option>', {
-                    value: item.id,
-                    text: item.description
-                }));
-            });
-        });
-    })
-
-    function GetMuncities(ProvinceId) {
-        var url = "/NoReload/GetMuncities?id=" + ProvinceId;
-        return $.ajax({
-            url: url,
-            tpye: 'get',
-            async: true
-        })
-    }
-
-    function GetBarangays(MuncityId) {
-        var url = "/NoReload/GetBarangays?id=" + MuncityId;
-        return $.ajax({
-            url: url,
-            tpye: 'get',
-            async: true
-        })
-    }
-</script>

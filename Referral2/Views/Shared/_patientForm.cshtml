@@ -2,12 +2,12 @@
 @using Referral2.Models.MobileModels;
 @using Newtonsoft.Json;
 @{
-    var dateReferred = Model.TimeReferred == default ? "" : Model.TimeReferred.ToString("MMMM dd, yyyy hh:mm tt", System.Globalization.CultureInfo.InvariantCulture);
-    var dateTransferred = Model.TimeTransferred == default ? "" : Model.TimeTransferred.ToString("MMMM dd, yyyy hh:mm tt", System.Globalization.CultureInfo.InvariantCulture);
+    var dateReferred = Model.TimeReferred == default ? "" : Model.TimeReferred.GetDate("MMMM dd, yyyy hh:mm tt");
+    var dateTransferred = Model.TimeTransferred == default ? "" : Model.TimeTransferred.GetDate("MMMM dd, yyyy hh:mm tt");
     var referringMd = Model.ReferringMdNavigation;
     var referringMdName = referringMd == null ? "" : GlobalFunctions.GetMDFullName(referringMd);
-    var referringMdContact = referringMd == null ? "" : referringMd.Contact;
-    var actionMd = Model.ReferredMdNavigation == null ? "" : GlobalFunctions.GetMDFullName(Model.ReferredMdNavigation) + " - " + Model.ReferredMdNavigation.Contact;
+    var referringMdContact = referringMd == null ? "" : referringMd.ContactNo;
+    var actionMd = Model.ReferredMdNavigation == null ? "" : GlobalFunctions.GetMDFullName(Model.ReferredMdNavigation) + " - " + Model.ReferredMdNavigation.ContactNo;
 
     var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
     var userFacility = int.Parse(User.FindFirstValue("Facility"));
@@ -45,13 +45,13 @@
     <table class="table table-striped">
         <tbody>
             <tr>
-                <td colspan="6">Name of Referring Facility: <span>@Model.ReferringFacility.Name</span></td>
+                <td colspan="6">Name of Referring Facility: <span>@Model.ReferringFacilityNavigation.Name</span></td>
             </tr>
             <tr>
-                <td colspan="6">Facility Contact #: <span>@Model.ReferringFacility.Contact</span></td>
+                <td colspan="6">Facility Contact #: <span>@Model.ReferringFacilityNavigation.ContactNo</span></td>
             </tr>
             <tr>
-                <td colspan="6">Address: <span>@Model.ReferringFacility.GetAddress()</span></td>
+                <td colspan="6">Address: <span>@Model.ReferringFacilityNavigation.GetAddress()</span></td>
             </tr>
             <tr>
                 <td colspan="3">Referred to: <span>@Model.ReferredToNavigation.Name</span></td>
@@ -84,7 +84,7 @@
                 <td>
                     Age:
                     <span>
-                        @Model.Patient.DateOfBirth.ComputeAge()
+                        @Model.Patient.Dob.ComputeAge()
                     </span>
                 </td>
                 <td>
@@ -136,7 +136,7 @@
                     Summary of ReCo (pls. refer to ReCo Guide in Referring Patients Checklist):
                     <br>
                     <span>
-                        @Model.RecommendSummary
+                        @Model.RecoSummary
                     </span>
                 </td>
             </tr>

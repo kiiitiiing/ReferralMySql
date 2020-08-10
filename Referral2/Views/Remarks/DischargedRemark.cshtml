@@ -27,47 +27,42 @@
     };
 }
 
-<div class="modal fade" role="dialog" id="discharged_modal">
-    <div class="modal-dialog modal-sm" role="document">
-        <div class="modal-content">
-            <form asp-action="DischargedRemark">
-                <div class="modal-header">
-                    <h4>
-                        Discharge Patient
-                    </h4>
-                </div>
-                <div class="modal-body">
-                    <div class="">
-                        <input id="getCode" type="hidden" asp-for="Code" />
-                    </div>
-                    <div class="">
-                        <span>Select Date/Time:</span>
-                        <input asp-for="DateDischarged" type="text" id="datetimepicker" value="@DateTime.Now.ToString("yyyy-MM-dd HH:mm")" class="form-control" required />
-                        <span asp-validation-for="DateDischarged" class="text-danger"></span>
-                    </div>
-                    <div class="">
-                        <span>Enter Remarks:</span>
-                        <textarea asp-for="Remarks" class="form-control" rows="5" required></textarea>
-                        <span asp-validation-for="Remarks" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="modal-footer justify-content-end">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button id="discharged" type="submit" class="btn btn-success">Submit</button>
-                </div>
-            </form>
+<div class="modal-content" id="discharged_modal">
+    <form asp-action="DischargedRemark">
+        <div class="modal-header">
+            <h4>
+                Discharge Patient
+            </h4>
         </div>
-    </div>
+        <div class="modal-body">
+            <div class="">
+                <input id="getCode" type="hidden" asp-for="Code" />
+            </div>
+            <div class="">
+                <label>Select Date/Time:</label>
+                <input asp-for="DateDischarged" type="text" id="datetimepicker" value="@DateTime.Now.ToString("yyyy-MM-dd HH:mm")" class="form-control" required />
+                <span asp-validation-for="DateDischarged" class="text-danger"></span>
+            </div>
+            <div class="">
+                <label>Enter Remarks:</label>
+                <textarea asp-for="Remarks" class="form-control" rows="5" required></textarea>
+                <span asp-validation-for="Remarks" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="modal-footer justify-content-end">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button id="discharged" type="submit" class="btn btn-success">Submit</button>
+        </div>
+    </form>
 </div>
-
 <script>
-    Initialize("@Constants.Server_Link");
+    @*Initialize("@Constants.Server_Link");
     setTimeout(function () { SubmitUserInformation(@Html.Raw(JsonConvert.SerializeObject(UserInformation))); }, 200);
     console.log("@Model.Code");
 
     $("#discharged").click(function () {
         setTimeout(function () { EnveloperPatientInformation(@Html.Raw(JsonConvert.SerializeObject(NotifyPatient))); }, 200);
-    });
+    });*@
 
     $(function () {
         $('#datetimepicker').datetimepicker({

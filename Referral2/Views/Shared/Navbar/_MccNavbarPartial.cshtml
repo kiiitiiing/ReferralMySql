@@ -66,7 +66,12 @@
         <ul class="dropdown-menu">
             <!-- CHANGE PASSWORD -->
             <li>
-                <a class="dropdown-item" data-toggle="ajax-modal" data-target="#change-password-modal" data-url="@Url.Action("ChangePassword","Users")">
+                <a class="dropdown-item"
+                   data-toggle="ajax-modal"
+                   data-target="#small_modal"
+                   data-action="#small_content"
+                   data-url="@Url.Action("ChangePassword","Users")"
+                   onclick="OpenModal($(this));">
                     <i class="fa fa-key"></i>
                     &nbsp;Change Password
                 </a>

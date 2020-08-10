@@ -1,0 +1,38 @@
+﻿@model RemarksViewModel
+
+<div class="modal-content" id="cancel-modal">
+    <div class="modal-header">
+        <h4>
+            Patient didn't arrive
+        </h4>
+    </div>
+    <div class="modal-body">
+        <form asp-action="CancelRemark">
+            <div class="">
+                <input type="hidden" asp-for="Code" />
+            </div>
+            <div class="">
+                <label>Remarks:</label>
+                <textarea asp-for="Remarks" class="form-control" rows="5" required></textarea>
+            </div>
+        </form>
+        @if (ViewBag.Errors != null)
+        {
+            <div class="row" style="margin-top: 20px;">
+                <div class="col-sm-12 center" style="align-content:center">
+                    <span class="text-danger text-sm">Please input the required fields.</span>
+                </div>
+            </div>
+        }
+    </div>
+    <div class="modal-footer" style="display: inline-block !important;">
+        <button class="btn btn-sm btn-danger fa-pull-left" type="button" data-dismiss="modal">
+            <i class="fa fa-times"></i>
+            Close
+        </button>
+        <button class="btn btn-sm btn-success fa-pull-right" data-action="small_modal" data-save="modal">
+            <i class="fa fa-check"></i>
+            Submit
+        </button>
+    </div>
+</div>
