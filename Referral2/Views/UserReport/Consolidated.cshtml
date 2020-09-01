@@ -4,7 +4,7 @@
     ViewData["Title"] = "INCOMING REFERRAL CONSOLIDATION TABLE  (Within Province Wide Health System)";
     var startDate = ViewBag.StartDate;
     var endDate = ViewBag.EndDate;
-    var dateRange = startDate.ToString("dd/MM/yyyy") + " - " + endDate.ToString("dd/MM/yyyy");
+    var dateRange = startDate.ToString("MM/dd/yyyy") + " - " + endDate.ToString("MM/dd/yyyy");
 }
     <style>
         label{
@@ -561,9 +561,9 @@
 <script type="text/javascript">
     $(document).ready(function () {
         $('input[name="daterange"]').daterangepicker({
-            format: 'DD/MM/YYYY',
-            startDate: '@startDate.ToString("dd/MM/yyyy")',
-            endDate: '@endDate.ToString("dd/MM/yyyy")',
+            format: 'MM/DD/YYYY',
+            startDate: '@startDate.ToString("MM/dd/yyyy")',
+            endDate: '@endDate.ToString("MM/dd/yyyy")',
             opens: 'right'
         });
     });

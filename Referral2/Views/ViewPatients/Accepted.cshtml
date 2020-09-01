@@ -78,12 +78,12 @@
                             @foreach (var item in Model)
                             {
                                 var status = item.Status;
-                                var facility = item.ReferringFacility.Length > 25 ? new string(item.ReferringFacility.Take(25).ToArray()) + "..." : item.ReferringFacility;
+                                var patientName = item.Fname + " " + item.Mname + " " + item.Lname;
                                 <tr>
                                     <!-- REFERRING FACILITY -->
                                     <td>
                                         <span class="facility-color" title="@item.ReferringFacility">
-                                            @facility
+                                            @item.ReferringFacility.WordCut(25)
                                         </span>
                                         <br />
                                         <p class="small text-muted">@item.Type</p>
@@ -92,24 +92,24 @@
                                     <td>
                                         @if (item.Type.Equals("Non-Pregnant"))
                                         {
-                                                <a class="text-info" style="cursor:pointer;" 
-                                                   data-toggle="ajax-modal"
-                                                   data-target="#large_modal"
-                                                   data-action="#large_content"
-                                                   data-url="@Url.Action("PrintableNormalForm","ViewForms", new { code = item.PatientCode })"
-                                                   onclick="OpenModal($(this));">
-                                                @item.PatientName.NameToUpper()
+                                            <a class="text-info" style="cursor:pointer;"
+                                               data-toggle="ajax-modal"
+                                               data-target="#large_modal"
+                                               data-action="#large_content"
+                                               data-url="@Url.Action("PrintableNormalForm","ViewForms", new { code = item.PatientCode })"
+                                               onclick="OpenModal($(this));">
+                                                @patientName.NameToUpper()
                                             </a>
                                         }
                                         else
                                         {
-                                            <a class="text-info" style="cursor:pointer;" 
+                                            <a class="text-info" style="cursor:pointer;"
                                                data-toggle="ajax-modal"
                                                data-target="#large_modal"
                                                data-action="#large_content"
                                                data-url="@Url.Action("PrintablePregnantForm","ViewForms", new { code = item.PatientCode })"
                                                onclick="OpenModal($(this));">
-                                                @item.PatientName.NameToUpper()
+                                                @patientName.NameToUpper()
                                             </a>
                                         }
                                         <p class="small text-muted">
@@ -142,10 +142,10 @@
                                         else if (status.Equals("accepted"))
                                         {
                                             //arrived
-                                            if ( DateTime.Now > item.DateAction.AddDays(3))
+                                            if (DateTime.Now > item.DateAction.AddDays(3))
                                             {
                                                 <button type="button"
-                                                        title="Patient Arrived"
+                                                        title="Patient Didn't Arrived"
                                                         class="btn btn-sm btn-danger"
                                                         data-toggle="ajax-modal"
                                                         data-target="#small_modal"

@@ -1,4 +1,4 @@
-﻿@model Patient
+﻿@model PatientModel
 
 @{
     ViewData["Title"] = "Add new Patient";
@@ -73,8 +73,8 @@
                                         <tr>
                                             <td class="table-add">Birthdate:</td>
                                             <td>
-                                                <input asp-for="Dob" type="date" class="form-control" required autocomplete="off" />
-                                                <span asp-validation-for="Dob" class="text-danger"></span>
+                                                <input asp-for="DateOfBirth" type="date" class="form-control" required autocomplete="off" />
+                                                <span asp-validation-for="DateOfBirth" class="text-danger"></span>
                                             </td>
                                         </tr>
                                         <!-- GENDER -->
@@ -101,7 +101,7 @@
                                         <tr>
                                             <td class="table-add">Municipality/City:</td>
                                             <td>
-                                                <select id="muncityFilter" asp-for="MuncityId" class="form-control" asp-items="ViewBag.MuncityId" required>
+                                                <select id="muncity-filter" asp-for="MuncityId" class="form-control" asp-items="ViewBag.Muncities" onchange="MuncityOnChange($(this).val());" style="width: 100% !important;">
                                                     <option value="">Select City/Municipality...</option>
                                                 </select>
                                                 <span asp-validation-for="MuncityId" class="text-danger"></span>
@@ -111,7 +111,7 @@
                                         <tr>
                                             <td class="table-add" id="barangay-label">Barangay:</td>
                                             <td>
-                                                <select id="barangay" asp-for="BarangayId" class="form-control" required>
+                                                <select  id="barangay-filter" asp-for="BarangayId" asp-items="ViewBag.Barangays" class="form-control" required style="width: 100% !important;">
                                                     <option value="">Select Barangay...</option>
                                                 </select>
                                                 <span asp-validation-for="BarangayId" class="text-danger"></span>
@@ -153,8 +153,11 @@
 
 <script>
     $(document).ready(function () {
-        $("#submitBtn").submit(function () {
-            $('form').preventDoubleSubmission();
+        $('#muncity-filter').select2({
+            theme: 'bootstrap4'
+        });
+        $('#barangay-filter').select2({
+            theme: 'bootstrap4'
         });
     });
 

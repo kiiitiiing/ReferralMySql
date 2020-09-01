@@ -19,15 +19,15 @@
                         <h3 class="card-title">Filter Patients</h3>
                     </div>
                     <!-- CARD DANGER BODY -->
-                    <form asp-action="Listpatients" method="post">
-                        <div class="card-body">
+                    <form asp-action="Listpatients" method="get">
+                        <div class="card-body" id="list_patient">
                             <!-- SEARCH -->
                             <div class="form-group">
                                 <input class="form-control form-control-sm" type="text" placeholder="Seach Keyword..." name="name" value="@ViewBag.CurrentFilter" autocomplete="off" required />
                             </div>
                             <!-- MUNICIPALITY -->
                             <div class="form-group">
-                                <select class="form-control form-control-sm" asp-items="ViewBag.Muncities" id="muncity-filter" name="muncityId" required onchange="MuncityOnChange($(this).val());">
+                                <select id="muncity-filter" class="form-control form-control-sm" asp-items="ViewBag.Muncities" name="muncityId" onchange="MuncityOnChange($(this).val());" style="width: 100% !important;">
                                     <option value="">Select City/Municipality...</option>
                                 </select>
                             </div>
@@ -86,11 +86,18 @@
                                         @foreach (var item in Model)
                                         {
                                             var dateOfBirth = item.DateofBirth.ToString("MMM dd, yyyy");
+                                            var name = item.Fname + " " + (item.Mname ?? "") + " " + item.Lname;
                                         <tr>
                                             <!-- NAME -->
                                             <td>
-                                                <a class="text-bold" href="#" data-toggle="ajax-modal" data-target="#update-modal" data-url="@Url.Action("Update", "AddPatients", new { id = item.PatientId })">
-                                                    @item.PatientName
+                                                <a class="text-bold"
+                                                   href="#" 
+                                                   data-toggle="ajax-modal"
+                                                   data-target="#small_modal"
+                                                   data-action="#small_content"
+                                                   data-url="@Url.Action("Update", "AddPatients", new { id = item.PatientId })"
+                                                   onclick="OpenModal($(this));">
+                                                    @name
                                                 </a>
                                             </td>
                                             <td>@item.PatientSex</td><!-- GENDER -->
@@ -225,30 +232,6 @@
                         </button>
                     </div>
                 </div>
-                <!--<div class="preg-btn row">-->
-                    <!-- NON-PREGNENT WALKIN -->
-                    <!--<button class="btn btn-warning col-xs-6" 
-                            type="button"
-                            data-backdrop="static"
-                            data-toggle="modal"
-                            data-target="#refer_modal" 
-                            onclick="ReferModalOnClick('walkin');">
-                        <img src="~/assets/dist/img/female.png" style="box-sizing: border-box; width 100%" />
-                        <br />
-                        Non-Pregnant
-                    </button>-->
-                    <!-- PREGNANT WALKIN -->
-                    <!--<button class="btn btn-info col-xs-6"
-                            type="button"
-                            data-backdrop="static"
-                            data-toggle="modal"
-                            data-target="#refer_modal"
-                            onclick="ReferModalOnClick('pregnant_walkin');">
-                        <img src="~/assets/dist/img/pregnant.png" style="box-sizing: border-box; width: 100%" />
-                        <br />
-                        Pregnant
-                    </button>
-                </div>-->
             </div>
         </div>
     </div>
@@ -313,32 +296,20 @@
         </div>
     </div>
 </div>
-<!-- NORMAL REFER MODAL -->
-@*<div class="modal fade" id="refer_modal">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content" id="normal-refer-content">
-            <div class="overlay d-flex justify-content-center align-items-center">
-                <i class="fas fa-2x fa-sync fa-spin"></i>
-            </div>
-            <div class="modal-content">
-                <div class="modal-header">
-                    <br />
-                </div>
-                <div class="modal-body">
-                    <br />
-                    <br />
-                    <br />
-                </div>
-                <div class="modal-footer">
-                    <br />
-                </div>
-            </div>
-        </div>
-    </div>
-</div>*@
+
 <script>
     var patientId;
 
+    $(document).ready(function () {
+        $('#muncity-filter').select2({
+            theme: 'bootstrap4',
+            dropdownParent: $('#list_patient')
+        });
+        $('#barangay-filter').select2({
+            theme: 'bootstrap4',
+            dropdownParent: $('#list_patient')
+        });
+    });
 
     $('.patientId').on('click', function () {
         patientId = $(this).data('patient_id');

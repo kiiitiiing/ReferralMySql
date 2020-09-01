@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Referral2.Data;
-using Referral2.Models;
+using Referral2.MyModels;
 using Referral2.Helpers;
 using Referral2.Models.ViewModels.Users;
 using Microsoft.EntityFrameworkCore;
@@ -13,67 +13,60 @@ using Referral2.Services;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims;
 using Microsoft.Extensions.Options;
+using Referral2.MyData;
 
 namespace Referral2.Controllers
 {
     public class UsersController : Controller
     {
-        private readonly ReferralDbContext _context;
+        private readonly MySqlReferralContext _context;
         private readonly IOptions<ReferralRoles> _roles;
         private readonly IUserService _userService;
 
-        public UsersController(ReferralDbContext context, IUserService userService, IOptions<ReferralRoles> roles)
+        public UsersController(MySqlReferralContext context, IUserService userService, IOptions<ReferralRoles> roles)
         {
             _context = context;
             _userService = userService;
             _roles = roles;
         }
         #region WHOS ONLINE
-        [Authorize(Policy = "Doctor")]
-        public async Task<IActionResult> WhosOnline(string nameSearch, int? facilitySearch)
+        [Authorize]
+        public async Task<IActionResult> WhosOnline()
         {
-            ViewBag.CurrentSearch = nameSearch;
-            ViewBag.Facilities = new SelectList(_context.Facility.Where(x => x.ProvinceId.Equals(UserProvince)), "Id", "Name");
             var logins = _context.Login.Where(x => x.Login1.Date.Equals(DateTime.Now.Date));
-            var onlineUsers = await _context.User
-                .Where(x => x.LoginStatus.Contains("login") && x.Level.Equals(_roles.Value.DOCTOR) && x.LastLogin.Date.Equals(DateTime.Now.Date) && x.FacilityId.Equals(UserFacility))
-                .Select(x => new WhosOnlineModel
-                {
-                    DoctorName = GlobalFunctions.GetMDFullName(x),
-                    FacilityAbrv = x.Facility.Abbr,
-                    Contact = x.ContactNo,
-                    Department = x.Department.Description,
-                    LoginStatus = logins.Where(i => i.UserId.Equals(x.Id)).OrderByDescending(i => i.Login1).First().Status.Equals("login"),
-                    LoginTime = logins.Where(i => i.UserId.Equals(x.Id)).OrderByDescending(i => i.Login1).First().Login1
-                })
-                .ToListAsync();
 
-            var onlineFacilities = await _context.Facility
-                .Include(x => x.Province)
-                .Include(x => x.User)
-                .Where(x => x.User.Any(x => x.Level == "doctor" && x.LastLogin >= DateTime.Now.Date))
-                .Select(x => new FacilitiesOnline
-                {
-                    Name = x.Name,
-                    Province = x.Province.Description,
-                    Status = x.User.Any(x => x.LastLogin >= DateTime.Now.Date && x.LoginStatus == "login")
-                })
-                .ToListAsync();
+            var onlineUsers = from user in _context.Users.Where(x=>x.LoginStatus.Contains("login") && x.Level != _roles.Value.ADMIN && x.LastLogin.Date == DateTime.Now.Date)
+                              join facility in _context.Facility on user.FacilityId equals facility.Id
+                              join dep in _context.Department on user.DepartmentId equals dep.Id into departments
+                              from department in departments.DefaultIfEmpty()
+                              select new WhosOnlineModel
+                              {
+                                  Level = user.Level,
+                                  Fname = user.Fname,
+                                  Mname = user.Mname,
+                                  Lname = user.Lname,
+                                  FacilityAbrv = facility.Abbr,
+                                  Contact = user.Contact,
+                                  Department = department.Description,
+                                  LoginStatus = logins.Where(x=>x.UserId == user.Id).Count() == 0 ? false : logins.Where(x => x.UserId == user.Id).OrderByDescending(i => i.Login1).First().Status.Equals("login"),
+                                  LoginTime = logins.Where(x => x.UserId == user.Id).Count() == 0 ? default : logins.Where(x => x.UserId == user.Id).OrderByDescending(i => i.Login1).First().Login1
+                              };
 
+            var users = _context.Users;
 
-            if (!string.IsNullOrEmpty(nameSearch))
-            {
-                onlineUsers.Where(x => x.DoctorName.Contains(nameSearch));
-            }
-            if (facilitySearch != 0)
-            {
-                onlineUsers.Where(x => x.FacilityId.Equals(facilitySearch));
-            }
+            var onlineFacilities = from facility in _context.Facility.Where(x=>x.Id != 63)
+                                   join province in _context.Province on facility.Province equals province.Id
+                                   select new FacilitiesOnline
+                                   {
+                                       Name = facility.Name,
+                                       Province = province.Description,
+                                       Status = users.Any(x=>x.FacilityId == facility.Id && x.LastLogin.Date >= DateTime.Now.Date && x.LoginStatus.Contains("login"))
+                                   };
 
             var model = new UserFacilityOnline
             {
-                Facilities = onlineFacilities,
-                Users = onlineUsers
+                Facilities = await onlineFacilities.ToListAsync(),
+                Users = await onlineUsers.ToListAsync()
             };
 
             return View(model);
@@ -97,7 +90,7 @@ namespace Referral2.Controllers
 
                 if (isValid)
                 {
-                    _userService.ChangePasswordAsync(user, model.NewPassword);
+                    //_userService.ChangePasswordAsync(user, model.NewPassword);
                     return PartialView("~/Views/Users/ChangePassword.cshtml", model);
                 }
                 else

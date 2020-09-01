@@ -9,7 +9,9 @@ namespace Referral2.Models.ViewModels.Admin
     public partial class SupportUsersViewModel
     {
         public int Id { get; set; }
-        public string Name { get; set; }
+        public string Fname { get; set; }
+        public string Mname { get; set; }
+        public string Lname { get; set; }
         public string Facility { get; set; }
         [DataType(DataType.PhoneNumber)]
         public string Contact { get; set; }

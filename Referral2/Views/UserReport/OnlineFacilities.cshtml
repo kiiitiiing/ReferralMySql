@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<OnlineFacilitiesModel>
 @{
     ViewData["Title"] = "Online Facilities";
-    var date = DateTime.Parse(ViewBag.Date).ToString("MMMM d, yyyy");
+    //var date = DateTime.Parse(ViewBag.Date).ToString("MMMM d, yyyy");
 }
 
 
@@ -10,17 +10,13 @@
         <div class="card-header">
             <form class="fa-pull-right form-inline" asp-action="OnlineFacilities" method="get">
                 <input class="form-control form-control-sm" id="datetimepicker" type="text" name="date" value="@ViewBag.Date" />
-                <button type="submit" value="Search" class="btn btn-sm btn-success">
-                    <i class="fa fa-calendar"></i>
-                    &nbsp;Change Date
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="fa fa-search"></i>
+                    &nbsp;Filter
                 </button>
             </form>
             <h4>
-                Online Facilities
-                <br />
-                <small class="text-success">
-                    @date
-                </small>
+                ONLINE FACILITIES
             </h4>
         </div>
         <div class="card-body">
@@ -39,7 +35,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var item in Model.Where(x=>x.LoginTime != default).GroupBy(x => x.Province))
+                            @foreach (var item in Model.Where(x => x.LoginTime != default).GroupBy(x => x.Province))
                             {
                                 var ctr = 1;
                                 <tr>
@@ -47,16 +43,23 @@
                                         <strong class="text-green">@item.Key Province</strong>
                                     </td>
                                 </tr>
-                                @foreach (var facility in item)
+                                @foreach (var facility in item.GroupBy(x => x.Name))
                                 {
-                                    var status = facility.Status ? "Active" : "Inactive";
-                                    var logout = facility.LogoutTime != default ? facility.LogoutTime.ToString("yyyy-MM-dd HH:mm:ss") : "";
+                                    var loginTime = facility.Select(x => x.LoginTime).Min();
+                                    var logoutTIme = facility.Select(x => x.LogoutTime).Max();
+                                    double totalHrs = 0;
+                                    if (logoutTIme != default || logoutTIme < loginTime)
+                                        totalHrs = logoutTIme.Subtract(loginTime).TotalHours;
+                                    else
+                                        totalHrs = 0;
+                                    var status = facility.OrderByDescending(x => x.LoginTime).FirstOrDefault().Status;
+                                    var logout = logoutTIme != default ? logoutTIme.ToString("yyyy-MM-dd HH:mm:ss") : "";
                                     <tr>
                                         <td>@ctr</td>
-                                        <td>@facility.Name</td>
-                                        <td>@facility.LoginTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                        <td>@facility.Key</td>
+                                        <td>@loginTime.ToString("yyyy-MM-dd HH:mm:ss")</td>
                                         <td>@logout</td>
-                                        <td>@facility.HoursOnline.HoursOnline()</td>
+                                        <td>@totalHrs.HoursOnline()</td>
                                         <td>@status</td>
                                     </tr>
                                     ctr++;

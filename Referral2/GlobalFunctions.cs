@@ -139,6 +139,26 @@ namespace Referral2
             return string.IsNullOrEmpty(address) ? "" : address + ", ";
         }
 
+        public static string GetFullName(this string level, params string[] names)
+        {
+            var name = level == "doctor"? "Dr. " : "";
+            for(int x = 0; x<names.Length; x++)
+            {
+                name = name + " " + names[x];
+            }
+            return name;
+        }
+
+        public static string GetAddress(params string[] addresses)
+        {
+            var address = "";
+            for (int x = 0; x < address.Length; x++)
+            {
+                address = address + ", " + address[x];
+            }
+            return address;
+        }
+
         public static string CheckString(this string text)
         {
             return string.IsNullOrEmpty(text) ? "" : text;
@@ -150,7 +170,7 @@ namespace Referral2
             {
                 var time = new double[2];
                 time[0] = Math.Floor(hours);
-                time[1] = Math.Ceiling((hours - time[0]) * 100);
+                time[1] = Math.Ceiling(Math.Abs(hours - time[0]) * 60);
 
                 return time[0] + " hours " + time[1] + " minutes";
             }
@@ -159,7 +179,6 @@ namespace Referral2
                 return "";
             }
         }
-
 
         public static string GetAddress(this Facility facility)
         {
@@ -189,6 +208,14 @@ namespace Referral2
             return barangay + muncity + province;
         }
 
+        public static string GetFullName(this MyModels.Patients patient)
+        {
+            if (patient != null)
+                return patient.Fname.CheckName() + " " + patient.Mname.CheckName() + " " + patient.Lname.CheckName();
+            else
+                return "";
+        }
+
         public static string GetFullName(this Patient patient)
         {
             if (patient != null)
@@ -211,12 +238,38 @@ namespace Referral2
             else
                 return "";
         }
+
+
+        public static string GetFullName(this MyModels.Users user)
+        {
+            if (user != null)
+                return user.Fname.CheckName() + " " + user.Mname.CheckName() + " " + user.Lname.CheckName();
+            else
+                return "";
+        }
+
         public static string GetFullName(this User user)
         {
             if (user != null)
                 return user.Fname.CheckName() + " " + user.Mname.CheckName() + " " + user.Lname.CheckName();
             else
                 return "";
+        }
+
+        public static string WordCut(this string text, int limit)
+        {
+            var cut = text.Length > limit ? new string(text.Take(limit).ToArray()) + "..." : text;
+            return cut;
+        }
+
+        public static string GetMDFullName(this MyModels.Users doctor)
+        {
+            if (doctor != null)
+                FullName = "Dr. " + doctor.Fname.CheckName() + " " + doctor.Mname.CheckName() + " " + doctor.Lname.CheckName();
+            else
+                FullName = "";
+
+            return FullName;
         }
 
         public static string GetMDFullName(this User doctor)

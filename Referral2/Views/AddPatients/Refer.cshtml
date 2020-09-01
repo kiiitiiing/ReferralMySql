@@ -3,6 +3,8 @@
 @{
     var dateReferred = DateTime.Now.DayOfWeek + " " + DateTime.Now.ToString("MMMM d, yyyy hh:mm tt", System.Globalization.CultureInfo.InvariantCulture);
     var referringMd = "Dr. " + User.FindFirstValue(ClaimTypes.GivenName) + " " + User.FindFirstValue(ClaimTypes.Surname);
+    var patietnAddress = Model.PatientBarangay+ ", " + (Model.PatientMuncity ?? " ") + " " + Model.PatientProvince;
+    var facilityAddress = (Model.FacilityBarangay ?? "") + ", " + (Model.FacilityMuncity ?? "") + ", " + Model.FacilityProvince;
 }
     <div class="modal-content" id="normal-refer">
         <!-- REFER BODY -->
@@ -18,40 +20,50 @@
                 <input type="hidden" asp-for="Sex" />
                 <input type="hidden" asp-for="Name" />
                 <input type="hidden" asp-for="PhicId" />
-                <input type="hidden" asp-for="Address" />
+                <input type="hidden" asp-for="PatientBarangay" />
+                <input type="hidden" asp-for="PatientMuncity" />
+                <input type="hidden" asp-for="PatientProvince" />
                 <input type="hidden" asp-for="PatientId" />
                 <input type="hidden" asp-for="PhicStatus" />
                 <input type="hidden" asp-for="CivilStatus" />
                 <input type="hidden" asp-for="FacilityName" />
-                <input type="hidden" asp-for="FacilityAddress" />
+                <input type="hidden" asp-for="FacilityBarangay" />
+                <input type="hidden" asp-for="FacilityMuncity" />
+                <input type="hidden" asp-for="FacilityProvince" />
                 <table class="table table-striped">
                     <tbody>
                         <!-- FACILITY NAME-->
                         <tr>
-                            <td colspan="6">
+                            <td colspan="2" width="58%">
                                 Name of Referring Facility: <span class="text-danger">@Model.FacilityName</span>
                             </td>
                         </tr>
                         <!-- FACILITY ADDRESS -->
                         <tr>
-                            <td colspan="6">
-                                Address: <span class="text-success">@Model.FacilityAddress</span>
+                            <td colspan="2" width="58%">
+                                Address: <span class="text-success">@facilityAddress</span>
                             </td>
                         </tr>
                         <tr>
                             <!-- REFERRED TO -->
-                            <td colspan="3">
-                                Referred to:&nbsp;&nbsp;&nbsp;
+                            <td width="20%">
+                                Referred to:
+                            </td>
+                            <td width="38%">
                                 <div class="" style="background-color:white !important;">
                                     <select class="form-control form-control-sm select2" id="facilityFilter" style="width:100%;" asp-for="Facility" asp-items="ViewBag.ReferredTo" onchange="FacilityOnChange($(this).val());">
-                                        <option value="0">Select Facility...</option>
+                                        <option value="">Select Facility...</option>
                                     </select>
                                 </div>
                                 <span class="text-danger" asp-validation-for="Facility"></span>
                             </td>
+                        </tr>
+                        <tr>
                             <!-- DEPARTMENT -->
-                            <td colspan="3">
+                            <td width="20%">
                                 Department:
+                            </td>
+                            <td width="38%">
                                 <select class="form-control form-control-sm" id="departmentFilter" asp-for="Department" onchange="DepartmentOnChange($('#facilityFilter').val(), $(this).val());">
                                     <option value="">Select Department...</option>
                                 </select>
@@ -60,9 +72,40 @@
                         </tr>
                         <!-- ADDRESS OF REFERRED HOSPITAL -->
                         <tr>
-                            <td colspan="6">
+                            <td colspan="2" width="58%">
                                 Address:
                                 <span id="facilityAddress" class="text-info"></span>
+                            </td>
+                        </tr>
+                        <!-- COVID NUMBER -->
+                        <tr>
+                            <td width="20%">
+                                Covid Number:
+                            </td>
+                            <td width="38%">
+                                <input class="form-control" asp-for="CovidNumber" />
+                            </td>
+                        </tr>
+                        <!-- CLINICAL STATUS -->
+                        <tr>
+                            <td width="20%">
+                                Clinical Status:
+                            </td>
+                            <td width="38%">
+                                <select class="form-control form-control-sm" asp-for="ClinicalStatus" asp-items="ViewBag.ClinicalStatuses">
+                                    <option value="">Select Option</option>
+                                </select> 
+                            </td>
+                        </tr>
+                        <!-- SURVEILANCE CATERGORY -->
+                        <tr>
+                            <td width="20%">
+                                Surveillance Category:
+                            </td>
+                            <td width="38%">
+                                <select class="form-control form-control-sm" asp-for="SurveillanceCategory" asp-items="ViewBag.SurveillanceCategories">
+                                    <option value="">Select Option</option>
+                                </select>
                             </td>
                         </tr>
                         <tr>
@@ -101,7 +144,7 @@
                         <tr>
                             <td colspan="6">
                                 Address:
-                                <span class="text-danger">@Model.Address</span>
+                                <span class="text-danger">@patietnAddress</span>
                             </td>
                         </tr>
                         <tr>
@@ -192,7 +235,8 @@
         form.removeData('unobtrusiveValidation');
         $.validator.unobtrusive.parse(form);
         $('.select2').select2({
-            theme: 'bootstrap4'
+            theme: 'bootstrap4',
+            dropdownParent: $('#normal-refer')
         })
     });
 </script>

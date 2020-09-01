@@ -9,7 +9,7 @@ namespace Referral2.Models.ViewModels.Support
     public partial class AddDoctorViewModel : AddUserViewModel
     {
         [Display(Name ="Department")]
-        public int? Department { get; set; }
+        public int Department { get; set; }
         [Required]
         public string Level { get; set; }
     }

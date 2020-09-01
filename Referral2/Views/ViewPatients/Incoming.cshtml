@@ -117,10 +117,11 @@
                             {
                                 foreach (var item in Model)
                                 {
+                                    var patientName = item.Fname + " " + item.Mname + " " + item.Lname;
                                     var dateAction = item.DateAction.GetDate("MMM dd, yyyy hh:mm tt");
                                     var currentUserFacility = int.Parse(User.FindFirstValue("Facility"));
                                     var currentUserDepartment = string.IsNullOrEmpty(User.FindFirstValue("Department"))? 0 : int.Parse(User.FindFirstValue("Department"));
-                                    
+
                                     switch (item.Status)
                                     {
                                         case "rejected":
@@ -135,11 +136,11 @@
                                                         </span>
                                                         <h3 class="timeline-header no-border">
                                                             <small class="text-bold">
-                                                                <a href="@Url.Action("Track","ViewPatients", new { code = item.Code })" target="_blank">@item.Code</a>
+                                                                <a href="@Url.Action("Track","Transactions", new { code = item.Code })" target="_blank">@item.Code</a>
                                                             </small>
-                                                            <a href="#">@item.PatientName</a>
+                                                            <a href="#">@patientName.NameToUpper()</a>
                                                             was RECOMMENDED TO REDIRECT to other facility by
-                                                            <span class="custom-warning">@item.ActionMd</span>
+                                                            <span class="custom-warning">@item.ActionMd.NameToUpper()</span>
                                                         </h3>
                                                         <div class="timeline-footer">
                                                             <div class="form-inline">
@@ -205,15 +206,15 @@
                                                         </span>
                                                         <h3 class="timeline-header no-border">
                                                             <small class="text-bold">
-                                                                <a href="@Url.Action("Track","ViewPatients", new { code = item.Code })" target="_blank">@item.Code</a>
+                                                                <a href="@Url.Action("Track","Transactions", new { code = item.Code })" target="_blank">@item.Code</a>
                                                             </small>
-                                                            <a href="#">@item.PatientName</a>
+                                                            <a href="#">@patientName.NameToUpper()</a>
                                                             was
                                                             <span class="badge badge-success">
                                                                 accepted
                                                             </span>
                                                             by
-                                                            <span class="text-success">@item.ActionMd</span>
+                                                            <span class="text-success">@item.ActionMd.NameToUpper()</span>
                                                         </h3>
                                                         <div class="timeline-footer">
                                                             <div class="form-inline">
@@ -279,11 +280,11 @@
                                                         </span>
                                                         <h3 class="timeline-header no-border">
                                                             <small class="text-bold">
-                                                                <a href="@Url.Action("Track","ViewPatients", new { code = item.Code })" target="_blank">@item.Code</a>
+                                                                <a href="@Url.Action("Track","Transactions", new { code = item.Code })" target="_blank">@item.Code</a>
                                                             </small>
-                                                            <a href="#">@item.PatientName</a>
+                                                            <a href="#">@patientName.NameToUpper()</a>
                                                             was transferred by
-                                                            <span class="text-success">@item.ActionMd</span>'s
+                                                            <span class="text-success">@item.ActionMd.NameToUpper()</span>'s
                                                         </h3>
                                                         <div class="timeline-footer">
                                                             <div class="form-inline">
@@ -349,11 +350,11 @@
                                                         </span>
                                                         <h3 class="timeline-header no-border">
                                                             <small class="text-bold">
-                                                                <a href="@Url.Action("Track","ViewPatients", new { code = item.Code })" target="_blank">@item.Code</a>
+                                                                <a href="@Url.Action("Track","Transactions", new { code = item.Code })" target="_blank">@item.Code</a>
                                                             </small>
-                                                            <a href="#">@item.PatientName</a>
+                                                            <a href="#">@patientName.NameToUpper()</a>
                                                             has <span class="badge bg-success">arrived</span> in
-                                                            <span class="text-success">@item.ActionMd</span>'s
+                                                            <span class="text-success">@item.ActionMd.NameToUpper()</span>'s
                                                             department
                                                         </h3>
                                                         <div class="timeline-footer">
@@ -420,15 +421,15 @@
                                                         </span>
                                                         <h3 class="timeline-header no-border">
                                                             <small class="text-bold">
-                                                                <a href="@Url.Action("Track","ViewPatients", new { code = item.Code })" target="_blank">@item.Code</a>
+                                                                <a href="@Url.Action("Track","Transactions", new { code = item.Code })" target="_blank">@item.Code</a>
                                                             </small>
-                                                            <a href="#">@item.PatientName</a>
+                                                            <a href="#">@patientName.NameToUpper()</a>
                                                             was
                                                             <span class="badge badge-danger">
                                                                 cancelled
                                                             </span>
                                                             by
-                                                            <span class="text-success">@item.ActionMd</span>
+                                                            <span class="text-success">@item.ActionMd.NameToUpper()</span>
                                                         </h3>
                                                         <div class="timeline-footer">
                                                             <div class="form-inline">
@@ -494,11 +495,11 @@
                                                         </span>
                                                         <h3 class="timeline-header no-border">
                                                             <small class="text-bold">
-                                                                <a href="@Url.Action("Track","ViewPatients", new { code = item.Code })" target="_blank">@item.Code</a>
+                                                                <a href="@Url.Action("Track","Transactions", new { code = item.Code })" target="_blank">@item.Code</a>
                                                             </small>
-                                                            <a href="#">@item.PatientName</a>
+                                                            <a href="#">@patientName.NameToUpper()</a>
                                                             was <span class="badge bg-success">admitted</span> by
-                                                            <span class="text-success">@item.ActionMd</span>
+                                                            <span class="text-success">@item.ActionMd.NameToUpper()</span>
                                                         </h3>
                                                         <div class="timeline-footer">
                                                             <div class="form-inline">
@@ -565,14 +566,14 @@
                                                         </span>
                                                         <h3 class="timeline-header no-border">
                                                             <small class="text-bold">
-                                                                <a href="@Url.Action("Track","ViewPatients", new { code = item.Code })" target="_blank">@item.Code</a>
+                                                                <a href="@Url.Action("Track","Transactions", new { code = item.Code })" target="_blank">@item.Code</a>
                                                             </small>
-                                                            <a href="#">@item.PatientName</a>
+                                                            <a href="#">@patientName.NameToUpper()</a>
                                                             <small class="text-muted">[@item.PatientSex, @item.PatientAge]</small>
                                                             was <span class="badge bg-blue">referred</span> to
                                                             <span class="text-danger">@item.Department</span>
                                                             by
-                                                            <span class="text-success">@item.ReferringMd</span>
+                                                            <span class="text-success">@item.ReferringMd.NameToUpper()</span>
                                                             of
                                                             <span class="text-warning">@item.ReferredFrom</span>
                                                         </h3>
@@ -658,14 +659,14 @@
                                                         </span>
                                                         <h3 class="timeline-header no-border">
                                                             <small class="text-bold">
-                                                                <a href="@Url.Action("Track","ViewPatients", new { code = item.Code })" target="_blank">@item.Code</a>
+                                                                <a href="@Url.Action("Track","Transactions", new { code = item.Code })" target="_blank">@item.Code</a>
                                                             </small>
-                                                            <a href="#">@item.PatientName</a>
+                                                            <a href="#">@patientName.NameToUpper()</a>
                                                             <small class="text-muted">[@item.PatientSex, @item.PatientAge]</small>
                                                             was <span class="badge bg-blue">referred</span> to
                                                             <span class="text-danger">@item.Department</span>
                                                             by
-                                                            <span class="text-success">@item.ReferringMd</span>
+                                                            <span class="text-success">@item.ReferringMd.NameToUpper()</span>
                                                             of
                                                             <span class="text-warning">@item.ReferredFrom</span>
                                                         </h3>
@@ -750,15 +751,15 @@
                                                         </span>
                                                         <h3 class="timeline-header no-border">
                                                             <small class="text-bold">
-                                                                <a href="@Url.Action("Track","ViewPatients", new { code = item.Code })" target="_blank">@item.Code</a>
+                                                                <a href="@Url.Action("Track","Transactions", new { code = item.Code })" target="_blank">@item.Code</a>
                                                             </small>
-                                                            <a href="#">@item.PatientName</a>
+                                                            <a href="#">@patientName.NameToUpper()</a>
                                                             was
                                                             <span class="badge badge-success">
                                                                 discharged
                                                             </span>
                                                             by
-                                                            <span class="text-success">@item.ActionMd</span>
+                                                            <span class="text-success">@item.ActionMd.NameToUpper()</span>
                                                         </h3>
                                                         <div class="timeline-footer">
                                                             <div class="form-inline">

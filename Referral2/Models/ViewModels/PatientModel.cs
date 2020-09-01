@@ -12,13 +12,13 @@ namespace Referral2.Models.ViewModels
         public string PhicId { get; set; }
         [Required]
         [Display(Name = "first name")]
-        public string Firstname { get; set; }
+        public string Fname { get; set; }
         [Required]
         [Display(Name = "middle name")]
-        public string Middlename { get; set; }
+        public string Mname { get; set; }
         [Required]
         [Display(Name = "last name")]
-        public string Lastname { get; set; }
+        public string Lname { get; set; }
         [Required]
         [Display(Name = "date of birth")]
         public DateTime DateOfBirth { get; set; }
@@ -27,11 +27,13 @@ namespace Referral2.Models.ViewModels
         [Required]
         [Display(Name = "civil status")]
         public string CivilStatus { get; set; }
+        [Display(Name = "province")]
+        public int ProvinceId { get; set; }
         [Required]
         [Display(Name = "city/municipality")]
-        public int? MuncityId { get; set; }
+        public int MuncityId { get; set; }
         [Required]
         [Display(Name = "barangay")]
-        public int? BarangayId { get; set; }
+        public int BarangayId { get; set; }
     }
 }

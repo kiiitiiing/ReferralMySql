@@ -52,6 +52,33 @@
         var placeholderElement = $('#modal-placeholders');
 
         var modals = $('#all_modals');
+
+        modals.on('click', 'button[data-save="reco"]', function (event) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            var content = $('#reco-modal');
+            var form = content.find('form');
+            var contentId = content.attr('id');
+            var actionUrl = form.attr('action');
+            var dataToSend = form.serialize();
+            console.log(content);
+            $.ajax({
+                url: actionUrl,
+                type: 'post',
+                async: true,
+                data: dataToSend,
+                success: function (output) {
+                    var newBody = $('.modal-body', output);
+                    newBody.find('#chat').val('');
+                    content.find('.modal-body').replaceWith(newBody);
+                    $('div.direct-chat-messages').animate({ scrollTop: $('#last-item').position().top }, 0);
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    alert(xhr.responseText);
+                    alert(thrownError);
+                }
+            })
+        });
         modals.on('click', 'button[data-save="modal"]', function (event) {
             event.preventDefault();
             event.stopImmediatePropagation();
@@ -84,38 +111,38 @@
                                 sessionStorage.setItem('onReload', 'updatedIssues');
                                 location.reload();
                             }
-                            else if (formId == 'update-doctor-modal') {
+                            else if (contentId == 'update-doctor-modal') {
                                 sessionStorage.setItem('onReload', 'updateDoctor');
                                 location.reload();
                             }
-                            else if (formId == 'change-password-modal') {
+                            else if (contentId == 'change-password-modal') {
                                 sessionStorage.setItem('onReload', 'passWordChanged');
                                 location.reload();
                             }
-                            else if (formId == 'reco-modal') {
+                            else if (contentId == 'reco-modal') {
                                 var input = placeholderElement.find('.modal-footer').find('form').find('.code').val();
                                 console.log(input);
                             }
-                            else if (formId == 'switch-user-modal') {
+                            else if (contentId == 'switch-user-modal') {
                                 location.href = '/Home/Index';
                             }
-                            else if (formId == 'add-doctor-modal') {
+                            else if (contentId == 'add-doctor-modal') {
                                 sessionStorage.setItem('onReload', 'addDoctor');
                                 location.reload();
                             }
-                            else if (formId == 'add-support-modal') {
+                            else if (contentId == 'add-support-modal') {
                                 sessionStorage.setItem('onReload', 'addSupport');
                                 location.reload();
                             }
-                            else if (formId == 'update-support-modal') {
+                            else if (contentId == 'update-support-modal') {
                                 sessionStorage.setItem('onReload', 'updateSupport');
                                 location.reload();
                             }
-                            else if (formId == 'add-facility-modal') {
+                            else if (contentId == 'add-facility-modal') {
                                 sessionStorage.setItem('onReload', 'addFacility');
                                 location.reload();
                             }
-                            else if (formId == 'update-facility-modal') {
+                            else if (contentId == 'update-facility-modal') {
                                 sessionStorage.setItem('onReload', 'updateFacility');
                                 location.reload();
                             }
@@ -123,6 +150,9 @@
                     }
                     else {
                         content.find('.modal-body').replaceWith(newBody);
+                        content.find('.select2').select2({
+                            theme: 'bootstrap4'
+                        });
                         if (contentId == 'new_sop') {
                             var disabled = content.find('#notavailable');
                             if (disabled.is(':checked') == true) {
@@ -364,6 +394,9 @@
                     text: 'Select Barangay'
                 }));
         }
+        barangaySelect.select2({
+            theme: 'bootstrap4'
+        });
     }
 
     function OpenModal(btn) {

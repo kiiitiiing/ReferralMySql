@@ -32,15 +32,15 @@
                                     {
                                         x++;
                                         var chatTime = item.CreatedAt.GetDate("dd MMM hh:mm tt");
-                                        direction = item.SenderId.Equals(userId) ? "right" : "left";
+                                        direction = item.Sender.Equals(userId) ? "right" : "left";
                                         var reverse = direction == "right" ? "left" : "right";
                                         var last = x == Model.Chats.Count() ? "last-item" : "";
                                         <div class="direct-chat-msg @direction" id="chats">
                                             <div class="direct-chat-info clearfix">
-                                                <span class="direct-chat-name fa-pull-@direction">@item.Sender.GetMDFullName().NameToUpper()</span>
+                                                <span class="direct-chat-name fa-pull-@direction">@item.SenderName.NameToUpper()</span>
                                                 <small class="direct-chat-timestamp fa-pull-@reverse">@chatTime</small>
                                             </div>
-                                            <img class="direct-chat-img" title="@item.Sender.Facility.Name" src="~/assets/dist/img/MDMale.jpg" alt="Message User Image">
+                                            <img class="direct-chat-img" title="@item.FacilityName" src="~/assets/dist/img/MDMale.jpg" alt="Message User Image">
                                             <div class="direct-chat-text" id="@last">
                                                 @item.Message
                                             </div>
@@ -57,7 +57,7 @@
                             <div class="input-group ">
                                 <input type="text" asp-for="Message" id="chat" required placeholder="Type Message..." class="form-control message">
                                 <span class="input-group-btn">
-                                    <button class="btn btn-success btn-flat" id="send-message" data-action="small_modal" data-save="modal">Send</button>
+                                    <button class="btn btn-success btn-flat" id="send-message" data-action="small_modal" data-save="reco">Send</button>
                                 </span>
                             </div>
                         </form>

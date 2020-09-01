@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Referral2.Data;
 using Referral2.Helpers;
+using Referral2.MyData;
 using Referral2.Services;
 
 namespace Referral2
@@ -35,6 +36,8 @@ namespace Referral2
             services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
             services.AddDbContext<ReferralDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("ReferralConnection")));
+            services.AddDbContext<MySqlReferralContext>(options =>
+                options.UseMySQL(Configuration.GetConnectionString("MySqlReferralConnection")));
 
             services.AddCors();
 

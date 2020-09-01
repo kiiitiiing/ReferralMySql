@@ -8,7 +8,9 @@ namespace Referral2.Models.ViewModels.ViewPatients
     public partial class ReferredViewModel
     {
         public int PatientId { get; set; }
-        public string PatientName { get; set; }
+        public string Fname { get; set; }
+        public string Mname { get; set; }
+        public string Lname { get; set; }
         public string PatientSex { get; set; }
         public int PatientAge { get; set; } 
         public int TrackingId { get; set; }
@@ -25,6 +27,8 @@ namespace Referral2.Models.ViewModels.ViewPatients
         public string ReferredTo { get; set; }
         public int? ReferredToId { get; set; }
         public int? ReferredFromId { get; set; }
+        public string FacilityFrom { get; set; }
+        public string FacilityTo { get; set; }
         public bool Pregnant { get; set; }
         public bool Seen { get; set; }
         public string Code { get; set; }

@@ -104,6 +104,16 @@
                     discharged = "disabled";
                     break;
                 }
+            case "archived":
+                {
+                    referred = "complete";
+                    seen = "complete";
+                    accepted = "complete";
+                    arrived = "active";
+                    admitted = "disabled";
+                    discharged = "disabled";
+                    break;
+                }
             case "admitted":
                 {
                     referred = "complete";
@@ -198,6 +208,7 @@
                 var callerCount = item.CallerCount;
                 var recoCount = item.ReCoCount;
                 var referredBy = item.Walkin ? "WALK IN" : item.ReferredBy.ToUpper();
+                var patientName = item.Fname + " " + item.Mname + " " + item.Lname;
                 int ctr = 0;
                 seen = "disabled";
                 accepted = "disabled";
@@ -211,7 +222,7 @@
                     <div class="card-header @headerclass">
                         <span class="patientTitle">
                             <i class="fa fa-wheelchair"></i>
-                            &nbsp;@item.PatientName
+                            &nbsp;@patientName
                             <small class="text-sm text-muted">[@item.PatientSex, @item.PatientAge] from @item.PatientAddress</small><br />
                         </span>
                         <span class="text-success">Referred by:</span>
@@ -263,11 +274,23 @@
 
                             <div class="col-sm-2 bs-wizard-step @arrived">
                                 <!-- ARRIVED -->
-                                <div class="text-center bs-wizard-stepnum">
-                                    Arrived
-                                </div>
-                                <div class="progress"><div class="progress-bar"></div></div>
-                                <a href="javascript:void(0)" class="bs-wizard-dot"></a>
+                                @if (item.Status.Equals("archived"))
+                                {
+                                    <div class="text-center bs-wizard-stepnum">
+                                        <span class="text-danger">Didn't Arrive</span>
+                                    </div>
+                                    <div class="progress"><div class="progress-bar"></div></div>
+                                    <a href="javascript:void(0)" class="bs-wizard-dot" title="Referred" style="background:#a94442;"></a>
+
+                                }
+                                else
+                                {
+                                    <div class="text-center bs-wizard-stepnum">
+                                        Arrived
+                                    </div>
+                                    <div class="progress"><div class="progress-bar"></div></div>
+                                    <a href="javascript:void(0)" class="bs-wizard-dot" title="Referred"></a>
+                                }
                             </div>
                             <div class="col-sm-2 bs-wizard-step @admitted">
                                 <!-- ADMITTED -->
@@ -304,20 +327,20 @@
                                                             @if (!item.Walkin)
                                                             {
                                                                 <td>
-                                                                    <span class="patient-color">@item2.PatientName</span>
+                                                                    <span class="patient-color">@patientName</span>
                                                                     was referred by
                                                                     <span class="md-color">@item2.ReferringMd</span>
                                                                     of
-                                                                    <span class="hospital-color">@item2.FacilityFrom</span>
+                                                                    <span class="hospital-color">@item.FacilityFrom</span>
                                                                     to
-                                                                    <span class="hospital-color">@item2.FacilityTo</span>
+                                                                    <span class="hospital-color">@item.FacilityTo</span>
                                                                 </td>
                                                             }
                                                             else
                                                             {
                                                                 <td>
                                                                     <strong>Walk-In Patient: </strong>
-                                                                    <span class="patient-color">@item2.PatientName</span>
+                                                                    <span class="patient-color">@patientName</span>
                                                                 </td>
                                                             }
 
@@ -331,9 +354,9 @@
                                                             <td>
                                                                 <span class="md-color">@item2.ActionMd</span>
                                                                 of
-                                                                <span class="hospital-color">@item2.FacilityTo</span>
+                                                                <span class="hospital-color">@item.FacilityTo</span>
                                                                 recommend to redirect
-                                                                <span class="patient-color">@item2.PatientName</span>
+                                                                <span class="patient-color">@patientName</span>
                                                                 to other facility.<br />
                                                                 <span class="text-warning">Remarks: @item2.Remarks</span><br />
                                                                 @if (item.Status == "rejected")
@@ -365,7 +388,7 @@
                                                                 <span class="text-muted">@item2.DateAction</span>
                                                             </td>
                                                             <td>
-                                                                <span class="patient-color">@item2.PatientName</span>
+                                                                <span class="patient-color">@patientName</span>
                                                                 has departed by
                                                                 <span class="md-color">@remarks@other</span>
                                                             </td>
@@ -381,20 +404,20 @@
                                                             @if (!item.Walkin)
                                                             {
                                                                 <td>
-                                                                    <span class="patient-color">@item2.PatientName</span>
+                                                                    <span class="patient-color">@patientName</span>
                                                                     was referred by
                                                                     <span class="md-color">@item2.ReferringMd</span>
                                                                     of
-                                                                    <span class="hospital-color">@item2.FacilityFrom</span>
+                                                                    <span class="hospital-color">@item.FacilityFrom</span>
                                                                     to
-                                                                    <span class="hospital-color">@item2.FacilityTo</span>
+                                                                    <span class="hospital-color">@item.FacilityTo</span>
                                                                 </td>
                                                             }
                                                             else
                                                             {
                                                                 <td>
                                                                     <strong>Walk-In Patient: </strong>
-                                                                    <span class="patient-color">@item2.PatientName</span>
+                                                                    <span class="patient-color">@patientName</span>
                                                                 </td>
                                                             }
 
@@ -409,20 +432,20 @@
                                                             @if (!item.Walkin)
                                                             {
                                                                 <td>
-                                                                    <span class="patient-color">@item2.PatientName</span>
+                                                                    <span class="patient-color">@patientName</span>
                                                                     was referred by
                                                                     <span class="md-color">@item2.ReferringMd</span>
                                                                     of
-                                                                    <span class="hospital-color">@item2.FacilityFrom</span>
+                                                                    <span class="hospital-color">@item.FacilityFrom</span>
                                                                     to
-                                                                    <span class="hospital-color">@item2.FacilityTo</span>
+                                                                    <span class="hospital-color">@item.FacilityTo</span>
                                                                 </td>
                                                             }
                                                             else
                                                             {
                                                                 <td>
                                                                     <strong>Walk-In Patient: </strong>
-                                                                    <span class="patient-color">@item2.PatientName</span>
+                                                                    <span class="patient-color">@patientName</span>
                                                                 </td>
                                                             }
 
@@ -435,11 +458,11 @@
                                                                 <span class="text-muted">@item2.DateAction</span>
                                                             </td>
                                                             <td>
-                                                                <span class="patient-color">@item2.PatientName</span>
+                                                                <span class="patient-color">@patientName</span>
                                                                 was accepted by
                                                                 <span class="md-color">@item2.ActionMd</span>
                                                                 of
-                                                                <span class="hospital-color">@item2.FacilityTo</span>
+                                                                <span class="hospital-color">@item.FacilityTo</span>
                                                                 <br />
                                                                 <span class="text-warning">Remarks: @item2.Remarks</span>
                                                             </td>
@@ -453,9 +476,25 @@
                                                                 <span class="text-muted">@item2.DateAction</span>
                                                             </td>
                                                             <td>
-                                                                <span class="patient-color">@item2.PatientName</span>
+                                                                <span class="patient-color">@patientName</span>
                                                                 has arrived at
-                                                                <span class="hospital-color">@item2.FacilityTo</span>
+                                                                <span class="hospital-color">@item.FacilityTo</span>
+                                                                <br />
+                                                                <span class="text-warning">Remarks: @item2.Remarks</span>
+                                                            </td>
+
+                                                            break;
+                                                        }
+                                                    case "archived":
+                                                        {
+
+                                                            <td class="table-date">
+                                                                <span class="text-muted">@item2.DateAction</span>
+                                                            </td>
+                                                            <td>
+                                                                <span class="patient-color">@patientName</span>
+                                                                didn't arrive to
+                                                                <span class="hospital-color">@item.FacilityTo</span>
                                                                 <br />
                                                                 <span class="text-warning">Remarks: @item2.Remarks</span>
                                                             </td>
@@ -469,9 +508,9 @@
                                                                 <span class="text-muted">@item2.DateAction</span>
                                                             </td>
                                                             <td>
-                                                                <span class="patient-color">@item2.PatientName</span>
+                                                                <span class="patient-color">@patientName</span>
                                                                 was admitted at
-                                                                <span class="hospital-color">@item2.FacilityTo</span>
+                                                                <span class="hospital-color">@item.FacilityTo</span>
                                                                 <br />
                                                                 <span class="text-warning">Remarks: @item2.Remarks</span>
                                                             </td>
@@ -485,9 +524,9 @@
                                                                 <span class="text-muted">@item2.DateAction</span>
                                                             </td>
                                                             <td>
-                                                                <span class="patient-color">@item2.PatientName</span>
+                                                                <span class="patient-color">@patientName</span>
                                                                 was discharged from
-                                                                <span class="hospital-color">@item2.FacilityTo</span>
+                                                                <span class="hospital-color">@item.FacilityTo</span>
                                                                 <br />
                                                                 <span class="text-warning">Remarks: @item2.Remarks</span>
                                                             </td>
@@ -503,9 +542,9 @@
                                                             <td>
                                                                 <span class="md-color">@item2.ActionMd</span>
                                                                 of
-                                                                <span class="hospital-color">@item2.FacilityTo</span>
+                                                                <span class="hospital-color">@item.FacilityTo</span>
                                                                 is requesting a call from
-                                                                <span class="hospital-color">@item2.FacilityFrom</span>.
+                                                                <span class="hospital-color">@item.FacilityFrom</span>.
                                                             </td>
 
                                                             break;
@@ -517,7 +556,7 @@
                                                                 <span class="text-muted">@item2.DateAction</span>
                                                             </td>
                                                             <td>
-                                                                <span class="patient-color">@item2.PatientName</span>
+                                                                <span class="patient-color">@patientName</span>
                                                                 was cancelled by
                                                                 <span class="md-color">@item2.ActionMd</span>
                                                                 <br />

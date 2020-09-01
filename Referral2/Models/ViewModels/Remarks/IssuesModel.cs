@@ -8,6 +8,6 @@ namespace Referral2.Models.ViewModels.Remarks
         [Required]
         public int TrackingId { get; set; }
         [Required]
-        public List<Issue> Issues { get; set; }
+        public List<Referral2.MyModels.Issue> Issues { get; set; }
     }
 }

@@ -10,7 +10,9 @@ namespace Referral2.Models.ViewModels.ViewPatients
         public bool Pregnant { get; set; }
         public int TrackingId { get; set; }
         public string Code { get; set; }
-        public string PatientName { get; set; }
+        public string Fname { get; set; }
+        public string Mname { get; set; }
+        public string Lname { get; set; }
         public string PatientSex { get; set; }
         public int PatientAge { get; set; }
         public string Status { get; set; }

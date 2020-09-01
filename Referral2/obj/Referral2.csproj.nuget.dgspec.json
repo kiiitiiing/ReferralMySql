@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "G:\\DATA BACKUP\\PISTING YAWA\\Referral\\Referral2\\Referral2.csproj": {}
+    "D:\\Systems\\Referral - MySql\\Referral2\\Referral2.csproj": {}
   },
   "projects": {
-    "G:\\DATA BACKUP\\PISTING YAWA\\Referral\\Referral2\\Referral2.csproj": {
+    "D:\\Systems\\Referral - MySql\\Referral2\\Referral2.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "G:\\DATA BACKUP\\PISTING YAWA\\Referral\\Referral2\\Referral2.csproj",
+        "projectUniqueName": "D:\\Systems\\Referral - MySql\\Referral2\\Referral2.csproj",
         "projectName": "Referral2",
-        "projectPath": "G:\\DATA BACKUP\\PISTING YAWA\\Referral\\Referral2\\Referral2.csproj",
-        "packagesPath": "C:\\Users\\keith\\.nuget\\packages\\",
-        "outputPath": "G:\\DATA BACKUP\\PISTING YAWA\\Referral\\Referral2\\obj\\",
+        "projectPath": "D:\\Systems\\Referral - MySql\\Referral2\\Referral2.csproj",
+        "packagesPath": "C:\\Users\\Keith\\.nuget\\packages\\",
+        "outputPath": "D:\\Systems\\Referral - MySql\\Referral2\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\keith\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Keith\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -54,6 +54,12 @@
               "target": "Package",
               "version": "[2.2.0, )"
             },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[3.1.7, )"
+            },
             "Microsoft.EntityFrameworkCore.Proxies": {
               "target": "Package",
               "version": "[3.0.1, )"
@@ -79,6 +85,10 @@
             "Microsoft.VisualStudio.Web.CodeGeneration.Design": {
               "target": "Package",
               "version": "[3.0.0, )"
+            },
+            "MySql.Data.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.21, )"
             },
             "PagedList.Core.Mvc": {
               "target": "Package",
@@ -129,7 +139,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.302\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.400\\RuntimeIdentifierGraph.json"
         }
       }
     }

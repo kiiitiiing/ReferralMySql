@@ -50,6 +50,8 @@
                         @foreach (var item in Model)
                         {
                             var facility = item.ReferringFacility.Length > 25 ? new string(item.ReferringFacility.Take(25).ToArray()) +"..." : item.ReferringFacility;
+                            var dateCancelled = ((DateTimeOffset)item.DateCancelled).UtcDateTime;
+                            var patientName = item.Fname + " " + item.Mname + " " + item.Lname;
                             <tr>
                                 <td>
                                     <span class="facility-color" title="@item.ReferringFacility">
@@ -62,13 +64,13 @@
                                     @if (item.PatientType.Equals("Non-Pregnant"))
                                     {
                                         <a href="#" data-toggle="ajax-modal" data-target="#normal-form-modal" data-url="@Url.Action("PrintableNormalForm","ViewForms", new { code = item.PatientCode })">
-                                            @item.PatientName
+                                            @patientName
                                         </a>
                                     }
                                     else
                                     {
                                         <a href="#" data-toggle="ajax-modal" data-target="#print-pregnant-form-modal" data-url="@Url.Action("PrintablePregnantForm","ViewForms", new { code = item.PatientCode })">
-                                            @item.PatientName
+                                            @patientName
                                         </a>
                                     }
                                     <p class="small text-muted">
@@ -76,7 +78,7 @@
                                     </p>
                                 </td>
                                 <td>
-                                    <span>@item.DateCancelled.GetDate("MMMM d, yyyy h:mm tt")</span>
+                                    <span>@dateCancelled.GetDate("MMMM d, yyyy h:mm tt")</span>
                                 </td>
                                 <td>
                                     @item.ReasonCancelled

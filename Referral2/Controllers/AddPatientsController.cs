@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Referral2.Models;
+using Referral2.MyModels;
 using Referral2.Data;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Referral2.Helpers;
@@ -11,6 +11,7 @@ using Referral2.Models.ViewModels.Doctor;
 using Microsoft.Extensions.Options;
 using Referral2.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
+using Referral2.MyData;
 
 namespace Referral2.Controllers
 {
@@ -18,13 +19,13 @@ namespace Referral2.Controllers
     public class AddPatientsController : Controller
     {
         const string SessionPatientId = "_patient_id";
-        private readonly ReferralDbContext _context;
+        private readonly MySqlReferralContext _context;
         private readonly IOptions<ReferralRoles> _roles;
         private readonly IOptions<ReferralStatus> _status;
         private readonly IOptions<TrackingType> _type;
 
         // Add Patient Constructor
-        public AddPatientsController( ReferralDbContext context, IOptions<ReferralRoles> roles, IOptions<ReferralStatus> status, IOptions<TrackingType> type)
+        public AddPatientsController(MySqlReferralContext context, IOptions<ReferralRoles> roles, IOptions<ReferralStatus> status, IOptions<TrackingType> type)
         {
             _context = context;
             _roles = roles;
@@ -37,8 +38,8 @@ namespace Referral2.Controllers
         [HttpGet]
         public IActionResult Add()
         {
-            ViewBag.BarangayId = new SelectList(_context.Barangay.Where(x => x.ProvinceId.Equals(UserProvince)), "Id", "Description");
-            ViewBag.MuncityId = new SelectList(_context.Muncity.Where(x => x.ProvinceId.Equals(UserProvince)), "Id", "Description");
+            //ViewBag.Barangays = new SelectList(_context.Barangay.Where(x => x.ProvinceId.Equals(UserProvince)), "Id", "Description");
+            ViewBag.Muncities = new SelectList(_context.Muncity.Where(x => x.ProvinceId.Equals(UserProvince)), "Id", "Description");
             ViewBag.CivilStatus = new SelectList(ListContainer.CivilStatus, "Key", "Value");
             ViewBag.PhicStatus = new SelectList(ListContainer.PhicStatus, "Key", "Value");
             return View();
@@ -46,18 +47,17 @@ namespace Referral2.Controllers
 
         //POST: Add patient
         [HttpPost]
-        public async Task<IActionResult> Add([Bind] Patient patient)
+        public async Task<IActionResult> Add(PatientModel patient)
         {
-            patient.ProvinceId = UserProvince;
+            ViewBag.Muncities = new SelectList(_context.Muncity, "Id", "Description", patient.MuncityId);
+            if(patient.BarangayId != 0)
+                ViewBag.Barangays = new SelectList(_context.Barangay, "Id", "Description", patient.BarangayId);
             if (ModelState.IsValid)
             {
                 setPatients(patient);
                 await _context.SaveChangesAsync();
                 return RedirectToAction("ListPatients", "ViewPatients", new {name = patient.Fname, muncityId = patient.MuncityId, barangayId = patient.BarangayId });
             }
-            ViewBag.BarangayId = new SelectList(_context.Barangay, "Id", "Description", patient.BarangayId);
-            ViewBag.MuncityId = new SelectList(_context.Muncity, "Id", "Description", patient.MuncityId);
-            ViewBag.ProvinceId = new SelectList(_context.Province, "Id", "Description", patient.ProvinceId);
             ViewBag.CivilStatus = new SelectList(ListContainer.CivilStatus, "Key", "Value", patient.CivilStatus);
             ViewBag.PhicStatus = new SelectList(ListContainer.PhicStatus, "Key", "Value", patient.PhicStatus);
             return View(patient);
@@ -68,44 +68,44 @@ namespace Referral2.Controllers
 
         public async Task<IActionResult> Update(int? id)
         {
-            var patient = await _context.Patient.FindAsync(id);
-            var muncities = _context.Muncity.Where(x => x.ProvinceId == patient.ProvinceId);
-            var barangays = _context.Barangay.Where(x => x.MuncityId == patient.MuncityId);
-            ViewBag.Muncities = new SelectList(muncities, "Id", "Description", patient.MuncityId);
-            ViewBag.Barangays = new SelectList(barangays, "Id", "Description", patient.BarangayId);
+            var patient = await _context.Patients.FindAsync(id);
+            var muncities = _context.Muncity.Where(x => x.ProvinceId == patient.Province);
+            var barangays = _context.Barangay.Where(x => x.MuncityId == patient.Muncity);
+            ViewBag.Muncities = new SelectList(muncities, "Id", "Description", patient.Muncity);
+            ViewBag.Barangays = new SelectList(barangays, "Id", "Description", patient.Brgy);
             ViewBag.PhicStatus = new SelectList(ListContainer.PhicStatus, "Key", "Value", patient.PhicStatus);
             ViewBag.Sex = new SelectList(ListContainer.Sex, "Key", "Value", patient.Sex);
             ViewBag.CivilStatus = new SelectList(ListContainer.CivilStatus, "Key", "Value", patient.CivilStatus);
             var patientModel = new PatientModel
             {
                 PhicStatus = patient.PhicStatus,
-                PhicId = patient.PhicId,
-                Firstname = patient.Fname,
-                Middlename = patient.Mname,
-                Lastname = patient.Lname,
+                PhicId = patient.PhicStatus == "None"? "" : patient.PhicId,
+                Fname = patient.Fname,
+                Mname = patient.Mname,
+                Lname = patient.Lname,
                 DateOfBirth = patient.Dob,
                 Sex = patient.Sex,
                 CivilStatus = patient.CivilStatus,
-                MuncityId = patient.MuncityId,
-                BarangayId = patient.BarangayId
+                MuncityId = patient.Muncity,
+                BarangayId = patient.Brgy
             };
             return PartialView(patientModel);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Update([Bind] PatientModel model)
+        public async Task<IActionResult> Update(PatientModel model)
         {
             var patient = await SetUpdatePatient(model);
             if (ModelState.IsValid)
             {
                 _context.Update(patient);
                 await _context.SaveChangesAsync();
-                return RedirectToAction("ListPatients", "ViewPatients", new { name = model.Firstname, muncityId = model.MuncityId, barangayId = model.BarangayId });
+                return RedirectToAction("ListPatients", "ViewPatients", new { name = model.Fname, muncityId = model.MuncityId, barangayId = model.BarangayId });
             }
-            var muncities = _context.Muncity.Where(x => x.ProvinceId == patient.ProvinceId);
-            var barangays = _context.Barangay.Where(x => x.MuncityId == patient.MuncityId);
-            ViewBag.Muncities = new SelectList(muncities, "Id", "Description", patient.MuncityId);
-            ViewBag.Barangays = new SelectList(barangays, "Id", "Description", patient.BarangayId);
+            var muncities = _context.Muncity.Where(x => x.ProvinceId == patient.Province);
+            var barangays = _context.Barangay.Where(x => x.MuncityId == patient.Muncity);
+            ViewBag.Muncities = new SelectList(muncities, "Id", "Description", patient.Muncity);
+            ViewBag.Barangays = new SelectList(barangays, "Id", "Description", patient.Brgy);
             ViewBag.PhicStatus = new SelectList(ListContainer.PhicStatus, "Key", "Value", patient.PhicStatus);
             ViewBag.Sex = new SelectList(ListContainer.Sex, "Key", "Value", patient.Sex);
             ViewBag.CivilStatus = new SelectList(ListContainer.CivilStatus, "Key", "Value", patient.CivilStatus);
@@ -113,59 +113,69 @@ namespace Referral2.Controllers
             return PartialView();
         }
 
-        private async Task<Patient> SetUpdatePatient(PatientModel model)
+        private async Task<Patients> SetUpdatePatient(PatientModel model)
         {
-            var patient = await _context.Patient.FindAsync(model.Id);
+            var patient = await _context.Patients.FindAsync(model.Id);
             patient.PhicStatus = model.PhicStatus;
             patient.PhicId = model.PhicId;
-            patient.Fname = model.Firstname;
-            patient.Mname = model.Middlename;
-            patient.Lname = model.Lastname;
+            patient.Fname = model.Fname;
+            patient.Mname = model.Mname;
+            patient.Lname = model.Lname;
             patient.Dob = model.DateOfBirth;
             patient.Sex = model.Sex;
             patient.CivilStatus = model.CivilStatus;
-            patient.MuncityId = model.MuncityId;
-            patient.BarangayId = model.BarangayId;
+            patient.Muncity = model.MuncityId;
+            patient.Brgy = model.BarangayId;
 
             return patient;
         }
 
-        #endregion
+        #endregion  
 
         #region Refer Patient
         //GET: ReferPartial
         public IActionResult Refer(int? id)
         {
-            var facility = _context.Facility
-                .Include(x => x.Barangay)
-                .Include(x => x.Muncity)
-                .Include(x => x.Province)
-                .FirstOrDefault(x => x.Id.Equals(UserFacility));
-            var patient = _context.Patient
-                .Include(x => x.Barangay)
-                .Include(x => x.Muncity)
-                .Include(x => x.Province)
-                .FirstOrDefault(x => x.Id == id);
-            var model = new ReferPatientViewModel
-            {
-                PatientId = patient.Id,
-                Name = patient.GetFullName(),
-                Age = patient.Dob.ComputeAge(),
-                Sex = patient.Sex,
-                CivilStatus = patient.CivilStatus,
-                Address = patient.GetAddress(),
-                PhicStatus = patient.PhicStatus,
-                PhicId = patient.PhicId,
-                FacilityName = facility.Name,
-                FacilityAddress = facility.GetAddress()
-            };
+            var curPatient = from patient in _context.Patients where patient.Id == id
+                             join province in _context.Province on patient.Province equals province.Id
+                             join mun in _context.Muncity on patient.Muncity equals mun.Id into MUNCT
+                             from muncity in MUNCT.DefaultIfEmpty()
+                             join bar in _context.Barangay on patient.Brgy equals bar.Id into BARA
+                             from barangay in BARA.DefaultIfEmpty()
+                             from facility in _context.Facility
+                             where facility.Id == UserFacility
+                             join fprovince in _context.Province on facility.Province equals fprovince.Id
+                             join fmunc in _context.Muncity on facility.Muncity equals fmunc.Id into FMUNCT
+                             from fmuncity in FMUNCT.DefaultIfEmpty()
+                             join fbar in _context.Barangay on facility.Brgy equals fbar.Id into FBARA
+                             from fbarangay in FBARA.DefaultIfEmpty()
+                             select new ReferPatientViewModel
+                             {
+                                 PatientId = patient.Id,
+                                 Name = "".GetFullName(patient.Fname, patient.Mname, patient.Lname),
+                                 Age = patient.Dob.ComputeAge(),
+                                 Sex = patient.Sex,
+                                 CivilStatus = patient.CivilStatus,
+                                 PatientBarangay = barangay.Description,
+                                 PatientMuncity = muncity.Description,
+                                 PatientProvince = province.Description,
+                                 PhicStatus = patient.PhicStatus,
+                                 PhicId = patient.PhicId,
+                                 FacilityName = facility.Name,
+                                 FacilityBarangay = fbarangay.Description,
+                                 FacilityMuncity = fmuncity.Description,
+                                 FacilityProvince = fprovince.Description
+                             };
+
             var referTo = _context.Facility
                 .Where(x => x.Id != UserFacility)
-                .Where(x => x.ProvinceId.Equals(UserProvince));
+                .Where(x => x.Province.Equals(UserProvince));
 
             ViewBag.ReferredTo = new SelectList(referTo, "Id", "Name");
+            ViewBag.ClinicalStatuses = new SelectList(ListContainer.ClinicalStatus, "Key", "Value");
+            ViewBag.SurveillanceCategories = new SelectList(ListContainer.SurveillanceCategory, "Key", "Value");
 
-            return PartialView(model);
+            return PartialView(curPatient.First());
         }
 
 
@@ -175,7 +185,7 @@ namespace Referral2.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Refer( ReferPatientViewModel model)
         {
-            model.ReferredToMd = model.ReferredToMd == 0 ? null : model.ReferredToMd;
+            model.ReferredToMd = model.ReferredToMd == 0 ? 0 : model.ReferredToMd;
             if (ModelState.IsValid && model.Facility != 0 && model.Department != 0)
             {
                 var patient = await setNormalPatientForm(model);
@@ -194,9 +204,11 @@ namespace Referral2.Controllers
             var facility = _context.Facility.Single(x => x.Id.Equals(UserFacility));
             var referTo = _context.Facility
                 .Where(x => x.Id != UserFacility)
-                .Where(x => x.ProvinceId.Equals(UserProvince));
+                .Where(x => x.Province.Equals(UserProvince));
 
             ViewBag.ReferredTo = new SelectList(referTo, "Id", "Name", model.Facility);
+            ViewBag.ClinicalStatuses = new SelectList(ListContainer.ClinicalStatus, "Key", "Value", model.ClinicalStatus);
+            ViewBag.SurveillanceCategories = new SelectList(ListContainer.SurveillanceCategory, "Key", "Value", model.SurveillanceCategory);
 
             return PartialView(model);
         }
@@ -206,43 +218,51 @@ namespace Referral2.Controllers
         //GET: Walkin patient
         public async Task<IActionResult> Walkin(int? id)
         {
-            var facility = _context.Facility
-                   .Include(x => x.Barangay)
-                   .Include(x => x.Muncity)
-                   .Include(x => x.Province)
-                   .FirstOrDefault(x => x.Id.Equals(UserFacility));
-            var patient = _context.Patient
-                .Include(x => x.Barangay)
-                .Include(x => x.Muncity)
-                .Include(x => x.Province)
-                .FirstOrDefault(x => x.Id == id);
-            var model = new ReferPatientViewModel
-            {
-                PatientId = patient.Id,
-                Name = patient.GetFullName(),
-                Age = patient.Dob.ComputeAge(),
-                Sex = patient.Sex,
-                CivilStatus = patient.CivilStatus,
-                Address = patient.GetAddress(),
-                PhicStatus = patient.PhicStatus,
-                PhicId = patient.PhicId,
-                FacilityName = facility.Name,
-                FacilityAddress = facility.GetAddress()
-            };
+            var curPatient = from patient in _context.Patients
+                             where patient.Id == id
+                             join province in _context.Province on patient.Province equals province.Id
+                             join mun in _context.Muncity on patient.Muncity equals mun.Id into MUNCT
+                             from muncity in MUNCT.DefaultIfEmpty()
+                             join bar in _context.Barangay on patient.Brgy equals bar.Id into BARA
+                             from barangay in BARA.DefaultIfEmpty()
+                             from facility in _context.Facility
+                             where facility.Id == UserFacility
+                             join fprovince in _context.Province on facility.Province equals fprovince.Id
+                             join fmunc in _context.Muncity on facility.Muncity equals fmunc.Id into FMUNCT
+                             from fmuncity in FMUNCT.DefaultIfEmpty()
+                             join fbar in _context.Barangay on facility.Brgy equals fbar.Id into FBARA
+                             from fbarangay in FBARA.DefaultIfEmpty()
+                             select new ReferPatientViewModel
+                             {
+                                 PatientId = patient.Id,
+                                 Name = "".GetFullName(patient.Fname, patient.Mname, patient.Lname),
+                                 Age = patient.Dob.ComputeAge(),
+                                 Sex = patient.Sex,
+                                 CivilStatus = patient.CivilStatus,
+                                 PatientBarangay = barangay.Description,
+                                 PatientMuncity = muncity.Description,
+                                 PatientProvince = province.Description,
+                                 PhicStatus = patient.PhicStatus,
+                                 PhicId = patient.PhicId,
+                                 FacilityName = facility.Name,
+                                 FacilityBarangay = fbarangay.Description,
+                                 FacilityMuncity = fmuncity.Description,
+                                 FacilityProvince = fprovince.Description
+                             };
             var faciliyDepartment = await AvailableDepartments(UserFacility);
             var facilities = _context.Facility
                 .Where(x => x.Id != UserFacility)
-                .Where(x => x.ProvinceId.Equals(UserProvince));
+                .Where(x => x.Province.Equals(UserProvince));
             ViewBag.ReferringFacility = new SelectList(facilities, "Id", "Name");
             ViewBag.Departments = new SelectList(faciliyDepartment, "DepartmentId", "DepartmentName");
 
-            return PartialView(model);
+            return PartialView(curPatient.First());
         }
         //POST: Walkin Patient
         [HttpPost]
         public async Task<IActionResult> Walkin(ReferPatientViewModel model)
         {
-            model.ReferredToMd = model.ReferredToMd == 0 ? null : model.ReferredToMd;
+            model.ReferredToMd = model.ReferredToMd == 0 ? 0 : model.ReferredToMd;
             if (ModelState.IsValid && model.Facility != 0 && model.Department != 0)
             {
                 var patient = await setNormalPatientForm(model);
@@ -266,10 +286,10 @@ namespace Referral2.Controllers
             var facility = _context.Facility.Find(UserFacility);
             var facilities = _context.Facility
                 .Where(x => x.Id != UserFacility)
-                .Where(x => x.ProvinceId.Equals(UserProvince));
+                .Where(x => x.Province.Equals(UserProvince));
             ViewBag.Patient = walkin;
             ViewBag.Facility = facility.Name;
-            ViewBag.FacilityAddress = GlobalFunctions.GetAddress(facility);
+            ViewBag.FacilityAddress = "";
             ViewBag.ReferringFacility = new SelectList(facilities, "Id", "Name", model.Facility);
             ViewBag.Departments = new SelectList(faciliyDepartment, "DepartmentId", "DepartmentName");
             return PartialView(model);
@@ -282,7 +302,7 @@ namespace Referral2.Controllers
         {
             var patient = await SetPatient(id);
             var facilities = _context.Facility
-                .Where(x => x.Id != UserFacility && x.ProvinceId == UserProvince);
+                .Where(x => x.Id != UserFacility && x.Province == UserProvince);
             ViewBag.Patient = patient;
             ViewBag.Facility = _context.Facility.Find(UserFacility).Name;
             ViewBag.Facilities = new SelectList(facilities, "Id", "Name");
@@ -294,7 +314,7 @@ namespace Referral2.Controllers
         {
             var patient = await SetPatient(model.PatientId);
             var facilities = _context.Facility
-                .Where(x => x.Id != UserFacility && x.ProvinceId == UserProvince);
+                .Where(x => x.Id != UserFacility && x.Province == UserProvince);
             if (ModelState.IsValid)
             {
                 var pregnantForm = await SetPregnantForm(model, _type.Value.REFER);
@@ -313,7 +333,7 @@ namespace Referral2.Controllers
                 ModelState.AddModelError("WomanInformationGiven", "This field is required.");
             }
             ViewBag.Patient = patient;
-            ViewBag.Facility = _context.Facility.Find(UserId()).Name;
+            ViewBag.Facility = _context.Facility.Find(UserId).Name;
             ViewBag.Facilities = new SelectList(facilities, "Id", "Name");
             return PartialView();
         }
@@ -327,10 +347,10 @@ namespace Referral2.Controllers
             var facility = _context.Facility.Find(UserFacility);
             var facilityDepartment = await AvailableDepartments(UserFacility);
             var facilities = _context.Facility
-                .Where(x => x.Id != UserFacility && x.ProvinceId == UserProvince);
+                .Where(x => x.Id != UserFacility && x.Province == UserProvince);
             ViewBag.Patient = patient;
             ViewBag.Facility = facility.Name;
-            ViewBag.FacilityAddress = GlobalFunctions.GetAddress(facility);
+            ViewBag.FacilityAddress = "";
             ViewBag.Facilities = new SelectList(facilities, "Id", "Name");
             ViewBag.Departments = new SelectList(facilityDepartment, "DepartmentId", "DepartmentName");
             return PartialView();
@@ -341,7 +361,7 @@ namespace Referral2.Controllers
         {
             var patient = await SetPatient(model.PatientId);
             var facilities = _context.Facility
-                .Where(x => x.Id != UserFacility && x.ProvinceId == UserProvince);
+                .Where(x => x.Id != UserFacility && x.Province == UserProvince);
             if (ModelState.IsValid)
             {
                 var pregnantForm = await SetPregnantForm(model,_type.Value.WALKIN);
@@ -360,7 +380,7 @@ namespace Referral2.Controllers
                 ModelState.AddModelError("WomanInformationGiven", "This field is required.");
             }
             ViewBag.Patient = patient;
-            ViewBag.Facility = _context.Facility.Find(UserId()).Name;
+            ViewBag.Facility = _context.Facility.Find(UserId).Name;
             ViewBag.Facilities = new SelectList(facilities, "Id", "Name");
             return PartialView();
         }
@@ -382,7 +402,7 @@ namespace Referral2.Controllers
                     ReferredTo = model.ReferredTo,
                     DepartmentId = model.DepartmentId,
                     ReferringMd = model.ReferringMd,
-                    ActionMd = null,
+                    ActionMd = 0,
                     Status = _status.Value.REFERRED,
                     Remarks = model.Remarks,
                     CreatedAt = DateTime.Now,
@@ -423,8 +443,8 @@ namespace Referral2.Controllers
                 ReferredFrom = model.ReferringFacility,
                 ReferredTo = model.ReferredTo,
                 DepartmentId = model.DepartmentId,
-                ReferringMd = walkin? null : (int?)model.ReferredBy,
-                ActionMd = walkin? (int?)UserId() : null,
+                ReferringMd = walkin? 0 : model.ReferredBy,
+                ActionMd = walkin? UserId : 0,
                 Status = walkin? _status.Value.ACCEPTED : _status.Value.REFERRED,
                 Type = _type.Value.PREGNANT,
                 Walkin = walkin ? "yes" : "no",
@@ -435,11 +455,11 @@ namespace Referral2.Controllers
 
             return Task.FromResult(tracking);
         }
-        private async Task<Patient> SetBabyPatient(PregnantReferViewModel model, Patient mother)
+        private async Task<Patients> SetBabyPatient(PregnantReferViewModel model, Patients mother)
         {
-            var baby = new Patient
+            var baby = new Patients
             {
-                UniqueId = RemoveWhiteSpace(model.BabyFirstName + model.BabyMiddleName + model.BabyLastName) + RemoveDash(((DateTime)model.BabyDateOfBirth).ToString("yyyy/MM/dd")) + mother.BarangayId.ToString(),
+                UniqueId = RemoveWhiteSpace(model.BabyFirstName + model.BabyMiddleName + model.BabyLastName) + RemoveDash(((DateTime)model.BabyDateOfBirth).ToString("yyyy/MM/dd")) + mother.Brgy.ToString(),
                 Fname = model.BabyFirstName.Trim(),
                 Mname = model.BabyMiddleName.Trim(),
                 Lname = model.BabyLastName.Trim(),
@@ -448,10 +468,10 @@ namespace Referral2.Controllers
                 CivilStatus = "Single",
                 PhicStatus = null,
                 PhicId = "None",
-                BarangayId = mother.BarangayId,
-                MuncityId = mother.MuncityId,
-                ProvinceId = mother.ProvinceId,
-                Address = GetAddress(mother),
+                Brgy = mother.Brgy,
+                Muncity = mother.Muncity,
+                Province = mother.Province,
+                Address = "",
                 TsekapPatient = 0,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
@@ -463,8 +483,8 @@ namespace Referral2.Controllers
         private async Task<PregnantForm> SetPregnantForm(PregnantReferViewModel model, string type)
         {
             var walkin = type.Equals(_type.Value.WALKIN);
-            Patient mother = _context.Patient.Find(model.PatientId);
-            Patient baby = null;
+            Patients mother = _context.Patients.Find(model.PatientId);
+            Patients baby = null;
             if(!string.IsNullOrEmpty(model.BabyFirstName))
             {
                 baby = await SetBabyPatient(model, mother);
@@ -475,7 +495,7 @@ namespace Referral2.Controllers
                 Code = DateTime.Now.ToString("yyMMdd") + "-" + UserFacility.ToString().PadLeft(3, '0') + "-" + DateTime.Now.ToString("hhmmss"),
                 ReferringFacility = walkin? model.ReferredTo : UserFacility,
                 ReferredTo = walkin? UserFacility : model.ReferredTo,
-                ReferredBy = UserId(),
+                ReferredBy = UserId,
                 RecordNo = model.RecordNumber?? "",
                 ReferredDate = DateTime.Now,
                 DepartmentId = model.Department,
@@ -489,7 +509,7 @@ namespace Referral2.Controllers
                 WomanDuringTransport = model.WomanDuringTreatmentGiven,
                 WomanTransportGivenTime = model.WomanDuringDateTimeGiven?? default,
                 WomanInformationGiven = model.WomanInformationGiven,
-                PatientBabyId = baby == null? null : (int?)baby.Id,
+                PatientBabyId = baby == null? 0 : baby.Id,
                 BabyReason = model.BabyMainReason,
                 BabyMajorFindings = model.BabyMajorFindings,
                 BabyLastFeed = model.BabyLastFeed?? default,
@@ -503,7 +523,7 @@ namespace Referral2.Controllers
             };
             var babyMother = new Baby
             {
-                BabyId = baby == null? null : (int?)baby.Id,
+                BabyId = baby == null? 0 : baby.Id,
                 MotherId = model.PatientId,
                 Weight = model.BabyBirthWeight ?? default,
                 GestationalAge = model.GestationalAge ?? default,
@@ -517,7 +537,7 @@ namespace Referral2.Controllers
         }
         private Task<PatientViewModel> SetPatient(int? id)
         {
-            var patient = _context.Patient.Find(id);
+            var patient = _context.Patients.Find(id);
 
             var patientModel = new PatientViewModel
             {
@@ -526,7 +546,7 @@ namespace Referral2.Controllers
                 Age = patient.Dob.ComputeAge(),
                 Sex = patient.Sex,
                 CivilStatus = patient.CivilStatus,
-                Address = GlobalFunctions.GetAddress(patient),
+                Address = "",
                 PhicStatus = patient.PhicStatus,
                 PhicId = patient.PhicId
             };
@@ -540,14 +560,21 @@ namespace Referral2.Controllers
                      DepartmentId = x.Id,
                      DepartmentName = x.Description
                  });
-            var availableDepartments = _context.User
-                .Where(x => x.FacilityId.Equals(facilityId) && x.Level.Equals(_roles.Value.DOCTOR))
-                .GroupBy(d => d.DepartmentId)
-                .Select(y => new SelectDepartment
-                {
-                    DepartmentId = departments.Single(x => x.DepartmentId.Equals(y.Key)).DepartmentId,
-                    DepartmentName = departments.Single(x => x.DepartmentId.Equals(y.Key)).DepartmentName
-                });
+            var availableDepartments = _context.Users
+                .Where(x => (x.FacilityId == UserFacility))
+                .Select(x => x.DepartmentId)
+                .Distinct()
+                .Join(
+                    _context.Department,
+                    user => user,
+                    department => department.Id,
+                    (user, department) =>
+                        new SelectDepartment
+                        {
+                            DepartmentId = user,
+                            DepartmentName = department.Description
+                        }
+                );
             return Task.FromResult(availableDepartments);
         }
         public PatientForm setNormalPatientForm(WalkinPatientViewModel model)
@@ -566,8 +593,8 @@ namespace Referral2.Controllers
                 RecoSummary = model.SummaryReco,
                 Diagnosis = model.Diagnosis,
                 Reason = model.Reason,
-                ReferringMd = null,
-                ReferredMd = UserId(),
+                ReferringMd = 0,
+                ReferredMd = UserId,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
             };
@@ -590,10 +617,13 @@ namespace Referral2.Controllers
                 RecoSummary = model.SummaryReco,
                 Diagnosis = model.Diagnosis,
                 Reason = model.Reason,
-                ReferringMd = UserId(),
+                ReferringMd = UserId,
                 ReferredMd = model.ReferredToMd,
                 CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now                
+                UpdatedAt = DateTime.Now,
+                CovidNumber = model.CovidNumber,
+                ReferClinicalStatus = model.ClinicalStatus,
+                ReferSurCategory = model.SurveillanceCategory
             };
             await _context.AddAsync(patient);
             await _context.SaveChangesAsync();
@@ -621,6 +651,7 @@ namespace Referral2.Controllers
                 Status = _status.Value.ACCEPTED,
                 FormId = patientForm.Id,
                 Walkin = "yes",
+                ModeTransportation = "",
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
             };
@@ -648,6 +679,7 @@ namespace Referral2.Controllers
                 Status = _status.Value.REFERRED,
                 FormId = patientForm.Id,
                 Walkin = "no",
+                ModeTransportation = "",
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
             };
@@ -666,7 +698,7 @@ namespace Referral2.Controllers
                 ReferredTo = tracking.ReferredTo,
                 DepartmentId = tracking.DepartmentId,
                 ReferringMd = tracking.ReferringMd,
-                ActionMd = null,
+                ActionMd = 0,
                 Remarks = tracking.Status,
                 Status = _status.Value.REFERRED,
                 CreatedAt = DateTime.Now,
@@ -687,7 +719,7 @@ namespace Referral2.Controllers
                 ReferredTo = tracking.ReferredTo,
                 DepartmentId = tracking.DepartmentId,
                 ReferringMd = tracking.ReferringMd,
-                ActionMd = UserId(),
+                ActionMd = UserId,
                 Remarks = "Walk-In Patient",
                 Status = tracking.Status,
                 CreatedAt = DateTime.Now,
@@ -709,7 +741,7 @@ namespace Referral2.Controllers
                 ReferredTo = tracking.ReferredTo,
                 DepartmentId = tracking.DepartmentId,
                 ReferringMd = tracking.ReferringMd,
-                ActionMd = UserId(),
+                ActionMd = UserId,
                 Remarks = tracking.Remarks,
                 Status = tracking.Status,
                 CreatedAt = DateTime.Now,
@@ -719,28 +751,44 @@ namespace Referral2.Controllers
         }
 
 
-        public void setPatients(Patient patients)
+        public void setPatients(PatientModel patients)
         {
-            patients.Fname = patients.Fname.Trim();
-            patients.Mname = patients.Mname.Trim();
-            patients.Lname = patients.Lname.Trim();
-            patients.Address = GetAddress(patients);
-            patients.PhicId = string.IsNullOrEmpty(patients.PhicId) ? "None" : patients.PhicId;
-            patients.TsekapPatient = 0;
-            patients.UniqueId = RemoveWhiteSpace(patients.Fname + patients.Mname + patients.Lname) + RemoveDash(patients.Dob.ToString("yyyy/MM/dd")) + patients.BarangayId.ToString();
-            patients.CreatedAt = DateTime.Now;
-            patients.UpdatedAt = DateTime.Now;
-            _context.Add(patients);
+            var currPatient = _context.Patients.FirstOrDefault(x =>
+                x.Fname == patients.Fname &&
+                x.Mname == patients.Mname &&
+                x.Lname == patients.Lname &&
+                x.Dob == patients.DateOfBirth &&
+                x.Sex == patients.Sex &&
+                x.Province == UserProvince &&
+                x.Muncity == patients.MuncityId &&
+                x.Brgy == patients.BarangayId);
+
+            if (currPatient == null)
+            {
+                var patient = new Patients
+                {
+                    UniqueId = RemoveWhiteSpace(patients.Fname + patients.Mname + patients.Lname) + RemoveDash(patients.DateOfBirth.ToString("yyyy/MM/dd")) + patients.BarangayId.ToString(),
+                    Fname = patients.Fname.Trim(),
+                    Mname = patients.Mname.Trim(),
+                    Lname = patients.Lname.Trim(),
+                    Dob = patients.DateOfBirth,
+                    Sex = patients.Sex,
+                    CivilStatus = patients.CivilStatus,
+                    PhicId = string.IsNullOrEmpty(patients.PhicId) ? "None" : patients.PhicId,
+                    PhicStatus = patients.PhicStatus,
+                    Province = UserProvince,
+                    Muncity = patients.MuncityId,
+                    Brgy = patients.BarangayId,
+                    Address = "",
+                    TsekapPatient = 0,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                };
+                _context.Add(patient);
+            }
+            
         }
 
-        public string GetAddress(Patient patient)
-        {
-            string barangay = patient.Barangay == null ? "" : patient.Barangay.Description + ", ";
-            string muncity = patient.Muncity == null ? "" : patient.Muncity.Description + ", ";
-            string province = patient.Province == null ? "" : patient.Province.Description;
-
-            return barangay + muncity + province;
-        }
         public string fixString(string name)
         {
             name = name.Trim().ToLower();
@@ -759,10 +807,8 @@ namespace Referral2.Controllers
         {
             return new string(input.Where(c => char.IsDigit(c)).ToArray());
         }
-        public int UserId()
-        {
-            return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-        }
+
+        public int UserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
         public int UserFacility => int.Parse(User.FindFirstValue("Facility"));
         public int UserDepartment => int.Parse(User.FindFirstValue("Department"));
         public int UserProvince => int.Parse(User.FindFirstValue("Province"));

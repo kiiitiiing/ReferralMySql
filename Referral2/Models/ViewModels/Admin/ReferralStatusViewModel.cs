@@ -11,7 +11,8 @@ namespace Referral2.Models.ViewModels.Admin
         public string FacilityFrom { get; set; }
         public string FacilityTo { get; set; }
         public string Department { get; set; }
-        public string PatientName { get; set; }
+        public string Fname { get; set; }
+        public string Lname { get; set; }
         public string Status { get; set; }
     }
 }

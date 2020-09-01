@@ -18,7 +18,7 @@ namespace Referral2.Models.ViewModels.Admin
         public string Abbrevation { get; set; }
         [Required]
         [Display(Name = "province")]
-        public int? Province { get; set; }
+        public int Province { get; set; }
         [Required]
         [Display(Name = "city/municipality")]
         public int? Muncity { get; set; }
@@ -45,6 +45,6 @@ namespace Referral2.Models.ViewModels.Admin
         public string Type { get; set; }
         [Required]
         [Display(Name = "status")]
-        public string Status { get; set; }
+        public int Status { get; set; }
     }
 }

@@ -114,6 +114,7 @@
                 arrived = "disabled";
                 admitted = "disabled";
                 discharged = "disabled";
+                var patientName = item.Fname + " " + item.Mname + " " + item.Lname;
                 SetStatus(item.Status);
 
                 <div style="border:2px solid #7E7E7E" class="card card-outline">
@@ -121,7 +122,7 @@
                     <div class="card-header @headerclass">
                         <span class="patientTitle">
                             <i class="fa fa-wheelchair"></i>
-                            &nbsp;@item.PatientName
+                            &nbsp;@patientName
                             <small class="text-sm text-muted">[@item.PatientSex, @item.PatientAge] from @item.PatientAddress</small><br />
                         </span>
                         <span class="text-success">Referred by:</span>

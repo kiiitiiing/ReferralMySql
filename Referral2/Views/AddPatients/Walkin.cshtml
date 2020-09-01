@@ -3,7 +3,8 @@
 @{
     var dateReferred = DateTime.Now.DayOfWeek + " " + DateTime.Now.ToString("MMMM d, yyyy hh:mm tt", System.Globalization.CultureInfo.InvariantCulture);
     var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-
+    var patietnAddress = Model.PatientBarangay + ", " + (Model.PatientMuncity ?? " ") + " " + Model.PatientProvince;
+    var facilityAddress = (Model.FacilityBarangay ?? "") + ", " + (Model.FacilityMuncity ?? "") + ", " + Model.FacilityProvince;
 }
 <!-- REFER BODY -->
     <div class="modal-content" id="walkin-form">
@@ -17,12 +18,16 @@
             <input type="hidden" asp-for="Sex" />
             <input type="hidden" asp-for="Name" />
             <input type="hidden" asp-for="PhicId" />
-            <input type="hidden" asp-for="Address" />
+            <input type="hidden" asp-for="PatientBarangay" />
+            <input type="hidden" asp-for="PatientMuncity" />
+            <input type="hidden" asp-for="PatientProvince" />
             <input type="hidden" asp-for="PatientId" />
             <input type="hidden" asp-for="PhicStatus" />
             <input type="hidden" asp-for="CivilStatus" />
             <input type="hidden" asp-for="FacilityName" />
-            <input type="hidden" asp-for="FacilityAddress" />
+            <input type="hidden" asp-for="FacilityBarangay" />
+            <input type="hidden" asp-for="FacilityMuncity" />
+            <input type="hidden" asp-for="FacilityProvince" />
             <div class="modal-body">
                 <table class="table table-striped">
                     <tbody>
@@ -65,7 +70,7 @@
                         <tr>
                             <td colspan="6">
                                 Address:
-                                <span class="text-info">@Model.FacilityAddress</span>
+                                <span class="text-info">@facilityAddress</span>
                             </td>
                         </tr>
                         <tr>
@@ -104,7 +109,7 @@
                         <tr>
                             <td colspan="6">
                                 Address:
-                                <span class="text-danger">@Model.Address</span>
+                                <span class="text-danger">@patietnAddress)</span>
                             </td>
                         </tr>
                         <tr>

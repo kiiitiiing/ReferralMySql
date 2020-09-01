@@ -73,10 +73,11 @@
                                     <tbody>
                                         @foreach (var item in Model)
                                         {
+                                            var name = item.Lname + ", " + item.Fname + " " + (item.Mname ?? "");
                                             var logout = item.LogoutTime == default ? "" : item.LogoutTime.ToString("h:mm tt", System.Globalization.CultureInfo.InvariantCulture);
                                             var login = item.LoginTime == default ? "" : item.LoginTime.ToString("h:mm tt", System.Globalization.CultureInfo.InvariantCulture);
                                             <tr>
-                                                <td style="font-size:0.9em;white-space: nowrap;">@item.MDName.NameToUpper()</td>
+                                                <td style="font-size:0.9em;white-space: nowrap;">@name.NameToUpper()</td>
                                                 <td class="text-center text-success">
                                                     @if (item.OnDuty == "login")
                                                     {

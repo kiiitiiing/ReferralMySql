@@ -1,13 +1,9 @@
-﻿@model PatientForm
+﻿@model PatientFormModel
 @using Referral2.Models.MobileModels;
 @using Newtonsoft.Json;
 @{
     var dateReferred = Model.TimeReferred == default ? "" : Model.TimeReferred.GetDate("MMMM dd, yyyy hh:mm tt");
     var dateTransferred = Model.TimeTransferred == default ? "" : Model.TimeTransferred.GetDate("MMMM dd, yyyy hh:mm tt");
-    var referringMd = Model.ReferringMdNavigation;
-    var referringMdName = referringMd == null ? "" : GlobalFunctions.GetMDFullName(referringMd);
-    var referringMdContact = referringMd == null ? "" : referringMd.ContactNo;
-    var actionMd = Model.ReferredMdNavigation == null ? "" : GlobalFunctions.GetMDFullName(Model.ReferredMdNavigation) + " - " + Model.ReferredMdNavigation.ContactNo;
 
     var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
     var userFacility = int.Parse(User.FindFirstValue("Facility"));
@@ -45,20 +41,20 @@
     <table class="table table-striped">
         <tbody>
             <tr>
-                <td colspan="6">Name of Referring Facility: <span>@Model.ReferringFacilityNavigation.Name</span></td>
+                <td colspan="6">Name of Referring Facility: <span>@Model.ReferringFacilityName</span></td>
             </tr>
             <tr>
-                <td colspan="6">Facility Contact #: <span>@Model.ReferringFacilityNavigation.ContactNo</span></td>
+                <td colspan="6">Facility Contact #: <span>@Model.ReferringFacilityContact</span></td>
             </tr>
             <tr>
-                <td colspan="6">Address: <span>@Model.ReferringFacilityNavigation.GetAddress()</span></td>
+                <td colspan="6">Address: <span>@Model.ReferringFacilityAddress</span></td>
             </tr>
             <tr>
-                <td colspan="3">Referred to: <span>@Model.ReferredToNavigation.Name</span></td>
-                <td colspan="3">Department: <span>@Model.Department.Description</span></td>
+                <td colspan="3">Referred to: <span>@Model.ReferredToName</span></td>
+                <td colspan="3">Department: <span>@Model.Department</span></td>
             </tr>
             <tr>
-                <td colspan="6">Address: <span>@Model.ReferredToNavigation.GetAddress()</span></td>
+                <td colspan="6">Address: <span>@Model.ReferredToAddress</span></td>
             </tr>
             <tr>
                 <td colspan="3">
@@ -78,25 +74,25 @@
                 <td colspan="3">
                     Name of Patient:
                     <span>
-                        @Model.Patient.GetFullName().NameToUpper()
+                        @Model.PatientName.NameToUpper()
                     </span>
                 </td>
                 <td>
                     Age:
                     <span>
-                        @Model.Patient.Dob.ComputeAge()
+                        @Model.PatientDob.ComputeAge()
                     </span>
                 </td>
                 <td>
                     Sex:
                     <span>
-                        @Model.Patient.Sex
+                        @Model.PatientSex
                     </span>
                 </td>
                 <td>
                     Status:
                     <span>
-                        @Model.Patient.CivilStatus
+                        @Model.PatientStatus
                     </span>
                 </td>
             </tr>
@@ -104,7 +100,7 @@
                 <td colspan="6">
                     Address:
                     <span>
-                        @Model.Patient.GetAddress()
+                        @Model.PatientAddress
                     </span>
                 </td>
             </tr>
@@ -112,13 +108,13 @@
                 <td colspan="3">
                     PhilHealth status:
                     <span>
-                        @Model.Patient.PhicStatus
+                        @Model.PhicStatus
                     </span>
                 </td>
                 <td colspan="3">
                     PhilHealth #:
                     <span>
-                        @Model.Patient.PhicId
+                        @Model.PhicId
                     </span>
                 </td>
             </tr>
@@ -162,7 +158,7 @@
                 <td colspan="6">
                     Name of referring MD/HCW:
                     <span>
-                        @referringMdName
+                        @Model.ReferringMdName
                     </span>
                 </td>
             </tr>
@@ -170,7 +166,7 @@
                 <td colspan="6">
                     Contact # of referring MD/HCW:
                     <span>
-                        @referringMdContact
+                        @Model.ReferringMdContact
                     </span>
                 </td>
             </tr>
@@ -178,7 +174,7 @@
                 <td colspan="6">
                     Name of referred MD/HCW- Mobile Contact # (ReCo):
                     <span>
-                        @actionMd
+                        @Model.ReferredMdName
                     </span>
                 </td>
             </tr>

@@ -17,26 +17,26 @@ using Referral2.Data;
 using Referral2.Helpers;
 using Referral2.Models.ViewModels.Admin;
 using Referral2.Models.ViewModels.Consolidated;
+using Referral2.MyData;
 
 namespace Referral2.Controllers
 {
     [Authorize]
     public class UserReportController : Controller
     {
-        private readonly ReferralDbContext _context;
+        private readonly MySqlReferralContext _context;
         private readonly IOptions<ReferralRoles> _roles;
         private readonly IOptions<ReferralStatus> _status;
 
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
-        public UserReportController(ReferralDbContext context, IOptions<ReferralRoles> roles, IOptions<ReferralStatus> status)
+        public UserReportController(MySqlReferralContext context, IOptions<ReferralRoles> roles, IOptions<ReferralStatus> status)
         {
             _context = context;
             _roles = roles;
             _status = status;
         }
-
         #region ONBOARD USERS
         [HttpGet]
         public IActionResult OnboardUsers(string date)
@@ -58,18 +58,60 @@ namespace Referral2.Controllers
 
 
                 var onlineUsers = _context.Login
-                    .Include(x => x.User)
-                    .Where(x => x.User.Level != _roles.Value.ADMIN && x.Login1 >= StartDate && x.Login1 <= EndDate)
-                    .Select(x => new OnlineAdminViewModel
-                    {
-                        UserId = x.UserId,
-                        FacilityName = x.User.Facility.Name,
-                        UserFullName = x.User.Lname + ", " + x.User.Fname,
-                        UserLevel = x.User.Level,
-                        UserDepartment = x.User.Department.Description,
-                        UserStatus = x.Status,
-                        UserLoginTime = x.Login1
-                    })
+                    .Where(login => login.Login1 >= StartDate && login.Login1 < EndDate)
+                    .Join(
+                        _context.Users
+                            .Where(x=>x.Level != _roles.Value.ADMIN)
+                            .GroupJoin(
+                            _context.Department,
+                            u => u.DepartmentId,
+                            d => d.Id,
+                            (u, D) =>
+                                new
+                                {
+                                    u = u,
+                                    D = D
+                                }
+                            )
+                            .SelectMany(
+                            temp0 => temp0.D.DefaultIfEmpty(),
+                            (temp0, department) =>
+                                new
+                                {
+                                    temp0 = temp0,
+                                    department = department
+                                }
+                            )
+                            .Join(
+                            _context.Facility,
+                            temp1 => temp1.temp0.u.FacilityId,
+                            f => f.Id,
+                            (temp1, f) =>
+                                new
+                                {
+                                    Id = temp1.temp0.u.Id,
+                                    FullName = temp1.temp0.u.GetFullName(),
+                                    Level = temp1.temp0.u.Level,
+                                    FacilityName = f.Name,
+                                    DepartmentName = temp1.department.Description,
+                                    Status = temp1.temp0.u.LoginStatus
+                                }
+                            ),
+                        login => login.UserId,
+                        user => user.Id,
+                        (login, user) =>
+                            new OnlineAdminViewModel
+                            {
+                                UserId = user.Id,
+                                FacilityName = user.FacilityName,
+                                UserFullName = user.FullName,
+                                UserLevel = user.Level,
+                                UserDepartment = user.DepartmentName,
+                                UserStatus = user.Status,
+                                UserLoginTime = login.Login1
+                            }
+                    )
+
                     .OrderBy(x => x.FacilityName)
                     .DistinctBy(x => x.UserId);
 
@@ -96,23 +138,68 @@ namespace Referral2.Controllers
                     EndDate = StartDate.AddDays(1).AddSeconds(1);
                 }
 
-                ViewBag.Date = StartDate.ToString("dd/MM/yyyy");
+                ViewBag.Date = StartDate.ToString("MM/dd/yyyy");
 
-                var logins = _context.Login.Include(x => x.User).ThenInclude(x => x.Facility);
+                var logins = _context.Login
+                    .Where(x=>x.Login1 >= StartDate && x.Login1 < EndDate)
+                    .Join(
+                        _context.Users
+                            .Join(
+                            _context.Facility,
+                            u => u.FacilityId,
+                            f => f.Id,
+                            (u, f) =>
+                                new
+                                {
+                                    u = u,
+                                    f = f
+                                }
+                            )
+                            .Join(
+                            _context.Province,
+                            temp0 => temp0.u.Province,
+                            p => p.Id,
+                            (temp0, p) =>
+                                new
+                                {
+                                    temp0.f.Name,
+                                    temp0.u.Id,
+                                    FacilityId = temp0.f.Id,
+                                    temp0.u.Status,
+                                    Province = p.Description
+                                }
+                            ),
+                        login => login.UserId,
+                        user => user.Id,
+                        (login, user) =>
+                            new OnlineFacilitiesModel
+                            {
+                                Name = user.Name,
+                                LoginTime = login.Login1,
+                                LogoutTime = login.Logout,
+                                Status = user.Status,
+                                Province = user.Province
+                            }
+                    );
 
-                var onlineFacilities = _context.Facility
-                    .Include(x => x.User).ThenInclude(x => x.Login)
-                    .Include(x => x.Province)
-                    .Select(c => new OnlineFacilitiesModel
-                    {
-                        Name = c.Name,
-                        LoginTime = logins.Where(x => x.User.FacilityId == c.Id && x.Login1 >= StartDate && x.Login1 <= EndDate).OrderBy(x => x.Login1).FirstOrDefault().Login1,
-                        LogoutTime = logins.Where(x => x.User.FacilityId == c.Id && x.Logout >= StartDate && x.Logout <= EndDate).OrderByDescending(x => x.Logout).FirstOrDefault().Logout,
-                        Status = false,
-                        Province = c.Province.Description
-                    });
 
-                return View(onlineFacilities);
+                /*var onlineFacilities = _context.Facility
+                    .Join(
+                        _context.Province,
+                        facility => facility.Province,
+                        province => province.Id,
+                        (facility, province) =>
+                            new OnlineFacilitiesModel
+                            {
+                                Name = facility.Name,
+                                LoginTime = logins.Where(x => x.FacilityId == facility.Id && x.LoginTime >= StartDate && x.LoginTime <= EndDate).OrderBy(x => x.LoginTime).FirstOrDefault().LoginTime,
+                                LogoutTime = logins.Where(x => x.FacilityId == facility.Id && x.LogoutTime >= StartDate && x.LogoutTime <= EndDate).OrderByDescending(x => x.LogoutTime).FirstOrDefault().LogoutTime,
+                                Status = logins.Where(x => x.FacilityId == facility.Id && x.LoginTime >= StartDate && x.LoginTime <= EndDate).OrderBy(x => x.LoginTime).FirstOrDefault().Status,
+                                Province = province.Description
+                            }
+                    );*/
+
+                return View(logins);
             }
             else
                 return NotFound();
@@ -120,13 +207,13 @@ namespace Referral2.Controllers
         #endregion
         #region OFFLINE FACILITIES
         [HttpGet]
-        public async Task<IActionResult> OfflineFacilities(string dateFilter)
+        public async Task<IActionResult> OfflineFacilities(string date)
         {
             if (Role.CheckRole())
             {
-                if (!string.IsNullOrEmpty(dateFilter))
+                if (!string.IsNullOrEmpty(date))
                 {
-                    StartDate = DateTime.ParseExact(dateFilter, "MM/dd/yyyy", CultureInfo.InvariantCulture);
+                    StartDate = DateTime.ParseExact(date, "MM/dd/yyyy", CultureInfo.InvariantCulture);
 
                 }
                 else
@@ -135,21 +222,68 @@ namespace Referral2.Controllers
                 }
                 EndDate = StartDate.AddDays(1).AddSeconds(-1);
 
-                var facilities = await _context.Facility
-                    .Include(x => x.User).ThenInclude(x => x.Login)
-                    .Include(x => x.Province)
-                    .Where(x => !x.Name.Contains("RHU"))
+                var facilities = await _context.Login
+                    .Join(
+                        _context.Users
+                            .Join(
+                            _context.Facility,
+                            u => u.FacilityId,
+                            f => f.Id,
+                            (u, f) =>
+                                new
+                                {
+                                    u = u,
+                                    f = f
+                                }
+                            )
+                            .Where(temp0 => !(temp0.f.Name.Contains("RHU")))
+                            .Join(
+                            _context.Province,
+                            temp0 => temp0.u.Province,
+                            p => p.Id,
+                            (temp0, p) =>
+                                new
+                                {
+                                    temp0.f.Name,
+                                    Chief_hospital = temp0.f.ChiefHospital,
+                                    Type = temp0.f.HospitalType,
+                                    temp0.u.Id,
+                                    temp0.u.Status,
+                                    Province = p.Description,
+                                    temp0.f.Contact
+
+                                }
+                            ),
+                        login => login.UserId,
+                        user => user.Id,
+                        (login, user) =>
+                            new OnboardModel
+                            {
+                                ContactNo = user.Contact,
+                                Name = user.Name,
+                                Chief = user.Chief_hospital,
+                                Province = user.Province,
+                                Type = user.Type,
+                                ActivitiesTo = ((login.Login1 >= StartDate) && (login.Login1 < EndDate))
+                            }
+                    )
+                    .ToListAsync();
+
+
+                    /*.Where(x => !x.Name.Contains("RHU"))
                     .Select(x => new OnboardModel
                     {
                         Name = x.Name,
                         Chief = x.ChiefHospital,
                         Province = x.Province.Description,
+                        Type = x.Type,
                         ActivitiesTo = x.User.Any(x => x.Login.Any(x => x.Login1 >= StartDate && x.Login1 < EndDate))
                     })
+                    .Where(x=>x.ActivitiesTo == false)
                     .OrderBy(x => x.Name)
-                    .ToListAsync();
+                    .ToListAsync();*/
 
-                ViewBag.DateFilter = StartDate.ToString("MM/dd/yyyy");
+                ViewBag.Date = StartDate.ToString("MM/dd/yyyy");
                 return View(facilities);
             }
             else
@@ -162,12 +296,34 @@ namespace Referral2.Controllers
         {
             if (Role.CheckRole())
             {
+                var activities = _context.Activity;
+                var users = _context.Users;
                 var facilities = await _context.Facility
-                .Include(x => x.User)
-                .Include(x => x.TrackingReferredFromNavigation)
-                .Include(x => x.TrackingReferredToNavigation)
-                .Include(x => x.Province)
-                .Where(x => !x.Name.Contains("RHU"))
+                    .Where(facility => facility.FacilityCode == null)
+                    .Where(x=>x.Name != "Department of Health - RO7")
+                    .Join(
+                        _context.Province,
+                        facility => facility.Province,
+                        province => province.Id,
+                        (facility, province) =>
+                            new OnboardModel
+                            {
+                                Name = facility.Name,
+                                Chief = facility.ChiefHospital,
+                                ContactNo = facility.Contact,
+                                Type = facility.HospitalType,
+                                LoginAt = users.Where(x=>x.FacilityId == facility.Id && x.LastLogin != default).OrderByDescending(x=>x.LastLogin).First().LastLogin,
+                                Province = province.Description,
+                                RegisteredAt = facility.CreatedAt.Value.DateTime,
+                                ActivitiesFrom = activities.Where(x=>x.ReferredFrom == facility.Id).Count() != 0,
+                                ActivitiesTo = activities.Where(x => x.ReferredTo == facility.Id).Count() != 0
+                            }
+                    )
+                    .ToListAsync();
+
+
+
+               /* .Where(x => !x.Name.Contains("RHU"))
                 .Select(x => new OnboardModel
                 {
                     Name = x.Name,
@@ -181,7 +337,7 @@ namespace Referral2.Controllers
                     ActivitiesTo = x.ActivityReferredToNavigation.Count() != 0
                 })
                 .OrderBy(x => x.Name)
-                .ToListAsync();
+                .ToListAsync();*/
 
                 return View(facilities);
             }
@@ -189,7 +345,7 @@ namespace Referral2.Controllers
                 return NotFound();
         }
         #endregion
-        #region CONSOLIDATED
+        /*#region CONSOLIDATED    
         // CONSOLIDATED
         public async Task<IActionResult> Consolidated(string dateRange, bool export, bool inexport, bool outexport)
         {
@@ -197,8 +353,9 @@ namespace Referral2.Controllers
             {
                 if (!string.IsNullOrEmpty(dateRange))
                 {
-                    StartDate = DateTime.Parse(dateRange.Substring(0, dateRange.IndexOf(" ") + 1).Trim());
-                    EndDate = DateTime.Parse(dateRange.Substring(dateRange.LastIndexOf(" ")).Trim());
+                    
+                    StartDate = DateTime.ParseExact(dateRange.Substring(0, dateRange.IndexOf(" ") + 1).Trim(), "MM/dd/yyyy", CultureInfo.InvariantCulture);
+                    EndDate = DateTime.ParseExact(dateRange.Substring(dateRange.LastIndexOf(" ")).Trim(), "MM/dd/yyyy", CultureInfo.InvariantCulture);
                 }
                 else
                 {
@@ -258,17 +415,19 @@ namespace Referral2.Controllers
                         .Select(i => new ListItem
                         {
                             NoItem = i.Count(),
-                            ItemName = facilities.SingleOrDefault(x => x.Id == i.Key).Name
+                            ItemName = facilities.FirstOrDefault(x => x.Id == i.Key).Name
                         })
                         .ToListAsync();
                     // INCOMING: REFERRING DOCTOS
                     var inReferringDoc = await trackings
-                        .Where(x => x.ReferredTo == item)
+                        .Where(x => x.ReferredTo == item && x.ReferringMd != null)
                         .GroupBy(x => x.ReferringMd)
                         .Select(i => new ListItem
                         {
                             NoItem = i.Count(),
-                            ItemName = i.Key == null ? "" : doctors.SingleOrDefault(x => x.Id == i.Key).GetMDFullName(),
+                            ItemName ="Dr. "+ doctors.FirstOrDefault(c=>c.Id == i.Key).Fname.NameToUpper()+" "
+                            +doctors.FirstOrDefault(c => c.Id == i.Key).Mname.NameToUpper() + " "
+                            + doctors.FirstOrDefault(c => c.Id == i.Key).Lname.NameToUpper()
                         })
                         .ToListAsync();
 
@@ -381,7 +540,9 @@ namespace Referral2.Controllers
                         .Select(i => new ListItem
                         {
                             NoItem = i.Count(),
-                            ItemName = i.Key == null ? "" : doctors.SingleOrDefault(x => x.Id == i.Key).GetMDFullName(),
+                            ItemName = "Dr. " + doctors.FirstOrDefault(c => c.Id == i.Key).Fname.NameToUpper() + " "
+                            + doctors.FirstOrDefault(c => c.Id == i.Key).Mname.NameToUpper() + " "
+                            + doctors.FirstOrDefault(c => c.Id == i.Key).Lname.NameToUpper()
                         })
                         .ToListAsync();
 
@@ -816,7 +977,7 @@ namespace Referral2.Controllers
 
             return stream;
         }
-        #endregion
+        #endregion*/
 
         #region HELPERS
         public int UserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));

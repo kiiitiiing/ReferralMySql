@@ -5,12 +5,16 @@ namespace Referral2.Models.ViewModels.Doctor
     public partial class ReferPatientViewModel
     {
         public string FacilityName { get; set; }
-        public string FacilityAddress { get; set; }
+        public string FacilityBarangay { get; set; }
+        public string FacilityMuncity { get; set; }
+        public string FacilityProvince { get; set; }
         public string Name { get; set; }
         public int Age { get; set; }
         public string Sex { get; set; }
         public string CivilStatus { get; set; }
-        public string Address { get; set; }
+        public string PatientBarangay { get; set; }
+        public string PatientMuncity { get; set; }
+        public string PatientProvince { get; set; }
         public string PhicStatus { get; set; }
         public string PhicId { get; set; }
         //Send form
@@ -34,6 +38,12 @@ namespace Referral2.Models.ViewModels.Doctor
         [Required]
         [Display(Name = "reason")]
         public string Reason { get; set; }
-        public int? ReferredToMd { get; set; }
+        [Display(Name = "covid number")]
+        public string CovidNumber { get; set; }
+        [Display(Name = "clinical status")]
+        public string ClinicalStatus { get; set; }
+        [Display(Name = "surveillance category")]
+        public string SurveillanceCategory { get; set; }
+        public int ReferredToMd { get; set; }
     }
 }

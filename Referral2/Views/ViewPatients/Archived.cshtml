@@ -52,24 +52,24 @@
                         <tbody>
                             @foreach (var item in Model)
                             {
-                                var facility = item.ReferringFacility.Length > 25 ? new string(item.ReferringFacility.Take(25).ToArray()) + "..." : item.ReferringFacility;
                                 var reason = string.IsNullOrEmpty(item.Reason) ? "N/A" : item.Reason;
+                                var patientName = item.Fname + " " + item.Mname + " " + item.Lname;
                                 <tr>
                                     <td class="facility-color" title="@item.ReferringFacility">
-                                        @facility<br />
+                                        @item.ReferringFacility.WordCut(25)<br />
                                         <p class="small text-muted">@item.Type</p>
                                     </td>
                                     <td>
                                         @if (item.Type.Equals("Non-Pregnant"))
                                         {
                                             <a class="text-info" style="cursor:pointer;" data-toggle="ajax-modal" data-target="#normal-form-modal" data-url="@Url.Action("PrintableNormalForm","ViewForms", new { code = item.Code })">
-                                                @item.PatientName
+                                                @patientName
                                             </a>
                                         }
                                         else
                                         {
                                             <a class="text-info" style="cursor:pointer;" data-toggle="ajax-modal" data-target="#print-pregnant-form-modal" data-url="@Url.Action("PrintablePregnantForm","ViewForms", new { code = item.Code })">
-                                                @item.PatientName
+                                                @patientName
                                             </a>
                                         }
                                         <br />

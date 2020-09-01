@@ -86,16 +86,18 @@ namespace Referral2.Controllers
         public async Task<IActionResult> WhosOnline()
         {
             var onlineUsers = await _context.User
-                .Where(x=>x.Level != "admin" && x.Level != "eoc")
-                .Where(x=>x.Login.Any(x=>x.Login1 >=DateTime.Now.Date && x.Logout != default))
+                .Where(x => x.Level != "admin" && x.Level != "eoc")
+                .Where(x => x.Login.Any(x => x.Login1 >= DateTime.Now.Date && x.Logout != default))
                 .Select(x => new WhosOnlineModel
                 {
-                    DoctorName = x.Level.Equals(_roles.Value.DOCTOR)? x.GetMDFullName() : x.GetFullName(),
+                    Fname = x.Level.Equals(_roles.Value.DOCTOR) ? "Dr. " + x.Fname : x.Fname,
+                    Mname = x.Mname,
+                    Lname = x.Lname,
                     FacilityAbrv = x.Facility.Abbr,
                     Contact = x.ContactNo,
                     Department = x.Department.Description,
-                    LoginStatus = x.Login.OrderByDescending(x=>x.UpdatedAt).FirstOrDefault().Status.Equals("login"),
-                    LoginTime = x.Login.OrderByDescending(x=>x.UpdatedAt).FirstOrDefault().Login1
+                    LoginStatus = x.Login.OrderByDescending(x => x.UpdatedAt).FirstOrDefault().Status.Equals("login"),
+                    LoginTime = x.Login.OrderByDescending(x => x.UpdatedAt).FirstOrDefault().Login1
                 })
                 .ToListAsync();
 

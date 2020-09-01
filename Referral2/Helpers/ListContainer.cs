@@ -13,9 +13,39 @@ namespace Referral2.Helpers
             {
                 return new List<KeyValuePair<string, string>>
                 {
-                    new KeyValuePair<string, string>("none","None"),
-                    new KeyValuePair<string, string>("member","Member"),
-                    new KeyValuePair<string, string>("dependent","Dependent")
+                    new KeyValuePair<string, string>("None","None"),
+                    new KeyValuePair<string, string>("Member","Member"),
+                    new KeyValuePair<string, string>("Dependent","Dependent")
+                };
+            }
+        }
+
+
+        public static List<KeyValuePair<string, string>> ClinicalStatus
+        {
+            get
+            {
+                return new List<KeyValuePair<string, string>>
+                {
+                    new KeyValuePair<string, string>("asymptomatic","Asymptomatic"),
+                    new KeyValuePair<string, string>("mild","Mild"),
+                    new KeyValuePair<string, string>("moderate","Moderate"),
+                    new KeyValuePair<string, string>("severe","Severe"),
+                    new KeyValuePair<string, string>("critical","Critical")
+                };
+            }
+        }
+
+        public static List<KeyValuePair<string, string>> SurveillanceCategory
+        {
+            get
+            {
+                return new List<KeyValuePair<string, string>>
+                {
+                    new KeyValuePair<string, string>("contact_pum","Contact (PUM)"),
+                    new KeyValuePair<string, string>("suspect","Suspect"),
+                    new KeyValuePair<string, string>("probable","Probable"),
+                    new KeyValuePair<string, string>("confirmed","Confirmed")
                 };
             }
         }
@@ -38,11 +68,11 @@ namespace Referral2.Helpers
             {
                 return new List<KeyValuePair<string, string>>
                 {
-                    new KeyValuePair<string, string>("single","Single"),
-                    new KeyValuePair<string, string>("married","Married"),
-                    new KeyValuePair<string, string>("divorced","Divorced"),
-                    new KeyValuePair<string, string>("separated","Separated"),
-                    new KeyValuePair<string, string>("widowed","Widowed")
+                    new KeyValuePair<string, string>("Single","Single"),
+                    new KeyValuePair<string, string>("Married","Married"),
+                    new KeyValuePair<string, string>("Divorced","Divorced"),
+                    new KeyValuePair<string, string>("Separated","Separated"),
+                    new KeyValuePair<string, string>("Widowed","Widowed")
                 };
             }
         }

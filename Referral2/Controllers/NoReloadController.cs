@@ -14,17 +14,18 @@ using Referral2.Models.ViewModels;
 using System.Security.Claims;
 using MoreLinq.Extensions;
 using Microsoft.Extensions.Options;
+using Referral2.MyData;
 
 namespace Referral2.Controllers
 {
     public class NoReloadController : Controller
     {
-        private readonly ReferralDbContext _context;
+        //private readonly ReferralDbContext _context;
         private readonly IOptions<ReferralRoles> _roles;
         private readonly IOptions<ReferralStatus> _status;
+        private readonly MySqlReferralContext _context;
 
-
-        public NoReloadController(ReferralDbContext context, IOptions<ReferralRoles> roles, IOptions<ReferralStatus> status)
+        public NoReloadController(MySqlReferralContext context, IOptions<ReferralRoles> roles, IOptions<ReferralStatus> status)
         {
             _context = context;
             _roles = roles;
@@ -58,23 +59,28 @@ namespace Referral2.Controllers
         public int NumberNotif()
         {
             var incoming = _context.Tracking
-                .Where(x => x.ReferredTo == UserFacility && x.UpdatedAt >= DateTime.Now.Date);
+                .Where(x => x.ReferredTo == UserFacility && x.UpdatedAt.Value.Date >= DateTimeOffset.Now.Date);
 
             return incoming.Count();
         }
 
-        [HttpGet]
+        [HttpGet] 
         [Route("{controller}/{action}/{facilityId}")]
         public List<SelectDepartment> AvailableDepartments(int facilityId)
         {
-            var availableDepartments = _context.User
-                .Where(x => x.FacilityId.Equals(facilityId) && x.Level.Equals(_roles.Value.DOCTOR) && x.DepartmentId != null)
+            var availableDepartments = _context.Users
+                .Where(x => x.FacilityId.Equals(facilityId) && x.Level.Equals(_roles.Value.DOCTOR) && x.DepartmentId != 0)
                 .DistinctBy(d => d.DepartmentId)
-                .Select(x => new SelectDepartment
-                {
-                    DepartmentId = (int)x.DepartmentId,
-                    DepartmentName = x.Department.Description
-                });
+                .Join(
+                    _context.Department,
+                    u => u.DepartmentId,
+                    d => d.Id,
+                    (u, d) => new SelectDepartment
+                    {
+                        DepartmentId = u.DepartmentId,
+                        DepartmentName = d.Description
+                    });
+
             return availableDepartments.ToList();
         }
 
@@ -96,7 +102,7 @@ namespace Referral2.Controllers
         [Route("{controller}/{action}/{status}")]
         public void ChangeLoginStatus(string status)
         {
-            var currentUser = _context.User.Find(UserId);
+            var currentUser = _context.Users.Find(UserId);
             var login = new Login
             {
                 UserId = UserId,
@@ -119,14 +125,30 @@ namespace Referral2.Controllers
         public SelectAddressDepartment FilterDepartment(int? facilityId)
         {
             var facility = _context.Facility
-                .Include(x => x.Barangay)
-                .Include(x => x.Muncity)
-                .Include(x => x.Province)
-                .FirstOrDefault(x => x.Id == facilityId);
+                .Join(
+                    _context.Province,
+                    f => f.Province,
+                    p => p.Id,
+                    (f, p) => new { f = f, p = p })
+                .Join(
+                    _context.Muncity,
+                    temp0 => temp0.f.Muncity,
+                    m => m.Id,
+                    (temp0, m) => new { temp0 = temp0, m = m })
+                .Join(
+                    _context.Barangay,
+                    temp1 => temp1.temp0.f.Brgy,
+                    b => b.Id,
+                    (temp1, b) => new { temp1 = temp1, b = b })
+                .FirstOrDefault(x => x.temp1.temp0.f.Id == facilityId);
             if (facility == null)
                 return null;
-            string facilityAddress = facility.Address == null ? "" : facility.Address + ", ";
-            string address = facilityAddress + facility.GetAddress();
+            string facilityAddress = facility.temp1.temp0.f.Address == null ? "" : facility.temp1.temp0.f.Address + ", ";
+            string address = facilityAddress +
+                (string.IsNullOrEmpty(facility.b.Description) ? "" : facility.b.Description + " ,") +
+                (string.IsNullOrEmpty(facility.temp1.m.Description) ? "" : facility.temp1.m.Description + " ,") +
+                (string.IsNullOrEmpty(facility.temp1.temp0.p.Description) ? "" : facility.temp1.temp0.p.Description);
+
 
             var departments = _context.Department.Select(x => new SelectDepartment
             {
@@ -134,16 +156,19 @@ namespace Referral2.Controllers
                 DepartmentName = x.Description
             });
 
-            var faciliyDepartment = _context.User
-                .Include(x => x.Department)
-                .Where(x => x.FacilityId.Equals(UserFacility) && x.Level.Equals(_roles.Value.DOCTOR) && x.DepartmentId != null)
-                .Select(y => y.Department)
+            var faciliyDepartment = _context.Users
+                .Where(x => x.FacilityId.Equals(UserFacility) && x.Level.Equals(_roles.Value.DOCTOR) && x.DepartmentId != 0)
+                .Select(y => y.DepartmentId)
                 .Distinct()
-                .Select(x => new SelectDepartment
-                {
-                    DepartmentId = (int)x.Id,
-                    DepartmentName = x.Description
-                });
+                .Join(
+                    _context.Department,
+                    u => u,
+                    d => d.Id,
+                    (u, d) => new SelectDepartment
+                    {
+                        DepartmentId = (int)d.Id,
+                        DepartmentName = d.Description
+                    });
 
             SelectAddressDepartment selectAddress = new SelectAddressDepartment(address, faciliyDepartment);
 
@@ -162,8 +187,30 @@ namespace Referral2.Controllers
         public async Task<string> GetFaciliyAddress(int? id)
         {
             var facility = await _context.Facility
-                .FindAsync(id);
-            var address = GlobalFunctions.GetAddress(facility);
+                .Join( 
+                    _context.Province,
+                    f => f.Province,
+                    p => p.Id,
+                    (f, p) => new { f = f, p = p })
+                .Join(
+                    _context.Muncity,
+                    temp0 => temp0.f.Muncity,
+                    m => m.Id,
+                    (temp0, m) => new { temp0 = temp0, m = m })
+                .Join(
+                    _context.Barangay,
+                    temp1 => temp1.temp0.f.Brgy,
+                    b => b.Id,
+                    (temp1, b) => new { temp1 = temp1, b = b })
+                .FirstOrDefaultAsync(x => x.temp1.temp0.f.Id == id);
+            if (facility == null)
+                return null;
+            string facilityAddress = facility.temp1.temp0.f.Address == null ? "" : facility.temp1.temp0.f.Address + ", ";
+            string address = facilityAddress +
+                (string.IsNullOrEmpty(facility.b.Description) ? "" : facility.b.Description + " ,") +
+                (string.IsNullOrEmpty(facility.temp1.m.Description) ? "" : facility.temp1.m.Description + " ,") +
+                (string.IsNullOrEmpty(facility.temp1.temp0.p.Description) ? "" : facility.temp1.temp0.p.Description);
+
             return address;
         }
 
@@ -201,11 +248,11 @@ namespace Referral2.Controllers
         [Route("{controller}/{action}/{facilityId}/{departmentId}")]
         public List<SelectUser> FilterUser(int facilityId, int departmentId)
         {
-            var getUser = _context.User.Where(x => x.FacilityId.Equals(facilityId) && x.DepartmentId.Equals(departmentId) && x.Level.Equals(_roles.Value.DOCTOR))
+            var getUser = _context.Users.Where(x => x.FacilityId.Equals(facilityId) && x.DepartmentId.Equals(departmentId) && x.Level.Equals(_roles.Value.DOCTOR))
                 .Select(y => new SelectUser
                 {
                     MdId = y.Id,
-                    DoctorName = ("Dr. " + y.Fname + " " + y.Mname.CheckName() + " " + y.Lname).NameToUpper() + " - " + y.ContactNo.CheckName()
+                    DoctorName = ("Dr. " + y.Fname.CheckName() + " " + y.Mname.CheckName() + " " + y.Lname).NameToUpper() + " - " + y.Contact.CheckName()
                 }); ;
 
             return getUser.ToList();
@@ -213,11 +260,11 @@ namespace Referral2.Controllers
 
         public List<SelectUser> FilterUsersWalkin(int? departmentId)
         {
-            var getUser = _context.User.Where(x => x.FacilityId.Equals(UserFacility) && x.DepartmentId.Equals(departmentId) && x.Level.Equals(_roles.Value.DOCTOR))
+            var getUser = _context.Users.Where(x => x.FacilityId.Equals(UserFacility) && x.DepartmentId.Equals(departmentId) && x.Level.Equals(_roles.Value.DOCTOR))
                 .Select(y => new SelectUser
                 {
                     MdId = y.Id,
-                    DoctorName = string.IsNullOrEmpty(y.ContactNo) ? "Dr. " + y.Fname + " " + y.Mname + " " + y.Lname + " - N/A" : "Dr. " + y.Fname + " " + y.Mname + " " + y.Lname + " - " + y.ContactNo
+                    DoctorName = string.IsNullOrEmpty(y.Contact) ? "Dr. " + y.Fname + " " + y.Mname + " " + y.Lname + " - N/A" : "Dr. " + y.Fname + " " + y.Mname + " " + y.Lname + " - " + y.Contact
                 });
 
             return getUser.ToList();
@@ -236,21 +283,22 @@ namespace Referral2.Controllers
         [Route("{controller}/{action}/{level}")]
         public DashboardViewModel DashboardValues(string level)
         {
-            var referred = new int[13];
-            var accepted = new int[13];
-            var redirected = new int[13];
-
-            IQueryable<Activity> activities = null;
+            var referred = new int[12];
+            var accepted = new int[12];
+            var redirected = new int[12];
+            int month = 1;
+            IQueryable<MyModels.Activity> activities = null;
 
             if(!level.Equals(_roles.Value.ADMIN))
                 activities = _context.Activity.Where(x => x.DateReferred.Year.Equals(DateTime.Now.Year) && x.ReferredTo.Equals(UserFacility));
             else
                 activities = _context.Activity.Where(x => x.DateReferred.Year.Equals(DateTime.Now.Year));
-            for (int x = 1; x <= 12; x++)
+            for (int x = 0; x < 12; x++)
             {
-                referred[x] = (activities.Where(i => i.DateReferred.Month.Equals(x) && (i.Status.Equals(_status.Value.REFERRED))).Count());
-                accepted[x] = (activities.Where(i => i.DateReferred.Month.Equals(x) && (i.Status.Equals(_status.Value.ACCEPTED) || i.Status.Equals(_status.Value.ARRIVED) || i.Status.Equals(_status.Value.ADMITTED))).Count());
-                redirected[x] = (activities.Where(i => i.DateReferred.Month.Equals(x) && (i.Status.Equals(_status.Value.REJECTED) || i.Status.Equals(_status.Value.TRANSFERRED))).Count());
+                referred[x] = (activities.Where(i => i.DateReferred.Month.Equals(month) && (i.Status.Equals(_status.Value.REFERRED))).Count());
+                accepted[x] = (activities.Where(i => i.DateReferred.Month.Equals(month) && (i.Status.Equals(_status.Value.ACCEPTED) || i.Status.Equals(_status.Value.ARRIVED) || i.Status.Equals(_status.Value.ADMITTED))).Count());
+                redirected[x] = (activities.Where(i => i.DateReferred.Month.Equals(month) && (i.Status.Equals(_status.Value.REJECTED) || i.Status.Equals(_status.Value.TRANSFERRED))).Count());
+                month++;
             }
             var adminDashboard = new DashboardViewModel(accepted, redirected, referred);
             return adminDashboard;

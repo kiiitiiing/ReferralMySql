@@ -53,6 +53,7 @@
                     var callerCount = Model.CallerCount;
                     var recoCount = Model.ReCoCount;
 
+                    var patientName = Model.Fname + " " + Model.Mname + " " + Model.Lname;
                     if (Model.Status == "referred")
                         seenReject = true;
                     else if (Model.Status == "rejected")
@@ -144,7 +145,7 @@
                         <div class="card-header @headerclass">
                             <span class="patientTitle">
                                 <i class="fa fa-wheelchair"></i>
-                                &nbsp;@Model.PatientName
+                                &nbsp;@patientName
                                 <small class="text-sm text-muted">[@Model.PatientSex, @Model.PatientAge] from @Model.PatientAddress</small><br />
                             </span>
                             <span class="text-success">Referred by:</span>

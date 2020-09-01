@@ -30,12 +30,7 @@
     form.removeData('validator');
     form.removeData('unobtrusiveValidation');
     $.validator.unobtrusive.parse(form);
-
-    $(document).ready(function () {
-        console.log('wtf?');
-
-        $('.select2').select2({
-            theme: 'bootstrap4'
-        });
+    $('.select2').select2({
+        theme: 'bootstrap4'
     });
 </script>

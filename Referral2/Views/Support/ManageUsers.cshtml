@@ -53,7 +53,7 @@
                                        data-action="#small_content"
                                        data-url="@Url.Action("UpdateUser", new { id = item.Id })"
                                        onclick="OpenModal($(this));">
-                                        Dr. @item.DoctorName.NameToUpper()
+                                        Dr. @item.Level.GetFullName(item.Fname,item.Mname,item.Lname).NameToUpper()
                                     </a>
                                 </td>
                                 <td>@item.DepartmentName</td>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.Serialization;
 
 namespace Referral2.Models
 {
@@ -24,6 +25,7 @@ namespace Referral2.Models
             TrackingReferringMdNavigation = new HashSet<Tracking>();
         }
 
+        public string FullName { get { return Fname + " " + Lname; } }
         [Key]
         [Column("id")]
         public int Id { get; set; }
@@ -136,8 +138,10 @@ namespace Referral2.Models
         public virtual ICollection<PregnantForm> PregnantForm { get; set; }
         [InverseProperty("UserMdNavigation")]
         public virtual ICollection<Seen> Seen { get; set; }
+        [IgnoreDataMember]
         [InverseProperty(nameof(Tracking.ActionMdNavigation))]
         public virtual ICollection<Tracking> TrackingActionMdNavigation { get; set; }
+        [IgnoreDataMember]
         [InverseProperty(nameof(Tracking.ReferringMdNavigation))]
         public virtual ICollection<Tracking> TrackingReferringMdNavigation { get; set; }
     }

@@ -16,22 +16,23 @@ using Referral2.Models.ViewModels.Consolidated;
 using Referral2.Models.ViewModels.Mcc;
 using Referral2.Models.ViewModels.Support;
 using Referral2.Models.ViewModels.ViewPatients;
-using Referral2.Models;
+using Referral2.MyModels;
 using System.Drawing;
 using OfficeOpenXml;
 using System.IO;
 using Referral2.Models.ViewModels.Users;
+using Referral2.MyData;
 
 namespace Referral2.Controllers
 {
     [Authorize(Policy = "MCC")]
     public class MedicalCenterChiefController : Controller
     {
-        private readonly ReferralDbContext _context;
+        private readonly MySqlReferralContext _context;
         private readonly IOptions<ReferralRoles> _roles;
         private readonly IOptions<ReferralStatus> _status;
 
-        public MedicalCenterChiefController(ReferralDbContext context, IOptions<ReferralStatus> status, IOptions<ReferralRoles> roles)
+        public MedicalCenterChiefController(MySqlReferralContext context, IOptions<ReferralStatus> status, IOptions<ReferralRoles> roles)
         {
             _context = context;
             _roles = roles;
@@ -40,13 +41,13 @@ namespace Referral2.Controllers
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
-
+        #region DASHBOARD
         // DASHBOARD
         public IActionResult MccDashboard()
         {
             var activities = _context.Activity.Where(x => x.DateReferred.Year.Equals(DateTime.Now.Year));
-            var totalDoctors = _context.User.Where(x => x.Level.Equals(_roles.Value.DOCTOR) && x.FacilityId.Equals(UserFacility)).Count();
-            var onlineDoctors = _context.User.Where(x => x.LoginStatus.Equals("login") && x.Level.Equals(_roles.Value.DOCTOR) && x.FacilityId == UserFacility && x.LastLogin.Date == DateTime.Now.Date).Count();
+            var totalDoctors = _context.Users.Where(x => x.Level.Equals(_roles.Value.DOCTOR) && x.FacilityId.Equals(UserFacility)).Count();
+            var onlineDoctors = _context.Users.Where(x => x.LoginStatus.Equals("login") && x.Level.Equals(_roles.Value.DOCTOR) && x.FacilityId == UserFacility && x.LastLogin.Date == DateTime.Now.Date).Count();
             var referredPatients = _context.Tracking
                 .Where(x => x.DateReferred != default || x.DateAccepted != default || x.DateArrived != default)
                 .Where(x=>x.ReferredFrom.Equals(UserFacility)).Count();
@@ -55,8 +56,9 @@ namespace Referral2.Controllers
 
             return View(adminDashboard);
         }
-
-        public async Task<IActionResult> ConsolidatedMcc(string dateRange , bool export, bool inexport, bool outexport)
+        #endregion
+        #region CONSOLIDATED 
+        /*public async Task<IActionResult> ConsolidatedMcc(string dateRange , bool export, bool inexport, bool outexport)
         {
             var dateNow = DateTime.Now;
             StartDate = new DateTime(dateNow.Year, dateNow.Month, 1);
@@ -108,7 +110,7 @@ namespace Referral2.Controllers
                 .Select(i => new ListItem
                 {
                     NoItem = i.Count(),
-                    ItemName = facilities.SingleOrDefault(x => x.Id == i.Key).Name
+                    ItemName = facilities.FirstOrDefault(x => x.Id == i.Key).Name
                 })
                 .ToListAsync();
             // INCOMING: REFERRING DOCTOS
@@ -118,7 +120,7 @@ namespace Referral2.Controllers
                 .Select(i => new ListItem
                 {
                     NoItem = i.Count(),
-                    ItemName = i.Key == null ? "" : doctors.SingleOrDefault(x => x.Id == i.Key).GetMDFullName(),
+                    ItemName = i.Key == null ? "" : doctors.FirstOrDefault(x => x.Id == i.Key).GetMDFullName(),
                 })
                 .Take(10)
                 .ToListAsync();
@@ -721,7 +723,9 @@ namespace Referral2.Controllers
 
             return stream;
         }
-
+*/
+        #endregion
+        #region ONLINE USERS
         // ONLINE USERS PER DEPARTMENT
         public async Task<IActionResult> OnlineUsersDepartment(string dateRange)
         {
@@ -730,17 +734,27 @@ namespace Referral2.Controllers
             ViewBag.EndDate = EndDate.ToString("yyyy/MM/dd");
 
             var departments = _context.Department;
-            var noUser = _context.User.Where(x => x.FacilityId.Equals(UserFacility) && x.Level == _roles.Value.DOCTOR);
-            var logins = _context.Login.Where(x => x.User.FacilityId == UserFacility && x.User.Level == _roles.Value.DOCTOR && x.Login1 >= StartDate && x.Login1 <= EndDate);
-            var users = await _context.User
+            var noUser = _context.Users.Where(x => x.FacilityId.Equals(UserFacility) && x.Level == _roles.Value.DOCTOR);
+            var logins = from login in _context.Login where login.Login1 >= StartDate && login.Login1 < EndDate
+                         join user in _context.Users on login.UserId equals user.Id
+                         where user.Level == _roles.Value.DOCTOR
+                         select new
+                         {
+                             user.DepartmentId,
+                             login.Status,
+                             LoginTime = login.Login1,
+                             login.UserId
+                         };
+
+            var users = await _context.Users
                 .Where(x => x.FacilityId.Equals(UserFacility))
                 .Select(x=>x.DepartmentId)
                 .Distinct()
                 .Select(x => new UserDepartmentViewModel
                 {
                     Department = departments.Single(y => y.Id.Equals(x)).Description,
-                    OnDuty = logins.Where(c=>c.User.DepartmentId == x && c.Status == "login").Select(x=>x.UserId).Distinct().Count(),
-                    OffDuty = logins.Where(c => c.User.DepartmentId == x && c.Status == "login_off").Select(x => x.UserId).Distinct().Count(),
+                    OnDuty = logins.Where(c=>c.DepartmentId == x && c.Status == "login").Select(x=>x.UserId).Distinct().Count(),
+                    OffDuty = logins.Where(c => c.DepartmentId == x && c.Status == "login_off").Select(x => x.UserId).Distinct().Count(),
                     NumberOfUsers = noUser.Where(y => y.DepartmentId.Equals(x)).Count()
                 })
                 .AsNoTracking()
@@ -748,8 +762,8 @@ namespace Referral2.Controllers
 
             return View(users);
         }
-
-
+        #endregion
+        #region INCOMING
         // INCOMING
         public async Task<IActionResult> MccIncoming(int? page, string dateRange)
         {
@@ -829,7 +843,8 @@ namespace Referral2.Controllers
             return View(await PaginatedList<MccIncomingViewModel>.CreateAsync(facilities.OrderBy(x=>x.Facility), page ?? 1, size));
         }
 
-
+        #endregion
+        #region TIME FRAME
         public async Task<IActionResult> TimeFrame(string dateRange, int? page)
         {
             var dateNow = DateTime.Now;
@@ -860,76 +875,18 @@ namespace Referral2.Controllers
 
         }
 
-        public async Task<IActionResult> Track(string code)
+        #endregion
+
+        /*public async Task<IActionResult> OnlineDoctors()
         {
-
-            ViewBag.CurrentCode = code;
-            var activities = _context.Activity;
-            var feedbacks = _context.Feedback;
-            var facilities = _context.Facility.Where(x => x.Id != UserFacility);
-            var track = await _context.Tracking
-                .Where(x => x.Code.Equals(code))
-                .Select(t => new ReferredViewModel
-                {
-                    PatientId = t.PatientId,
-                    PatientName = t.Patient.Fname + " " + t.Patient.Mname + " " + t.Patient.Lname,
-                    PatientSex = t.Patient.Sex,
-                    PatientAge = t.Patient.Dob.ComputeAge(),
-                    Barangay = t.Patient.Barangay.Description,
-                    Muncity = t.Patient.Muncity.Description,
-                    Province = t.Patient.Province.Description,
-                    ReferredBy = t.ReferringMdNavigation.GetMDFullName(),
-                    ReferredTo = t.ActionMdNavigation.GetMDFullName(),
-                    ReferredToId = t.ReferredTo,
-                    TrackingId = t.Id,
-                    SeenCount = t.Seen.Count(),
-                    CallerCount = activities.Where(x => x.Code.Equals(t.Code) && x.Status.Equals(_status.Value.CALLING)).Count(),
-                    IssueCount = _context.Issue.Where(x => x.TrackingId.Equals(t.Id)).Count(),
-                    ReCoCount = feedbacks.Where(x => x.Code.Equals(t.Code)).Count(),
-                    Travel = string.IsNullOrEmpty(t.ModeTransportation),
-                    Code = t.Code,
-                    Status = t.Status,
-                    Pregnant = t.Type.Equals("pregnant"),
-                    Seen = t.DateSeen != default,
-                    Walkin = t.Walkin.Equals("yes"),
-                    UpdatedAt = t.DateReferred,
-                    Activities = activities.Where(x => x.Code.Equals(t.Code) && x.Status != _status.Value.CALLING).OrderByDescending(x => x.CreatedAt)
-                        .Select(i => new ActivityLess
-                        {
-                            Status = i.Status,
-                            DateAction = i.DateReferred.ToString("MMM dd, yyyy hh:mm tt", CultureInfo.InvariantCulture),
-                            FacilityFrom = i.ReferredFromNavigation == null ? "" : i.ReferredFromNavigation.Name,
-                            FacilityFromContact = i.ReferredFromNavigation == null ? "" : i.ReferredFromNavigation.ContactNo,
-                            FacilityTo = t.ReferredToNavigation.Name,
-                            PatientName = "",//i.Patient.Fname + " " + i.Patient.Mname + " " + i.Patient.Lname,
-                            ActionMd = i.ActionMdNavigation.GetMDFullName(),
-                            ReferringMd = i.ReferringMdNavigation.GetMDFullName(),
-                            Remarks = i.Remarks
-                        })
-                })
-                .OrderByDescending(x => x.UpdatedAt)
-                .FirstOrDefaultAsync();
-
-
-            if (track != null)
-            {
-                ViewBag.Code = track.Code;
-            }
-
-
-            return View(track);
-        }
-
-        public async Task<IActionResult> OnlineDoctors(string nameSearch, int? facilitySearch)
-        {
-            ViewBag.CurrentSearch = nameSearch;
-            ViewBag.Facilities = new SelectList(_context.Facility.Where(x => x.ProvinceId.Equals(UserProvince)), "Id", "Name");
             var logins = _context.Login.Where(x => x.Login1.Date.Equals(DateTime.Now.Date));
             var onlineUsers = await _context.User
                 .Where(x => x.LoginStatus.Contains("login") && x.Level.Equals(_roles.Value.DOCTOR) && x.LastLogin.Date.Equals(DateTime.Now.Date) && x.FacilityId.Equals(UserFacility))
                 .Select(x => new WhosOnlineModel
                 {
-                    DoctorName = x.GetMDFullName(),
+                    Fname = x.Fname,
+                    Mname = x.Mname,
+                    Lname = x.Lname,
                     FacilityAbrv = x.Facility.Abbr,
                     Contact = x.ContactNo,
                     Department = x.Department.Description,
@@ -937,15 +894,6 @@ namespace Referral2.Controllers
                     LoginTime = logins.Where(i => i.UserId.Equals(x.Id)).OrderByDescending(i => i.Login1).First().Login1
                 })
                 .ToListAsync();
-
-            if (!string.IsNullOrEmpty(nameSearch))
-            {
-                onlineUsers.Where(x => x.DoctorName.Contains(nameSearch));
-            }
-            if (facilitySearch != 0)
-            {
-                onlineUsers.Where(x => x.FacilityId.Equals(facilitySearch));
-            }
 
             return View(onlineUsers);
         }
@@ -963,7 +911,7 @@ namespace Referral2.Controllers
                 .ToListAsync();
 
             return PartialView(OnlineMccFacility);
-        }
+        }*/
 
         #region HELPERS
 

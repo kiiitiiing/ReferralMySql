@@ -39,7 +39,7 @@
                                 <div class="col-md-4">
                                     <div class="card card-widget widget-user-2">
                                         <div class="widget-user-header @widgetBg" style="height: 160px;">
-                                            <small class="widget-user-username" style="margin-left: 0px!important;">@item.DoctorName.NameToUpper()</small>
+                                            <small class="widget-user-username" style="margin-left: 0px!important;">@GlobalFunctions.GetFullName(item.Fname,item.Mname,item.Lname).NameToUpper()</small>
                                             <small class="widget-user-desc badge bg-maroon" style="position:absolute; bottom:45%; right:5%;" >@abbrv</small>
                                         </div>
                                         <div class="card-footer p-0">

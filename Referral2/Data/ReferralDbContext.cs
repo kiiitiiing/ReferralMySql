@@ -14,6 +14,7 @@ namespace Referral2.Data
         public ReferralDbContext(DbContextOptions<ReferralDbContext> options)
             : base(options)
         {
+            this.ChangeTracker.LazyLoadingEnabled = false;
         }
 
         public virtual DbSet<Activity> Activity { get; set; }

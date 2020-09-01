@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Referral2.Data;
 using Referral2.Services;
-using Referral2.Models;
+using Referral2.MyModels;
 using Referral2.Models.ViewModels.Account;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
@@ -16,6 +16,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Referral2.MyData;
 
 namespace Referral2.Controllers
 {
@@ -25,12 +26,12 @@ namespace Referral2.Controllers
 
         private readonly IConfiguration _configuration;
 
-        private readonly ReferralDbContext _context;
+        private readonly MySqlReferralContext _context;
 
         private readonly IOptions<ReferralRoles> _roles;
         private readonly IOptions<ReferralStatus> _status;
 
-        public AccountController(IUserService userService, IConfiguration configuration, ReferralDbContext context, IOptions<ReferralRoles> roles, IOptions<ReferralStatus> status )
+        public AccountController(IUserService userService, IConfiguration configuration, MySqlReferralContext context, IOptions<ReferralRoles> roles, IOptions<ReferralStatus> status )
         {
             _userService = userService;
             _configuration = configuration;
@@ -53,12 +54,12 @@ namespace Referral2.Controllers
         [Authorize(Policy = "Doctor")]
         public IActionResult SwitchUser()
         {
-            var users = _context.User
+            var users = _context.Users
                 .Where(x => x.FacilityId.Equals(UserFacility) && x.Id != UserId && x.Level.Equals(_roles.Value.DOCTOR))
                 .Select(x => new ChangeLoginViewModel
                 {
                     Id = x.Id,
-                    UserLastname = x.Lname + ", " + x.Fname
+                    UserLastname = x.GetFullName()  
                 });
 
             ViewBag.Users = new SelectList(users, "Id", "UserLastname", UserId);
@@ -69,12 +70,12 @@ namespace Referral2.Controllers
         [HttpPost]
         public async Task<IActionResult> SwitchUser([Bind] SwitchUserModel model)
         {
-            var users = _context.User
+            var users = _context.Users
                 .Where(x => x.FacilityId.Equals(UserFacility) && x.Level == _roles.Value.DOCTOR)
                 .Select(x => new ChangeLoginViewModel
                 {
                     Id = x.Id,
-                    UserLastname = (x.Lname + ", " + x.Fname).NameToUpper()
+                    UserLastname = x.GetFullName()
                 });
             if (ModelState.IsValid)
             {
@@ -186,6 +187,7 @@ namespace Referral2.Controllers
             return View(model);
         }
         #endregion
+        #region BACK AS ADMIN
         [Authorize]
         public async Task<ActionResult> BackAsAdmin()
         {
@@ -208,17 +210,8 @@ namespace Referral2.Controllers
                 return RedirectToAction("MccDashboard", "MedicalCenterChief");
             }
         }
-        public async Task<IActionResult> Logout(string returnUrl)
-        {
-            ViewBag.ReturnUrl = returnUrl;
-
-            if(!_configuration.GetValue<bool>("Account:ShowLogoutPrompt"))
-            {
-                return await Logout();
-            }
-
-            return View();
-        }
+        #endregion
+        #region AUTHORIZE
         public IActionResult AccessDenied(string returnUrl)
         {
             ViewBag.ReturnUrl = returnUrl;
@@ -230,7 +223,6 @@ namespace Referral2.Controllers
         {
             return View();
         }
-
         public IActionResult Cancel(string returnUrl)
         {
             if(isUrlValid(returnUrl))
@@ -240,7 +232,19 @@ namespace Referral2.Controllers
 
             return RedirectToAction("Index", "Home");
         }
+        #endregion
+        #region LOGOUT
+        public async Task<IActionResult> Logout(string returnUrl)
+        {
+            ViewBag.ReturnUrl = returnUrl;
 
+            if (!_configuration.GetValue<bool>("Account:ShowLogoutPrompt"))
+            {
+                return await Logout();
+            }
+
+            return View();
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
@@ -253,20 +257,7 @@ namespace Referral2.Controllers
 
             return RedirectToAction("Login", "Account");
         }
-
-        [HttpGet]
-        public IActionResult Profile()
-        {
-            var user = _context.User.Find(UserId);
-
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            return View(user);
-        }
-
+        #endregion
 
         #region Helpers
         private bool isUrlValid(string returnUrl)
@@ -276,9 +267,81 @@ namespace Referral2.Controllers
 
         private async Task LoginAsAsync(int facilityId, string level)
         {
-            var user = await _context.User
-                .Include(x => x.Department)
-                .Include(x => x.Facility)
+            var user = await _context.Users
+                .GroupJoin(
+                    _context.Department,
+                    user => user.DepartmentId,
+                    dep => dep.Id,
+                    (user, DEPARTMENT) =>
+                        new
+                        {
+                            user = user,
+                            DEPARTMENT = DEPARTMENT
+                        }
+                )
+                .SelectMany(
+                    temp0 => temp0.DEPARTMENT.DefaultIfEmpty(),
+                    (temp0, department) =>
+                        new
+                        {
+                            temp0 = temp0,
+                            department = department
+                        }
+                )
+                .Join(
+                    _context.Facility,
+                    temp1 => temp1.temp0.user.FacilityId,
+                    facility => facility.Id,
+                    (temp1, facility) =>
+                        new
+                        {
+                            temp1 = temp1,
+                            facility = facility
+                        }
+                )
+                .GroupJoin(
+                    _context.Muncity,
+                    temp2 => temp2.temp1.temp0.user.Muncity,
+                    mnct => mnct.Id,
+                    (temp2, MUNCITY) =>
+                        new
+                        {
+                            temp2 = temp2,
+                            MUNCITY = MUNCITY
+                        }
+                )
+                .SelectMany(
+                    temp3 => temp3.MUNCITY.DefaultIfEmpty(),
+                    (temp3, muncity) =>
+                        new
+                        {
+                            temp3 = temp3,
+                            muncity = muncity
+                        }
+                )
+                .Join(
+                    _context.Province,
+                    temp4 => temp4.temp3.temp2.temp1.temp0.user.Province,
+                    province => province.Id,
+                    (temp4, province) =>
+                        new CookiesModel
+                        {
+                            Id = temp4.temp3.temp2.temp1.temp0.user.Id,
+                            Username = temp4.temp3.temp2.temp1.temp0.user.Username,
+                            Fname = temp4.temp3.temp2.temp1.temp0.user.Fname,
+                            Mname = temp4.temp3.temp2.temp1.temp0.user.Mname,
+                            Lname = temp4.temp3.temp2.temp1.temp0.user.Lname,
+                            Email = temp4.temp3.temp2.temp1.temp0.user.Email,
+                            Province = temp4.temp3.temp2.temp1.temp0.user.Province,
+                            Muncity = temp4.temp3.temp2.temp1.temp0.user.Muncity,
+                            Contact = temp4.temp3.temp2.temp1.temp0.user.Contact,
+                            Level = temp4.temp3.temp2.temp1.temp0.user.Level,
+                            FacilityId = temp4.temp3.temp2.temp1.temp0.user.FacilityId,
+                            DepartmentId = temp4.temp3.temp2.temp1.temp0.user.DepartmentId,
+                            FacilityName = temp4.temp3.temp2.facility.Name,
+                            DepartmentName = temp4.temp3.temp2.temp1.department.Description
+                        }
+                )
                 .FirstOrDefaultAsync(x => x.Id == UserId);
             var properties = new AuthenticationProperties
             {
@@ -293,14 +356,14 @@ namespace Referral2.Controllers
                 new Claim(ClaimTypes.GivenName, user.Fname),
                 new Claim(ClaimTypes.Surname, user.Lname),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.MobilePhone, user.ContactNo),
+                new Claim(ClaimTypes.MobilePhone, user.Contact),
                 new Claim(ClaimTypes.Role, level),
                 new Claim("Facility", facilityId.ToString()),
-                new Claim("FacilityName", user.Facility.Name),
+                new Claim("FacilityName", user.FacilityName),
                 new Claim("Department", user.DepartmentId.ToString()),
-                new Claim("DepartmentName", user.DepartmentId != null? user.Department.Description: ""),
-                new Claim("Province", user.ProvinceId.ToString()),
-                new Claim("Muncity", user.MuncityId.ToString()),
+                new Claim("DepartmentName", user.DepartmentId != 0? user.DepartmentName: ""),
+                new Claim("Province", user.Province.ToString()),
+                new Claim("Muncity", user.Muncity.ToString()),
                 new Claim("RealRole", user.Level),
                 new Claim("RealFacility", user.FacilityId.ToString())
             };
@@ -311,7 +374,7 @@ namespace Referral2.Controllers
         }
 
 
-        private async Task LoginAsync(User user, bool rememberMe)
+        private async Task LoginAsync(CookiesModel user, bool rememberMe)
         {
             var properties = new AuthenticationProperties
             {
@@ -327,11 +390,11 @@ namespace Referral2.Controllers
                 new Claim(ClaimTypes.Surname, user.Lname),
                 new Claim(ClaimTypes.Role, user.Level),
                 new Claim("Facility", user.FacilityId.ToString()),
-                new Claim("FacilityName", user.Facility.Name),
+                new Claim("FacilityName", user.FacilityName),
                 new Claim("Department", user.DepartmentId.ToString()),
-                new Claim("DepartmentName", user.DepartmentId != null? user.Department.Description: ""),
-                new Claim("Province", user.ProvinceId.ToString()),
-                new Claim("Muncity", user.MuncityId.ToString()),
+                new Claim("DepartmentName", user.DepartmentId != 0? user.DepartmentName: ""),
+                new Claim("Province", user.Province.ToString()),
+                new Claim("Muncity", user.Muncity.ToString()),
                 new Claim("RealRole", user.Level),
                 new Claim("RealFacility", user.FacilityId.ToString())
             };
@@ -362,7 +425,7 @@ namespace Referral2.Controllers
 
         public void UpdateLogin(int userId)
         {
-            Referral2.Models.Login logout = null;
+            Login logout = null;
             try
             {
                 logout = _context.Login.Where(x=>x.UserId == userId && x.Logout == default).OrderByDescending(x=>x.UpdatedAt).First();
@@ -374,7 +437,7 @@ namespace Referral2.Controllers
             }
             if(logout!=null)
             {
-                var currentUser = _context.User.Find(userId);
+                var currentUser = _context.Users.Find(userId);
                 logout.Logout = DateTime.Now;
                 currentUser.LoginStatus = "logout";
                 currentUser.UpdatedAt = DateTime.Now;

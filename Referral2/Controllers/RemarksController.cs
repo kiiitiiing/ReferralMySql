@@ -11,25 +11,26 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Referral2.Data;
 using Referral2.Helpers;
-using Referral2.Models;
+using Referral2.MyModels;
 using Referral2.Models.ViewModels;
 using Referral2.Resources;
 using Microsoft.Extensions.Options;
 using Referral2.Models.ViewModels.Remarks;
 using Microsoft.EntityFrameworkCore;
 using MoreLinq.Extensions;
+using Referral2.MyData;
 
 namespace Referral2.Controllers
 {
     [Authorize]
     public class RemarksController : Controller
     {
-        private readonly ReferralDbContext _context;
+        private readonly MySqlReferralContext _context;
         private readonly IOptions<ReferralRoles> _roles;
         private readonly IOptions<ReferralStatus> _status;
 
 
-        public RemarksController(ReferralDbContext context, IOptions<ReferralRoles> roles, IOptions<ReferralStatus> status)
+        public RemarksController(MySqlReferralContext context, IOptions<ReferralRoles> roles, IOptions<ReferralStatus> status)
         {
             _context = context;
             _roles = roles;
@@ -45,7 +46,7 @@ namespace Referral2.Controllers
         {
             var facilities = _context.Facility.Where(x => x.Id != UserFacility);
             ViewBag.Facilities = new SelectList(facilities, "Id", "Name");
-            return PartialView("~/Views/Remarks/ReferOther.cshtml");
+            return PartialView();
         }
         [HttpPost]
         public async Task<IActionResult> ReferOther([Bind] ReferOtherModel model)
@@ -83,9 +84,9 @@ namespace Referral2.Controllers
                 _context.Update(tracking);
                 _context.Add(activity);
                 await _context.SaveChangesAsync();
-                return PartialView("~/Views/Remarks/ReferOther.cshtml");
+                return PartialView();
             }
-            return PartialView("~/Views/Remarks/ReferOther.cshtml",model);
+            return PartialView(model);
         }
         #endregion
 
@@ -112,8 +113,8 @@ namespace Referral2.Controllers
                 DateSeen = default,
                 ReferredFrom = tracking.ReferredFrom,
                 ReferredTo = tracking.ReferredTo,
-                DepartmentId = null,
-                ReferringMd = null,
+                DepartmentId = 0,
+                ReferringMd = 0,
                 ActionMd = UserId,
                 Remarks = "N/A",
                 Status = _status.Value.CALLING,
@@ -131,7 +132,6 @@ namespace Referral2.Controllers
         public IActionResult Issues(int? id)
         {
             var issues = _context.Issue
-                .Include(x=>x.Tracking)
                 .Where(x => x.TrackingId == id);
             var issueModel = new IssuesModel
             {
@@ -167,9 +167,7 @@ namespace Referral2.Controllers
                 await _context.SaveChangesAsync();
                 var issues = new IssuesModel()
                 {
-                    Issues = _context.Issue
-                    .Include(x => x.Tracking)
-                    .Where(x => x.TrackingId == model.TrackingId).ToList(),
+                    Issues = _context.Issue.Where(x => x.TrackingId == model.TrackingId).ToList(),
                     TrackingId = model.TrackingId
                 };
                 return PartialView(issues);
@@ -465,8 +463,8 @@ namespace Referral2.Controllers
             {
                 var newFeedback = new Feedback();
                 newFeedback.Code = code;
-                newFeedback.SenderId = UserId;;
-                newFeedback.RecieverId = currentTracking.ReferringMd;
+                newFeedback.Sender = UserId;;
+                newFeedback.Receiver = currentTracking.ReferringMd;
                 newFeedback.Message = model.Message;
                 newFeedback.CreatedAt = DateTime.Now;
                 newFeedback.UpdatedAt = DateTime.Now;
@@ -483,14 +481,18 @@ namespace Referral2.Controllers
         #region Helpers
         private List<SelectDepartment> AvailableDepartments(int facilityId)
         {
-            var availableDepartments = _context.User
-                .Where(x => x.FacilityId.Equals(facilityId) && x.Level.Equals(_roles.Value.DOCTOR) && x.DepartmentId != null)
+            var availableDepartments = _context.Users
+                .Where(x => x.FacilityId.Equals(facilityId) && x.Level.Equals(_roles.Value.DOCTOR) && x.DepartmentId != 0)
                 .DistinctBy(d => d.DepartmentId)
-                .Select(x => new SelectDepartment
-                {
-                    DepartmentId = (int)x.DepartmentId,
-                    DepartmentName = x.Department.Description
-                });
+                .Join(
+                    _context.Department,
+                    u => u.DepartmentId,
+                    d => d.Id,
+                    (u, d) => new SelectDepartment
+                    {
+                        DepartmentId = u.DepartmentId,
+                        DepartmentName = d.Description
+                    });
             return availableDepartments.ToList();
         }
 
@@ -637,7 +639,7 @@ namespace Referral2.Controllers
         private Activity NewActivity(Tracking tracking, DateTime dateAction)
         {
             Activity activity = new Activity();
-
+            var facility = _context.Facility.Find(tracking.ReferredFrom);
             activity.Code = tracking.Code;
             activity.PatientId = tracking.PatientId;
             activity.DateReferred = dateAction;
@@ -660,9 +662,9 @@ namespace Referral2.Controllers
                         activity.Remarks = tracking.Remarks;
                         activity.DateSeen = default;
                         activity.ReferredFrom = tracking.ReferredTo;
-                        activity.ReferredTo = null;
+                        activity.ReferredTo = 0;
                         activity.DepartmentId = tracking.DepartmentId;
-                        activity.ReferringMd = null;
+                        activity.ReferringMd = 0;
                         activity.ActionMd = UserId;;
                         activity.Status = tracking.Status;
                         break;
@@ -684,21 +686,21 @@ namespace Referral2.Controllers
                         activity.Remarks = tracking.Remarks;
                         activity.DateSeen = default;
                         activity.ReferredFrom = tracking.ReferredTo;
-                        activity.ReferredTo = null;
+                        activity.ReferredTo = 0;
                         activity.DepartmentId = tracking.DepartmentId;
-                        activity.ReferringMd = null;
+                        activity.ReferringMd = 0;
                         activity.ActionMd = UserId;;
                         activity.Status = tracking.Status;
                         break;
                     }
                 case "calling":
                     {
-                        activity.Remarks = UserName+" called " + tracking.ReferredFromNavigation.Name;
+                        activity.Remarks = UserName+" called " + facility.Name;
                         activity.DateSeen = default;
                         activity.ReferredFrom = tracking.ReferredFrom;
                         activity.ReferredTo = tracking.ReferredTo;
                         activity.DepartmentId = tracking.DepartmentId;
-                        activity.ReferringMd = null;
+                        activity.ReferringMd = 0;
                         activity.ActionMd = UserId;;
                         activity.Status = tracking.Status;
                         break;
@@ -708,9 +710,9 @@ namespace Referral2.Controllers
                         activity.Remarks = tracking.Remarks;
                         activity.DateSeen = default;
                         activity.ReferredFrom = tracking.ReferredTo;
-                        activity.ReferredTo = null;
-                        activity.DepartmentId = null;
-                        activity.ReferringMd = null;
+                        activity.ReferredTo = 0;
+                        activity.DepartmentId = 0;
+                        activity.ReferringMd = 0;
                         activity.ActionMd = UserId;;
                         activity.Status = tracking.Status;
                         break;
@@ -721,8 +723,8 @@ namespace Referral2.Controllers
                         activity.DateSeen = default;
                         activity.ReferredFrom = tracking.ReferredTo;
                         activity.ReferredTo = tracking.ReferredFrom;
-                        activity.DepartmentId = null;
-                        activity.ReferringMd = null;
+                        activity.DepartmentId = 0;
+                        activity.ReferringMd = 0;
                         activity.ActionMd = UserId;;
                         activity.Status = tracking.Status;
                         break;
@@ -732,9 +734,9 @@ namespace Referral2.Controllers
                         activity.Remarks = tracking.Remarks;
                         activity.DateSeen = default;
                         activity.ReferredFrom = tracking.ReferredFrom;
-                        activity.ReferredTo = null;
-                        activity.DepartmentId = null;
-                        activity.ReferringMd = null;
+                        activity.ReferredTo = 0;
+                        activity.DepartmentId = 0;
+                        activity.ReferringMd = 0;
                         activity.ActionMd = UserId;;
                         activity.Status = tracking.Status;
                         break;
@@ -744,9 +746,21 @@ namespace Referral2.Controllers
                         activity.Remarks = tracking.Remarks;
                         activity.ReferredFrom = tracking.ReferredFrom;
                         activity.ReferredTo = tracking.ReferredTo;
-                        activity.DepartmentId = null;
-                        activity.ReferringMd = null;
+                        activity.DepartmentId = 0;
+                        activity.ReferringMd = 0;
                         activity.ActionMd = UserId;;
+                        activity.Status = tracking.Status;
+                        break;
+                    }
+
+                case "archived":
+                    {
+                        activity.Remarks = tracking.Remarks;
+                        activity.ReferredFrom = UserFacility;
+                        activity.ReferredTo = 0;
+                        activity.DepartmentId = 0;
+                        activity.ReferringMd = 0;
+                        activity.ActionMd = UserId; ;
                         activity.Status = tracking.Status;
                         break;
                     }
