@@ -26,9 +26,7 @@
     };
  }
 
-<div class="modal fade" role="dialog" id="arrived-modal">
-    <div class="modal-dialog modal-sm" role="document">
-        <div class="modal-content">
+        <div class="modal-content" id="arrived-modal">
             <form asp-action="ArrivedRemark" method="post" id="arrive-form">
                 <div class="modal-header">
                     <h4>
@@ -54,8 +52,6 @@
                 </div>
             </form>
         </div>
-    </div>
-</div>
     
 <script>
     Initialize("@Constants.Server_Link");

@@ -37,7 +37,7 @@ namespace Referral2
             services.AddDbContext<ReferralDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("ReferralConnection")));
             services.AddDbContext<MySqlReferralContext>(options =>
-                options.UseMySQL(Configuration.GetConnectionString("MySqlReferralConnection")));
+                options.UseMySQL(Configuration.GetConnectionString("MySqlReferralConnection"),mySqlOptions => mySqlOptions.CommandTimeout(300)));
 
             services.AddCors();
 

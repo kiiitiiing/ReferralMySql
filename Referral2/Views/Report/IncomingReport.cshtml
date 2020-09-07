@@ -26,7 +26,7 @@
                         </small>
                     </div>
                     <!-- CARD DANGER BODY -->
-                    <form method="post" asp-action="IncomingReport">
+                    <form method="get" asp-action="IncomingReport">
                         <div class="card-body">
                             <!-- DATE RANGE FILTER -->
                             <div class="form-group">
@@ -34,7 +34,7 @@
                             </div>
                             <!-- FACILITY -->
                             <div class="form-group">
-                                <select class="form-control" name="facility" asp-items="ViewBag.Facilities">
+                                <select class="form-control select2" name="facility" asp-items="ViewBag.Facilities">
                                     <option value="">All Facility</option>
                                 </select>
                             </div>
@@ -155,6 +155,9 @@
             startDate: '@startDate.ToString("dd/MM/yyyy")',
             endDate: '@endDate.ToString("dd/MM/yyyy")',
             opens: 'right'
+        });
+        $('.select2').select2({
+            theme: 'bootstrap4'
         });
     });
 </script>

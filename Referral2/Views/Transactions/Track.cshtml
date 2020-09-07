@@ -80,6 +80,16 @@
                                 discharged = "disabled";
                                 break;
                             }
+                        case "cancelled":
+                            {
+                                referred = "active";
+                                seen = "disabled";
+                                accepted = "disabled";
+                                arrived = "disabled";
+                                admitted = "disabled";
+                                discharged = "disabled";
+                                break;
+                            }
                         case "seen":
                             {
                                 referred = "complete";
@@ -172,11 +182,23 @@
 
                                 <div class="col-sm-2 bs-wizard-step @referred">
                                     <!-- REFERRED -->
-                                    <div class="text-center bs-wizard-stepnum">
-                                        Referred
-                                    </div>
-                                    <div class="progress"><div class="progress-bar"></div></div>
-                                    <a href="javascript:void(0)" class="bs-wizard-dot" title="Referred"></a>
+                                    @if (Model.Status.Equals("cancelled"))
+                                    {
+                                        <div class="text-center bs-wizard-stepnum">
+                                            <span class="text-danger">Cancelled</span>
+                                        </div>
+                                        <div class="progress"><div class="progress-bar"></div></div>
+                                        <a href="javascript:void(0)" class="bs-wizard-dot" title="Referred" style="background:#a94442;"></a>
+
+                                    }
+                                    else
+                                    {
+                                        <div class="text-center bs-wizard-stepnum">
+                                            Referred
+                                        </div>
+                                        <div class="progress"><div class="progress-bar"></div></div>
+                                        <a href="javascript:void(0)" class="bs-wizard-dot" title="Referred"></a>
+                                    }
                                 </div>
 
                                 <div class="col-sm-2 bs-wizard-step @seen">
@@ -500,15 +522,27 @@
                             var dataUrl = Model.Pregnant ? Url.Action("PrintablePregnantForm", "ViewForms", new { code = Model.Code }) : Url.Action("PrintableNormalForm", "ViewForms", new { code = Model.Code });
                         }
                         <div class="card-footer">
-                            <button class="btn btn-xs bg-gradient-warning" data-target="#@dataTarget" data-toggle="ajax-modal" data-url="@dataUrl">
+                            <button class="btn btn-xs bg-gradient-warning"
+                                    data-toggle="ajax-modal"
+                                    data-target="#large_modal"
+                                    data-action="#large_content"
+                                    data-url="@dataUrl"
+                                    onclick="OpenModal($(this));">
                                 <i class="fa fa-folder"></i>
                                 &nbsp;View Form
                             </button>
                             @if (seenCount > 0)
                             {
-                                <button type="button" class="btn btn-success btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewSeens", "Modals", new { trackingId = Model.TrackingId })">
+                                <button type="button"
+                                        class="btn btn-success btn-xs"
+                                        data-toggle="ajax-modal"
+                                        data-target="#small_modal"
+                                        data-action="#small_content"
+                                        data-url="@Url.Action("ViewSeens", "Modals", new { trackingId = Model.TrackingId })"
+                                        onclick="OpenModal($(this));">
                                     <i class="fa fa-user-md"></i>
                                     &nbsp;Seen
+
                                     <small class="badge bg-green">@seenCount</small>
 
                                 </button>
@@ -522,7 +556,13 @@
                                 }*@
                             @if (callerCount > 0)
                             {
-                                <button class="btn btn-xs bg-gradient-primary" data-toggle="ajax-modal" data-target="#calling-modal" data-url="@Url.Action("ViewCalls","Modals", new { code = Model.Code })">
+                                <button class="btn btn-xs bg-gradient-primary"
+                                        type="button"
+                                        data-toggle="ajax-modal"
+                                        data-target="#small_modal"
+                                        data-action="#small_content"
+                                        data-url="@Url.Action("ViewCalls","Modals", new { code = Model.Code })"
+                                        onclick="OpenModal($(this));">
                                     <i class="fa fa-phone"></i>
                                     &nbsp;Caller
 
@@ -531,7 +571,13 @@
                                 </button>
                             }
 
-                            <button type="button" class="btn btn-info btn-xs" data-toggle="ajax-modal" data-target="#seen-modal" data-url="@Url.Action("ViewReco","Modals", new { code = Model.Code })">
+                            <button type="button"
+                                    class="btn btn-info btn-xs"
+                                    data-toggle="ajax-modal"
+                                    data-target="#small_modal"
+                                    data-action="#small_content"
+                                    data-url="@Url.Action("ViewReco","Modals", new { code = Model.Code })"
+                                    onclick="OpenModal($(this));">
                                 <i class="fa fa-comments"></i>
                                 &nbsp;ReCo
                                 @if (recoCount > 0)

@@ -741,7 +741,7 @@ namespace Referral2.Controllers
                 ReferredTo = tracking.ReferredTo,
                 DepartmentId = tracking.DepartmentId,
                 ReferringMd = tracking.ReferringMd,
-                ActionMd = UserId,
+                ActionMd = 0,
                 Remarks = tracking.Remarks,
                 Status = tracking.Status,
                 CreatedAt = DateTime.Now,

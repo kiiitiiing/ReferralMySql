@@ -13,7 +13,7 @@
             <div class="form-group issue-body">
                 @if (Model.Issues.Count() == 0)
                 {
-                    Model.Issues.Add(new Issue());
+                    Model.Issues.Add(new Referral2.MyModels.Issue());
                     <input asp-for="Issues[0].TrackingId" id="track_@Model.Issues[0].Id" value="@Model.TrackingId" hidden />
                     <input asp-for="Issues[0].Status" id="status_@Model.Issues[0].Id" value="outgoing" hidden />
                     <input class="form-control" asp-for="Issues[0].Issue1" id="issue_@Model.Issues[0].Id" placeholder="Enter the issue here.." required><br />

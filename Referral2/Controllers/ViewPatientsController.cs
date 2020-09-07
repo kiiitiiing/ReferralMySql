@@ -418,7 +418,7 @@ namespace Referral2.Controllers
                         .Join(
                             _context.Department,
                             t => t.DepartmentId,
-                            d => (Int32?)(d.Id),
+                            d => d.Id,
                             (t, d) =>
                                 new
                                 {
@@ -504,10 +504,8 @@ namespace Referral2.Controllers
                                     PatientSex = temp6.temp5.temp4.temp3.p.Sex,
                                     PatientAge = temp6.temp5.temp4.temp3.p.Dob.ComputeAge(),
                                     Status = temp6.temp5.temp4.temp3.temp2.temp1.temp0.t.Status,
-                                    ReferringMd = temp6.temp5.refMd.GetMDFullName() /*((((temp6.temp5.refMd.Fname + " ") + temp6.temp5.refMd.Mname) + " ") +
-                                        temp6.temp5.refMd.Lname)*/,
-                                    ActionMd = actMd.GetMDFullName() /*((((actMd.Fname + " ") + actMd.Mname) + " ") + actMd.Lname)*/,
-                                    ReferredFrom = temp6.temp5.temp4.temp3.temp2.temp1.f.Name,
+                                    ReferringMd = temp6.temp5.refMd.GetMDFullName(),
+                                    ActionMd = temp6.temp5.temp4.temp3.temp2.temp1.temp0.t.Status == _status.Value.CANCELLED? temp6.temp5.refMd.GetMDFullName() : actMd.GetMDFullName(),
                                     ReferredFromId = temp6.temp5.temp4.temp3.temp2.temp1.temp0.t.ReferredFrom,
                                     ReferredTo = temp6.temp5.temp4.temp3.temp2.ftoo.Name,
                                     ReferredToId = temp6.temp5.temp4.temp3.temp2.temp1.temp0.t.ReferredTo,
@@ -519,28 +517,6 @@ namespace Referral2.Controllers
                                     FeedbackCount = feedbacks.Where(x=>x.Code == temp6.temp5.temp4.temp3.temp2.temp1.temp0.t.Code).Count()
                                 }
                         );
-                    /*(department, depId) => new IncomingViewModel()
-                    {
-                        Pregnant = department.tracking.refMd.facility.tracking.Type.Equals("pregnant"),
-                        TrackingId = department.tracking.refMd.facility.tracking.Id,
-                        Code = department.tracking.refMd.facility.tracking.Code,
-                        PatientName = department.patient.GetFullName(),
-                        PatientSex = department.patient.Sex,
-                        PatientAge = department.patient.Dob.ComputeAge(),
-                        Status = department.tracking.refMd.facility.tracking.Status,
-                        ReferringMd = department.tracking.user.GetMDFullName().NameToUpper(),
-                        ActionMd = "",
-                        SeenCount = 0,//seens.Where(x=>x.TrackingId == muncity.province.patients.department.tracking.refMd.facility.tracking.Id).Count(),
-                        CallCount = 0,//activities.Where(x => x.Code.Equals(muncity.province.patients.department.tracking.refMd.facility.tracking.Code) && x.Status.Equals(_status.Value.CALLING)).Count(),
-                        FeedbackCount = 0,//feedbacks.Where(x => x.Code.Equals(muncity.province.patients.department.tracking.refMd.facility.tracking.Code)).Count(),//feedback
-                        DateAction = default, //activities.OrderByDescending(x => x.DateReferred).Where(x => x.Code.Equals(department.tracking.refMd.facility.tracking.Code)).First().DateReferred,
-                        ReferredFrom = department.tracking.refMd.facility.from.Name,
-                        ReferredFromId = department.tracking.refMd.facility.tracking.ReferredFrom,
-                        ReferredTo = department.tracking.refMd.to.Name,
-                        ReferredToId = department.tracking.refMd.facility.tracking.ReferredTo,
-                        Department = depId.Description,
-                        DepartmentId = department.tracking.refMd.facility.tracking.DepartmentId
-                    });*/
 
             #endregion
             if (department != null)
@@ -590,12 +566,12 @@ namespace Referral2.Controllers
             ViewBag.EndDate = EndDate;
             #endregion
             #region Query
-            var seens = _context.Seen;
-            var issues = _context.Issue;
+            //var seens = _context.Seen;
+            //var issues = _context.Issue;
             var activities = _context.Activity.Where(x => x.CreatedAt >= StartDate && x.CreatedAt <= EndDate);
-            var feedbacks = _context.Feedback.Where(x => x.CreatedAt >= StartDate && x.CreatedAt <= EndDate);
+            //var feedbacks = _context.Feedback.Where(x => x.CreatedAt >= StartDate && x.CreatedAt <= EndDate);
             var facilities = _context.Facility.Where(x => x.Id != UserFacility);
-            var referred = _context.Tracking.OrderByDescending(x=>x.UpdatedAt)
+            var referred = _context.Tracking.OrderByDescending(x => x.UpdatedAt)
                 .Where(x => x.ReferredFrom == UserFacility && x.DateReferred >= StartDate && x.DateReferred <= EndDate)
                 .Join(
                     _context.Users,
@@ -696,10 +672,10 @@ namespace Referral2.Controllers
                             FacilityFrom = temp6.temp5.temp4.temp3.temp2.refFrom.Name,
                             FacilityTo = temp6.temp5.temp4.temp3.refTo.Name,
                             TrackingId = temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Id,
-                            SeenCount = seens.Where(x => x.TrackingId == temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Id).Count(),
-                            CallerCount = activities.Where(x => x.Code.Equals(temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Code) && x.Status.Equals(_status.Value.CALLING)).Count(),
-                            IssueCount = issues.Where(x => x.TrackingId.Equals(temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Id)).Count(),
-                            ReCoCount = feedbacks.Where(x => x.Code.Equals(temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Code)).Count(),
+                            //SeenCount = seens.Where(x => x.TrackingId == temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Id).Count(),
+                            //CallerCount = activities.Where(x => x.Code.Equals(temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Code) && x.Status.Equals(_status.Value.CALLING)).Count(),
+                            //IssueCount = issues.Where(x => x.TrackingId.Equals(temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Id)).Count(),
+                            //ReCoCount = feedbacks.Where(x => x.Code.Equals(temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Code)).Count(),
                             Travel = string.IsNullOrEmpty(temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.ModeTransportation),
                             Code = temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Code,
                             Status = temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Status,
@@ -819,7 +795,7 @@ namespace Referral2.Controllers
 
             int size = 3;
 
-            return View(await PaginatedList<ReferredViewModel>.CreateAsync(referred, page ?? 1, size));
+            return View(await PaginatedList<ReferredViewModel>.CreateAsync(referred.OrderByDescending(x=>x.UpdatedAt), page ?? 1, size));
         }
         #endregion
 

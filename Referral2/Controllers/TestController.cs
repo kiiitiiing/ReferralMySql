@@ -35,12 +35,13 @@ namespace Referral2.Controllers
             return _context.Activity.Take(10).ToList();
         }
 
+        [HttpGet]
         public ActionResult<List<DailyUsersAdminModel>> AcceptedPatient()
         {
             Date = DateTime.Now.Date;
-            var logins = _contextToo.User
+            var logins = _context.Users
                 .Join(
-                    _contextToo.Login,
+                    _context.Login,
                     user => user.Id,
                     login => login.UserId,
                     (user, login) =>
@@ -54,17 +55,21 @@ namespace Referral2.Controllers
                         }
                 );
 
-            var users = _contextToo.User;
+            var users = _context.Users;
 
-            var dailyUsers = _contextToo.Facility
-                .Select(i => new DailyUsersAdminModel
+            var dailyUsers =( from facility in _context.Facility
+                             join user in users on facility.Id equals user.FacilityId into USER
+                             from uasd in USER.DefaultIfEmpty()
+                             join login in logins on facility.Id equals login.UserFacility into LOGIN
+                             from asdf in LOGIN.DefaultIfEmpty()
+                            select new DailyUsersAdminModel
                 {
-                    Facility = i.Name,
-                    OnDutyHP = logins.Where(x => x.UserFacility == i.Id && x.Login.Date == Date && x.Level == "doctor" && x.Status == "login").Select(x => x.UserId).Distinct().Count(),
-                    OffDutyHP = logins.Where(x => x.UserFacility == i.Id && x.Login.Date == Date && x.Level == "doctor" && x.Status == "login_off").Select(x => x.UserId).Distinct().Count(),
-                    OfflineHP = users.Where(x => x.FacilityId == i.Id && x.Level == "doctor").Count(),
-                    OnlineIT = logins.Where(x => x.UserFacility == i.Id && x.Login.Date == Date && x.Level == "support").Select(x => x.UserId).Distinct().Count(),
-                    OfflineIT = users.Where(x => x.FacilityId == i.Id && x.Level == "support").Count(),
+                    Facility = facility.Name,
+                    OnDutyHP = LOGIN.Where(x => x.Login.Date == Date && x.Level == "doctor" && x.Status == "login").Select(x => x.UserId).Distinct().Count(),
+                    OffDutyHP = LOGIN.Where(x => x.Login.Date == Date && x.Level == "doctor" && x.Status == "login_off").Select(x => x.UserId).Distinct().Count(),
+                    OfflineHP = USER.Where(x => x.Level == "doctor").Count(),
+                    OnlineIT = LOGIN.Where(x => x.Login.Date == Date && x.Level == "support").Select(x => x.UserId).Distinct().Count(),
+                    OfflineIT = USER.Where(x => x.Level == "support").Count(),
                 })
                .Take(10)
                 .ToList();

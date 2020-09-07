@@ -83,6 +83,7 @@
             event.preventDefault();
             event.stopImmediatePropagation();
             var content = $($(this).parent()).parent();
+            content.prepend('<div id="overlay_loading" class="overlay d-flex justify-content-center align-items-center"><i class="fas fa-2x fa-sync fa-spin"></i></div>');
             var form = content.find('form');
             var contentId = content.attr('id');
             var actionUrl = form.attr('action');
@@ -119,6 +120,21 @@
                                 sessionStorage.setItem('onReload', 'passWordChanged');
                                 location.reload();
                             }
+                            else if (contentId == 'didnt-arrive-modal') {
+                                location.reload();
+                            }
+                            else if (contentId == 'arrived-modal') {
+                                location.reload();
+                            }
+                            else if (contentId == 'admitted-modal') {
+                                location.reload();
+                            }
+                            else if (contentId == 'discharged_modal') {
+                                location.reload();
+                            }
+                            else if (contentId == 'cancel-modal') {
+                                location.reload();
+                            }
                             else if (contentId == 'reco-modal') {
                                 var input = placeholderElement.find('.modal-footer').find('form').find('.code').val();
                                 console.log(input);
@@ -149,6 +165,7 @@
                         });
                     }
                     else {
+                        content.find('#overlay_loading').remove();
                         content.find('.modal-body').replaceWith(newBody);
                         content.find('.select2').select2({
                             theme: 'bootstrap4'
@@ -326,6 +343,41 @@
 
     });
 
+    function GetTableCount(param, type) {
+        var urls = '@Url.Action("GetTableCount", "NoReload")' + '?code=' + param + '&type=' + type;
+        return $.ajax({
+            url: urls,
+            type: 'get',
+            async: true,
+            success: function (output) {
+                if (type == 'feedback') {
+                    $('#reco_' + param).removeAttr('style');
+                    $('#reco_' + param).html(output);
+                }
+                else if (type == 'issue') {
+                    $('#issue_' + param).removeAttr('style');
+                    $('#issue_' + param).html(output);
+                }
+                else if (type == 'seen') {
+                    if (output != '') {
+                        $('#seen_' + param).removeAttr('style');
+                        $('#seen_no_' + param).html(output);
+                    }
+                }
+                else if (type == 'call') {
+                    if (output != '') {
+                        $('#call_' + param).removeAttr('style');
+                        $('#call_no_' + param).html(output);
+                    }
+                }
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(xhr.responseText);
+                alert(thrownError);
+            }
+        });
+    }
+
     function LoadingModal(id) {
         var urls = '@Url.Action("ModalLoading", "Account")';
         return $.ajax({
@@ -408,7 +460,7 @@
         $.when($(target).modal('show')).done(function () {
             $.ajax({
                 url: url,
-                tpye: 'get',
+                type: 'get',
                 async: true,
                 success: function (data) {
                     setTimeout(function () {
@@ -521,43 +573,6 @@
             }
         });
 
-        @*if ($('div.chart').length > 0) {
-            $.when(GetDashboardValues(level)).done(function (output) {
-                console.log(output);
-                var areaChartData = {
-                    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-                    datasets: [
-                        {
-                            label: 'Referred',
-                            backgroundColor: '#8e9cff',
-                            data: data.referred
-                        },
-                        {
-
-                            label: 'Accepted',
-                            backgroundColor: '#26B99A',
-                            data: output.accepted
-                        },
-                        {
-                            label: 'Redirected',
-                            backgroundColor: '#03586A',
-                            data: output.redirected
-                        },
-                    ]
-                };
-                var barChartCanvas = bar_chart.get(0).getContext('2d');
-                var barChartData = jQuery.extend(true, {}, areaChartData);
-                var temp0 = areaChartData.datasets[0];
-                var temp1 = areaChartData.datasets[1];
-                barChartData.datasets[0] = temp0;
-                barChartData.datasets[1] = temp1;
-
-                var barChart = new Chart(barChartCanvas, {
-                    type: 'bar',
-                    data: barChartData
-                });
-            });
-        }*@
     }
 
     function Toast(type, message) {
@@ -637,7 +652,7 @@
         var url = '@Url.Action("RemoveFacility", "Admin")' + '/' + id;
     $.ajax({
         url: url,
-        tpye: 'post',
+        type: 'post',
         async: true
     });
     }
@@ -646,16 +661,15 @@
         var urlss = '@Url.Action("ChangeLoginStatus", "NoReload")' + '/' + status;
     $.ajax({
         url: urlss,
-        tpye: 'get',
+        type: 'get',
         async: true
     });
     }
-
     function CallRequest(code) {
         var urlss = '@Url.Action("RequestCall", "Remarks")' + '/' + code;
     $.ajax({
         url: urlss,
-        tpye: 'get',
+        type: 'get',
         async: true
     });
     }
@@ -664,7 +678,7 @@
         var urlss = '@Url.Action("NumberNotif", "NoReload")';
         return $.ajax({
         url: urlss,
-        tpye: 'get',
+        type: 'get',
         async: true
         });
     }
@@ -703,7 +717,7 @@
         var url = '@Url.Action("GetMuncities", "NoReload")' + '/' + id;
         return $.ajax({
             url: url,
-            tpye: 'get',
+            type: 'get',
             async: true
         })
     }

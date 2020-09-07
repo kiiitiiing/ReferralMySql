@@ -85,6 +85,30 @@ namespace Referral2.Controllers
         }
 
         [HttpGet]
+        public string GetTableCount (string code, string type)
+        {
+            int ctr = 0;
+            if(type == "seen")
+            {
+                ctr = _context.Seen.Where(x => x.TrackingId == int.Parse(code)).Count();
+            }
+            else if( type == "call")
+            {
+                ctr = _context.Activity.Where(x => x.Code.Equals(code) && x.Status.Equals(_status.Value.CALLING)).Count();
+            }
+            else if( type == "issue")
+            {
+                ctr = _context.Issue.Where(x => x.TrackingId.Equals(int.Parse(code))).Count();
+            }
+            else if(type == "feedback")
+            {
+                ctr = _context.Feedback.Where(x => x.Code.Equals(code)).Count();
+            }
+
+            return ctr == 0 ? "" : ctr.ToString();
+        }
+
+        [HttpGet]
         [Route("{controller}/{action}/{muncityId}")]
         public List<SelectAddress> FilteredBarangay(int? muncityId)
         {

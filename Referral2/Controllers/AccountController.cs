@@ -83,6 +83,7 @@ namespace Referral2.Controllers
 
                 if (isValid)
                 {
+
                     await ChangeUser();
                     await LoginAsync(user, false);
                     CreateLogin(user.Id);
@@ -418,12 +419,12 @@ namespace Referral2.Controllers
 
         public async Task<bool> ChangeUser()
         {
-            UpdateLogin(UserId);
+            await UpdateLogin(UserId);
             await HttpContext.SignOutAsync();
             return true;
         }
 
-        public void UpdateLogin(int userId)
+        public async Task UpdateLogin(int userId)
         {
             Login logout = null;
             try
@@ -439,11 +440,12 @@ namespace Referral2.Controllers
             {
                 var currentUser = _context.Users.Find(userId);
                 logout.Logout = DateTime.Now;
+                logout.UpdatedAt = DateTime.Now;
                 currentUser.LoginStatus = "logout";
                 currentUser.UpdatedAt = DateTime.Now;
                 _context.Update(currentUser);
                 _context.Update(logout);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
             }
         }
 

@@ -9,6 +9,8 @@ namespace Referral2.Models.ViewModels
     {
         public string Code { get; set; }
         public DateTime DateDischarged { get; set; }
+        public string ClinicaStatus { get; set; }
+        public string SurveillanceCategory { get; set; }
         public string Remarks { get; set; }
     }
 }

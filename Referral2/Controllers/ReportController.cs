@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Referral2.Data;
 using Referral2.Helpers;
-using Referral2.Models;
+using Referral2.MyModels;
 using Referral2.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
@@ -19,19 +19,22 @@ using DinkToPdf.Contracts;
 using DinkToPdf;
 using System.IO;
 using Referral2.Services;
+using Referral2.MyData;
+using Referral2.Models.ViewModels.Forms;
+using SQLitePCL;
 
 namespace Referral2.Controllers
 {
     [Authorize(Policy = "Doctor")]
     public class ReportController : Controller
     {
-        private readonly ReferralDbContext _context;
+        private readonly MySqlReferralContext _context;
         private readonly IOptions<ReferralRoles> _roles;
         private readonly IOptions<ReferralStatus> _status;
         private IConverter _converter;
 
 
-        public ReportController(ReferralDbContext context, IConverter converter, IOptions<ReferralRoles> roles, IOptions<ReferralStatus> status)
+        public ReportController(MySqlReferralContext context, IConverter converter, IOptions<ReferralRoles> roles, IOptions<ReferralStatus> status)
         {
             _context = context;
             _converter = converter;
@@ -41,6 +44,9 @@ namespace Referral2.Controllers
 
         DateTime StartDate { get; set; }
         DateTime EndDate { get; set; }
+
+        #region INCOMING REPORT
+        [HttpGet]
         public async Task<IActionResult> IncomingReport(string daterange, int? page, int? facility, int? department)
         {
             var currentDate = DateTime.Now;
@@ -60,26 +66,25 @@ namespace Referral2.Controllers
             int size = 20;
 
             var activities = _context.Activity
-                .Where(x => x.DateReferred>= StartDate && x.DateReferred <= EndDate);
-            var tracking = _context.Tracking
-                .Where(x => x.ReferredTo == UserFacility && x.DateReferred>= StartDate && x.DateReferred <= EndDate)
-                .Select(t => new IncomingReportViewModel
-                {
-                    ReferredTo = (int)t.ReferredTo,
-                    ReferredFrom = (int)t.ReferredFrom,
-                    Department = (int)t.DepartmentId,
-                    Code = t.Code,
-                    Facility = t.ReferredFromNavigation.Name,
-                    DateReferred = t.DateReferred,
-                    DateAdmitted = activities.First(x=>x.Code.Equals(t.Code) && x.Status.Equals(_status.Value.ADMITTED)).DateReferred,
-                    DateArrived = activities.First(x => x.Code.Equals(t.Code) && x.Status.Equals(_status.Value.ARRIVED)).DateReferred,
-                    DateDischarged = activities.First(x => x.Code.Equals(t.Code) && x.Status.Equals(_status.Value.DISCHARGED)).DateReferred,
-                    DateCancelled = activities.First(x => x.Code.Equals(t.Code) && x.Status.Equals(_status.Value.CANCELLED)).DateReferred,
-                    DateTransferred = activities.First(x => x.Code.Equals(t.Code) && x.Status.Equals(_status.Value.TRANSFERRED)).DateReferred
-                });
+                .Where(x => x.DateReferred >= StartDate && x.DateReferred <= EndDate);
+            var tracking = from track in _context.Tracking.Where(x => x.ReferredTo == UserFacility && x.DateReferred >= StartDate && x.DateReferred <= EndDate)
+                           join refFrom in _context.Facility on track.ReferredFrom equals refFrom.Id
+                           select new IncomingReportViewModel
+                           {
+                               ReferredTo = track.ReferredTo,
+                               ReferredFrom = track.ReferredFrom,
+                               Department = track.DepartmentId,
+                               Code = track.Code,
+                               Facility = refFrom.Name,
+                               DateReferred = track.DateReferred,
+                               DateAdmitted = activities.First(x => x.Code == track.Code && x.Status.Equals(_status.Value.ADMITTED)).DateReferred,
+                               DateArrived = activities.First(x => x.Code == track.Code && x.Status.Equals(_status.Value.ARRIVED)).DateReferred,
+                               DateDischarged = activities.First(x => x.Code == track.Code && x.Status.Equals(_status.Value.DISCHARGED)).DateReferred,
+                               DateCancelled = activities.First(x => x.Code == track.Code && x.Status.Equals(_status.Value.CANCELLED)).DateReferred,
+                               DateTransferred = activities.First(x => x.Code == track.Code && x.Status.Equals(_status.Value.TRANSFERRED)).DateReferred
+                           };
 
-            var facilities = _context.Facility
-                .Where(x => x.Id != UserFacility);
+            var facilities = _context.Facility.Where(x => x.Id != UserFacility).ToList();
             var departments = await AvailableDepartments(UserFacility);
             ViewBag.Facilities = new SelectList(facilities, "Id", "Name");
             ViewBag.Departments = new SelectList(departments, "DepartmentId", "DepartmentName");
@@ -101,7 +106,9 @@ namespace Referral2.Controllers
 
             return View(await PaginatedList<IncomingReportViewModel>.CreateAsync(tracking.OrderByDescending(x=>x.DateReferred), page ?? 1, size));
         }
-        // GET OUTGOING REPORT
+        #endregion
+        #region OUTGOING REPORT
+        [HttpGet]
         public async Task<IActionResult> OutgoingReport(string daterange, int? page, int? facility, int? department)
         {
             var currentDate = DateTime.Now;
@@ -124,9 +131,9 @@ namespace Referral2.Controllers
                 .Where(x => x.ReferredFrom == UserFacility && x.DateReferred>= StartDate && x.DateReferred <= EndDate)
                 .Select(t => new OutgoingReportViewModel
                 {
-                    Department = (int)t.DepartmentId,
-                    ReferredTo = (int)t.ReferredTo,
-                    ReferredFrom = (int)t.ReferredFrom,
+                    Department = t.DepartmentId,
+                    ReferredTo = t.ReferredTo,
+                    ReferredFrom = t.ReferredFrom,
                     Code = t.Code,
                     DateReferred = t.DateReferred,
                     Seen = t.DateSeen == default ? default : t.DateSeen.Subtract(t.DateReferred).TotalMinutes,
@@ -159,37 +166,194 @@ namespace Referral2.Controllers
 
             return View(await PaginatedList<OutgoingReportViewModel>.CreateAsync(outgoing.OrderBy(x=>x.Code), page ?? 1, size));
         }
+        #endregion
+        #region NORMAL FORM PDF
         public async Task<IActionResult> NormalFormPdf(string code)
         {
-            var patientForm = await _context.PatientForm
-                .Include(x => x.Patient)
-                .Include(x => x.ReferredToNavigation)
-                .Include(x => x.ReferringFacilityNavigation)
-                .Include(x => x.Department)
-                .Include(x => x.ReferredToNavigation)
-                .Include(x => x.ReferringMdNavigation)
-                .SingleOrDefaultAsync(x => x.Code.Equals(code));
+            var form = from patForm in _context.PatientForm.Where(x => x.Code == code)
+                       join patient in _context.Patients on patForm.PatientId equals patient.Id
+                       join patBrgy in _context.Barangay on patient.Brgy equals patBrgy.Id into PBRGY
+                       from pBarangay in PBRGY.DefaultIfEmpty()
+                       join patMunct in _context.Muncity on patient.Muncity equals patMunct.Id into PMUNCT
+                       from pMuncity in PMUNCT.DefaultIfEmpty()
+                       join pProvince in _context.Province on patient.Province equals pProvince.Id
+                       join refFrom in _context.Facility on patForm.ReferringFacility equals refFrom.Id
+                       join fromBrgy in _context.Barangay on refFrom.Brgy equals fromBrgy.Id into FBRGY
+                       from fromBarangay in FBRGY.DefaultIfEmpty()
+                       join fromMunct in _context.Muncity on refFrom.Muncity equals fromMunct.Id into FMUNCT
+                       from fromMuncity in FMUNCT.DefaultIfEmpty()
+                       join fromProvince in _context.Province on refFrom.Province equals fromProvince.Id
+                       join refTo in _context.Facility on patForm.ReferredTo equals refTo.Id
+                       join toBrgy in _context.Barangay on refFrom.Brgy equals toBrgy.Id into TBRGY
+                       from toBarangay in TBRGY.DefaultIfEmpty()
+                       join toMunct in _context.Muncity on refFrom.Muncity equals toMunct.Id into TMUNCT
+                       from toMuncity in TMUNCT.DefaultIfEmpty()
+                       join toProvince in _context.Province on refFrom.Province equals toProvince.Id
+                       join refMd in _context.Users on patForm.ReferringMd equals refMd.Id into REFMD
+                       from referringMd in REFMD.DefaultIfEmpty()
+                       join refdMd in _context.Users on patForm.ReferredMd equals refdMd.Id into REFDMD
+                       from referredMd in REFDMD.DefaultIfEmpty()
+                       join dep in _context.Department on patForm.DepartmentId equals dep.Id into DEP
+                       from department in DEP.DefaultIfEmpty()
+                       select new PatientFormModel
+                       {
+                           UniqueId = patForm.UniqueId,
+                           Code = patForm.Code,
+                           ReferringFacility = patForm.ReferringFacility,
+                           ReferringFacilityName = refFrom.Name,
+                           ReferringFacilityAddress = GlobalFunctions.GetAddress(refFrom.Address, fromBarangay.Description, fromMuncity.Description, fromProvince.Description),
+                           ReferringFacilityContact = refFrom.Contact,
+                           ReferredTo = patForm.ReferredTo,
+                           ReferredToName = refTo.Name,
+                           ReferredToAddress = GlobalFunctions.GetAddress(refTo.Address, toBarangay.Description, toMuncity.Description, toProvince.Description),
+                           ReferredToContact = refTo.Contact,
+                           DepartmentId = patForm.DepartmentId,
+                           Department = department.Description,
+                           CovidNumber = patForm.CovidNumber,
+                           ReferClinicalStatus = patForm.ReferClinicalStatus,
+                           ReferSurCategory = patForm.ReferSurCategory,
+                           DisClinicalStatus = patForm.DisClinicalStatus,
+                           DisSurCategory = patForm.DisSurCategory,
+                           TimeReferred = patForm.TimeReferred,
+                           TimeTransferred = patForm.TimeTransferred,
+                           PatientId = patForm.PatientId,
+                           PatientName = "".GetFullName(patient.Fname, patient.Mname, patient.Lname),
+                           PatientAddress = GlobalFunctions.GetAddress(pBarangay.Description, pMuncity.Description, pProvince.Description),
+                           PatientSex = patient.Sex,
+                           PatientDob = patient.Dob,
+                           PatientStatus = patient.CivilStatus,
+                           PhicId = patient.PhicId,
+                           PhicStatus = patient.PhicStatus,
+                           CaseSummary = patForm.CaseSummary,
+                           RecoSummary = patForm.RecoSummary,
+                           Diagnosis = patForm.Diagnosis,
+                           Reason = patForm.Reason,
+                           ReferringMd = patForm.ReferringMd,
+                           ReferringMdName = referringMd.Level.GetFullName(referringMd.Fname, referringMd.Mname, referringMd.Lname),
+                           ReferringMdContact = referringMd.Contact,
+                           ReferredMd = patForm.ReferredMd,
+                           ReferredMdName = referredMd.Level.GetFullName(referredMd.Fname, referredMd.Mname, referredMd.Lname),
+                           ReferredMdContact = referredMd.Contact,
+                           CreatedAt = patForm.CreatedAt.Value.DateTime,
+                           UpdatedAt = patForm.UpdatedAt.Value.DateTime
+                       };
+
+
+            var patientForm = await form.FirstAsync();
+
             var file = SetPDF(patientForm);
             return File(file, "application/pdf");
         }
-            
+        #endregion
+
         public async Task<IActionResult> PregnantFromPdf(string code)
         {
-            var pregnantForm = await _context.PregnantForm
-                .Include(x => x.PatientBaby)
-                .Include(x => x.PatientWoman)
-                .Include(x => x.Department)
-                .Include(x => x.ReferredToNavigation)
-                .Include(x => x.ReferredByNavigation)
-                .Include(x=>x.ReferringFacilityNavigation)
-                .SingleOrDefaultAsync(x => x.Code.Equals(code));
+            var form = from patForm in _context.PregnantForm.Where(x => x.Code == code)
+                       join patient in _context.Patients on patForm.PatientWomanId equals patient.Id
+                       join bb in _context.Patients on patForm.PatientBabyId equals bb.Id into BB
+                       from baby in BB.DefaultIfEmpty()
+                       join bbb in _context.Baby on baby.Id equals bbb.Id into BBB
+                       from babyInfo in BBB.DefaultIfEmpty()
+                       join patBrgy in _context.Barangay on patient.Brgy equals patBrgy.Id into PBRGY
+                       from pBarangay in PBRGY.DefaultIfEmpty()
+                       join patMunct in _context.Muncity on patient.Muncity equals patMunct.Id into PMUNCT
+                       from pMuncity in PMUNCT.DefaultIfEmpty()
+                       join pProvince in _context.Province on patient.Province equals pProvince.Id
+                       join refFrom in _context.Facility on patForm.ReferringFacility equals refFrom.Id
+                       join fromBrgy in _context.Barangay on refFrom.Brgy equals fromBrgy.Id into FBRGY
+                       from fromBarangay in FBRGY.DefaultIfEmpty()
+                       join fromMunct in _context.Muncity on refFrom.Muncity equals fromMunct.Id into FMUNCT
+                       from fromMuncity in FMUNCT.DefaultIfEmpty()
+                       join fromProvince in _context.Province on refFrom.Province equals fromProvince.Id
+                       join refTo in _context.Facility on patForm.ReferredTo equals refTo.Id
+                       join toBrgy in _context.Barangay on refFrom.Brgy equals toBrgy.Id into TBRGY
+                       from toBarangay in TBRGY.DefaultIfEmpty()
+                       join toMunct in _context.Muncity on refFrom.Muncity equals toMunct.Id into TMUNCT
+                       from toMuncity in TMUNCT.DefaultIfEmpty()
+                       join toProvince in _context.Province on refFrom.Province equals toProvince.Id
+                       join refMd in _context.Users on patForm.ReferredBy equals refMd.Id into REFMD
+                       from referringMd in REFMD.DefaultIfEmpty()
+                       join dep in _context.Department on patForm.DepartmentId equals dep.Id into DEP
+                       from department in DEP.DefaultIfEmpty()
+                       select new PregnantFormModel
+                       {
+                           UniqueId = patForm.UniqueId,
+                           Code = patForm.Code,
+                           ReferringFacility = patForm.ReferringFacility,
+                           ReferringFacilityName = refFrom.Name,
+                           ReferringFacilityAddress = GlobalFunctions.GetAddress(refFrom.Address, fromBarangay.Description, fromMuncity.Description, fromProvince.Description),
+                           ReferringFacilityContact = refFrom.Contact,
+                           ReferredTo = patForm.ReferredTo,
+                           ReferredToName = refTo.Name,
+                           ReferredToAddress = GlobalFunctions.GetAddress(refTo.Address, toBarangay.Description, toMuncity.Description, toProvince.Description),
+                           ReferredToContact = refTo.Contact,
+                           DepartmentId = patForm.DepartmentId,
+                           Department = department.Description,
+                           TimeReferred = default,
+                           TimeTransferred = default,
+                           ReferredDate = patForm.ReferredDate,
+                           ArrivalDate = patForm.ArrivalDate,
+                           PatientId = patForm.PatientWomanId,
+                           PatientName = "".GetFullName(patient.Fname, patient.Mname, patient.Lname),
+                           PatientAddress = GlobalFunctions.GetAddress(pBarangay.Description, pMuncity.Description, pProvince.Description),
+                           PatientSex = patient.Sex,
+                           WomanBeforeGivenTime = patForm.WomanBeforeGivenTime,
+                           WomanBeforeTreatment = patForm.WomanBeforeTreatment,
+                           WomanDuringTransport = patForm.WomanDuringTransport,
+                           WomanInformationGiven = patForm.WomanInformationGiven,
+                           WomanMajorFindings = patForm.WomanMajorFindings,
+                           WomanReason = patForm.WomanReason,
+                           WomanTransportGivenTime = patForm.WomanTransportGivenTime,
+                           HealthWorker = patForm.HealthWorker,
+                           BabyBeforeGivenTime = patForm.BabyBeforeGivenTime,
+                           BabyBeforeTreatment = patForm.BabyBeforeTreatment,
+                           BabyDob = baby.Dob,
+                           BabyDuringTransport = patForm.BabyDuringTransport,
+                           BabyGestationAge = babyInfo.GestationalAge,
+                           BabyInformationGiven = patForm.BabyInformationGiven,
+                           BabyLastFeed = patForm.BabyLastFeed,
+                           BabyMajorFindings = patForm.BabyMajorFindings,
+                           BabyName = "".GetFullName(baby.Fname, baby.Mname, baby.Lname),
+                           BabyReason = patForm.BabyReason,
+                           BabyTransportGivenTime = patForm.BabyTransportGivenTime,
+                           BabyWeight = babyInfo.Weight,
+                           PatientBabyId = patForm.PatientBabyId,
+                           PatientDob = patient.Dob,
+                           PatientStatus = patient.CivilStatus,
+                           PhicId = patient.PhicId,
+                           PhicStatus = patient.PhicStatus,
+                           ReferringMd = patForm.ReferredBy,
+                           ReferringMdName = referringMd.Level.GetFullName(referringMd.Fname, referringMd.Mname, referringMd.Lname),
+                           ReferringMdContact = referringMd.Contact,
+                           CreatedAt = patForm.CreatedAt.Value.DateTime,
+                           UpdatedAt = patForm.UpdatedAt.Value.DateTime
+                       };
+
+            var pregnantForm = await form.FirstAsync();
             var file = SetPDF(pregnantForm);
             return File(file, "application/pdf");
         }
 
         #region HELPERS
 
-        public byte[] SetPDF(PatientForm form)
+        public async Task<List<SelectDepartment>> AvailableDepartments(int facilityId)
+        {
+            var deps = _context.Users
+                .Where(x => x.FacilityId.Equals(facilityId) && x.Level.Equals(_roles.Value.DOCTOR) && x.DepartmentId != 0)
+                .Select(x => x.DepartmentId)
+                .Distinct();
+            var departments = from userDep in deps
+                              join department in _context.Department on userDep equals department.Id
+                              select new SelectDepartment
+                              {
+                                  DepartmentId = userDep,
+                                  DepartmentName = department.Description
+                              };
+
+            return await departments.ToListAsync();
+        }
+
+        public byte[] SetPDF(PatientFormModel form)
         {
             new CustomAssemblyLoadContext().LoadUnmanagedLibrary(Path.Combine(Directory.GetCurrentDirectory(), "libwkhtmltox.dll"));
             var globalSettings = new GlobalSettings
@@ -198,12 +362,12 @@ namespace Referral2.Controllers
                 Orientation = Orientation.Portrait,
                 PaperSize = PaperKind.A4,
                 Margins = new MarginSettings { Top = 1.54, Bottom = 1.34, Left = 1.34, Right = 1.34, Unit = Unit.Centimeters },
-                DocumentTitle = GlobalFunctions.GetFullName(form.Patient)
+                DocumentTitle = form.PatientName
             };
             var objectSettings = new ObjectSettings
             {
                 PagesCount = true,
-                HtmlContent = /*DTR(),*/ NormalPdf(form),
+                HtmlContent = NormalPdf(form),
                 WebSettings = { DefaultEncoding = "utf-8", UserStyleSheet = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "css", "site.css") }
             };
 
@@ -214,7 +378,7 @@ namespace Referral2.Controllers
             };
             return _converter.Convert(pdf);
         }
-        public byte[] SetPDF(PregnantForm form)
+        public byte[] SetPDF(PregnantFormModel form)
         {
             new CustomAssemblyLoadContext().LoadUnmanagedLibrary(Path.Combine(Directory.GetCurrentDirectory(), "libwkhtmltox.dll"));
             var globalSettings = new GlobalSettings
@@ -223,7 +387,7 @@ namespace Referral2.Controllers
                 Orientation = Orientation.Portrait,
                 PaperSize = PaperKind.A4,
                 Margins = new MarginSettings { Top = 1.54, Bottom = 1.34, Left = 1.34, Right = 1.34, Unit = Unit.Centimeters },
-                DocumentTitle = GlobalFunctions.GetFullName(form.PatientWoman)
+                DocumentTitle = form.PatientName
             };
             var objectSettings = new ObjectSettings
             {
@@ -659,7 +823,7 @@ namespace Referral2.Controllers
             return pdf.ToString();
         }
 
-        public string NormalPdf(PatientForm form)
+        public string NormalPdf(PatientFormModel form)
         {
             var pdf = new StringBuilder();
             pdf.AppendFormat(@"
@@ -843,33 +1007,33 @@ namespace Referral2.Controllers
                         </div>
                     </body>
                 </html>",
-                form.ReferringFacilityNavigation.Name,
-                form.ReferringFacilityNavigation.ContactNo,
-                GlobalFunctions.GetAddress(form.ReferringFacilityNavigation),
-                form.ReferredToNavigation.Name,
-                form.Department.Description,
-                GlobalFunctions.GetAddress(form.ReferredToNavigation),
+                form.ReferringFacilityName,
+                form.ReferringFacilityContact,
+                form.ReferringFacilityAddress,
+                form.ReferredToName,
+                form.Department,
+                form.ReferredToAddress,
                 form.TimeReferred.GetDate("MMMM d, yyyy h:mm tt"),
                 form.TimeTransferred == default? "" : form.TimeTransferred.GetDate("MMMM d, yyyy h:mm tt"),
-                GlobalFunctions.GetFullName(form.Patient),
-                form.Patient.Dob.ComputeAge(),
-                form.Patient.Sex,
-                form.Patient.CivilStatus,
-                GlobalFunctions.GetAddress(form.Patient),
-                form.Patient.PhicStatus,
-                form.Patient.PhicId,
+                form.PatientName,
+                form.PatientDob.ComputeAge(),
+                form.PatientSex,
+                form.PatientStatus,
+                form.PatientAddress,
+                form.PhicStatus,
+                form.PhicId,
                 form.CaseSummary,
                 form.RecoSummary,
                 form.Diagnosis,
                 form.Reason,
-                GlobalFunctions.GetMDFullName(form.ReferringMdNavigation),
-                form.ReferringMdNavigation.ContactNo,
-                GlobalFunctions.GetMDFullName(form.ReferredMdNavigation),
+                form.ReferringMdName,
+                form.ReferringMdContact,
+                form.ReferredMdName,
                 form.Code);
             return pdf.ToString();
         }
 
-        public string PregnantPdf(PregnantForm form)
+        public string PregnantPdf(PregnantFormModel form)
         {
             var pdf = new StringBuilder();
             pdf.Append(@"
@@ -930,15 +1094,15 @@ namespace Referral2.Controllers
                 form.Code,
                 form.RecordNo,
                 form.ReferredDate.ToString("MMMM d, yyyy hh:mm tt",CultureInfo.InvariantCulture),
-                GlobalFunctions.GetMDFullName(form.ReferredByNavigation),
+                form.ReferringMdName,
                 form.ArrivalDate == default ? "" : form.ArrivalDate.ToString("MMMM d, yyyy hh:mm tt", CultureInfo.InvariantCulture),
-                form.ReferredByNavigation.ContactNo,
-                form.ReferringFacilityNavigation.Name,
-                form.ReferringFacilityNavigation.ContactNo,
+                form.ReferringMdContact,
+                form.ReferringFacilityName,
+                form.ReferringFacilityContact,
                 form.HealthWorker,
-                form.ReferredToNavigation.Name,
-                form.Department.Description,
-                GlobalFunctions.GetAddress(form.ReferredToNavigation));
+                form.ReferredToName,
+                form.Department,
+                form.ReferredToAddress);
 
             pdf.AppendFormat(@"
             <table class='table table-bordered'>
@@ -987,19 +1151,19 @@ namespace Referral2.Controllers
                     </tr>
                 </tbody>
             </table>",
-            GlobalFunctions.GetFullName(form.PatientWoman),
-            form.PatientWoman.Dob.ComputeAge(),
-            GlobalFunctions.GetAddress(form.PatientWoman),
+            form.PatientName,
+            form.PatientDob.ComputeAge(),
+            form.PatientAddress,
             form.WomanReason,
             form.WomanMajorFindings,
-            ((DateTime)form.WomanBeforeGivenTime) == default ? "" : ((DateTime)form.WomanBeforeGivenTime).ToString("MMMM d, yyyy hh:mm tt", CultureInfo.InvariantCulture),
+            (form.WomanBeforeGivenTime) == default ? "" : (form.WomanBeforeGivenTime).ToString("MMMM d, yyyy hh:mm tt", CultureInfo.InvariantCulture),
             form.WomanBeforeTreatment,
-            ((DateTime)form.WomanTransportGivenTime) == default ? "" : ((DateTime)form.WomanTransportGivenTime).ToString("MMMM d, yyyy hh:mm tt", CultureInfo.InvariantCulture),
+            (form.WomanTransportGivenTime) == default ? "" : (form.WomanTransportGivenTime).ToString("MMMM d, yyyy hh:mm tt", CultureInfo.InvariantCulture),
             form.WomanDuringTransport,
             form.WomanInformationGiven);
 
 
-            if(form.PatientBabyId != null)
+            if(form.PatientBabyId != 0)
             {
                 var baby = _context.Baby.SingleOrDefault(x => x.BabyId == form.PatientBabyId);
                 pdf.AppendFormat(@"
@@ -1055,20 +1219,20 @@ namespace Referral2.Controllers
                         </tr>
                     </tbody>
                 </table>",
-                GlobalFunctions.GetFullName(form.PatientBaby),
-                form.PatientBaby.Dob.ToString("MMMM d, yyyy hh:mm tt", CultureInfo.InvariantCulture),
+                form.BabyName,
+                form.BabyDob.ToString("MMMM d, yyyy hh:mm tt", CultureInfo.InvariantCulture),
                 baby.Weight,
                 baby.GestationalAge,
                 form.BabyReason,
                 form.BabyMajorFindings,
-                ((DateTime)form.BabyLastFeed) == default ? "" : ((DateTime)form.BabyLastFeed).ToString("MMMM d, yyyy hh:mm tt", CultureInfo.InvariantCulture),
+                (form.BabyLastFeed) == default ? "" : (form.BabyLastFeed).ToString("MMMM d, yyyy hh:mm tt", CultureInfo.InvariantCulture),
                 form.WomanBeforeTreatment,
-                ((DateTime)form.WomanBeforeGivenTime) == default ? "" : ((DateTime)form.WomanBeforeGivenTime).ToString("MMMM d, yyyy hh:mm tt", CultureInfo.InvariantCulture),
+                (form.WomanBeforeGivenTime) == default ? "" : (form.WomanBeforeGivenTime).ToString("MMMM d, yyyy hh:mm tt", CultureInfo.InvariantCulture),
                 form.WomanDuringTransport,
-                ((DateTime)form.WomanTransportGivenTime) == default ? "" : ((DateTime)form.WomanTransportGivenTime).ToString("MMMM d, yyyy hh:mm tt", CultureInfo.InvariantCulture),
+                (form.WomanTransportGivenTime) == default ? "" : (form.WomanTransportGivenTime).ToString("MMMM d, yyyy hh:mm tt", CultureInfo.InvariantCulture),
                 form.WomanInformationGiven);
             }
-
+            
 
             pdf.Append(@"
                         </div>
@@ -1078,21 +1242,6 @@ namespace Referral2.Controllers
             return pdf.ToString();
         }
 
-
-
-        private Task<IEnumerable<SelectDepartment>> AvailableDepartments(int facilityId)
-        {
-            var availableDepartments = _context.User
-                .Where(x => x.FacilityId.Equals(facilityId) && x.Level.Equals(_roles.Value.DOCTOR) && x.DepartmentId != null)
-                .Select(x=>x.DepartmentId)
-                .Distinct()
-                .Select(x => new SelectDepartment
-                {
-                    DepartmentId = (int)x,
-                    DepartmentName = _context.Department.SingleOrDefault(c=> c.Id == x).Description
-                });
-            return Task.FromResult(availableDepartments.AsEnumerable());
-        }
         public int UserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
         public int UserFacility => int.Parse(User.FindFirstValue("Facility"));
         public int UserDepartment => int.Parse(User.FindFirstValue("Department"));

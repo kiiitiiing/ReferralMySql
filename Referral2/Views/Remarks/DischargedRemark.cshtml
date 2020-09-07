@@ -35,15 +35,29 @@
             </h4>
         </div>
         <div class="modal-body">
-            <div class="">
+            <div class="form-group">
                 <input id="getCode" type="hidden" asp-for="Code" />
             </div>
-            <div class="">
+            <div class="form-group">
                 <label>Select Date/Time:</label>
                 <input asp-for="DateDischarged" type="text" id="datetimepicker" value="@DateTime.Now.ToString("yyyy-MM-dd HH:mm")" class="form-control" required />
                 <span asp-validation-for="DateDischarged" class="text-danger"></span>
             </div>
-            <div class="">
+            <div class="form-group">
+                <label>Clinical Status:</label>
+                <select asp-for="ClinicaStatus" asp-items="ViewBag.ClinicalStat" class="form-control">
+                    <option value="">Select option</option>
+                </select>
+                <span asp-validation-for="ClinicaStatus" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label>Surveillance Category:</label>
+                <select asp-for="SurveillanceCategory" asp-items="ViewBag.SurveilanceCat" class="form-control">
+                    <option value="">Select option</option>
+                </select>
+                <span asp-validation-for="SurveillanceCategory" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <label>Enter Remarks:</label>
                 <textarea asp-for="Remarks" class="form-control" rows="5" required></textarea>
                 <span asp-validation-for="Remarks" class="text-danger"></span>

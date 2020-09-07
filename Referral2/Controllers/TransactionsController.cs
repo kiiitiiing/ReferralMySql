@@ -36,248 +36,237 @@ namespace Referral2.Controllers
         {
             if(UserRole == _roles.Value.DOCTOR || UserRole == _roles.Value.MCC)
             {
-
+                if(!string.IsNullOrEmpty(code))
+                {
+                #region Track Code
                 ViewBag.CurrentCode = code;
                 var seens = _context.Seen;
-                var activities = _context.Activity;
+                var activities = await _context.Activity.Where(x => x.Code == code).OrderByDescending(x => x.CreatedAt)
+                        .Join(
+                            _context.Facility,
+                            act => act.ReferredFrom,
+                            refFrom => refFrom.Id,
+                            (act, refFrom) =>
+                                new
+                                {
+                                    act = act,
+                                    refFrom = refFrom
+                                }
+                        )
+                        .GroupJoin(
+                            _context.Facility,
+                            temp0 => temp0.act.ReferredTo,
+                            rto => rto.Id,
+                            (temp0, RTO) =>
+                                new
+                                {
+                                    temp0 = temp0,
+                                    RTO = RTO
+                                }
+                        )
+                        .SelectMany(
+                            temp1 => temp1.RTO.DefaultIfEmpty(),
+                            (temp1, refTo) =>
+                                new
+                                {
+                                    temp1 = temp1,
+                                    refTo = refTo
+                                }
+                        )
+                        .GroupJoin(
+                            _context.Users,
+                            temp2 => temp2.temp1.temp0.act.ReferringMd,
+                            rmd => rmd.Id,
+                            (temp2, RMD) =>
+                                new
+                                {
+                                    temp2 = temp2,
+                                    RMD = RMD
+                                }
+                        )
+                        .SelectMany(
+                            temp3 => temp3.RMD.DefaultIfEmpty(),
+                            (temp3, refMd) =>
+                                new
+                                {
+                                    temp3 = temp3,
+                                    refMd = refMd
+                                }
+                        )
+                        .GroupJoin(
+                            _context.Users,
+                            temp4 => temp4.temp3.temp2.temp1.temp0.act.ActionMd,
+                            amd => amd.Id,
+                            (temp4, AMD) =>
+                                new
+                                {
+                                    temp4 = temp4,
+                                    AMD = AMD
+                                }
+                        )
+                        .SelectMany(
+                            temp5 => temp5.AMD.DefaultIfEmpty(),
+                            (temp5, actMd) =>
+                                new ActivityLess
+                                {
+                                    Status = temp5.temp4.temp3.temp2.temp1.temp0.act.Status,
+                                    DateAction = temp5.temp4.temp3.temp2.temp1.temp0.act.DateReferred.ToString("MMM dd, yyyy hh:mm tt", CultureInfo.InvariantCulture),
+                                    FacilityFrom = (temp5.temp4.temp3.temp2.temp1.temp0.act.ReferredFrom == 0) ? "" : temp5.temp4.temp3.temp2.temp1.temp0.refFrom.Name,
+                                    FacilityFromContact = (temp5.temp4.temp3.temp2.temp1.temp0.act.ReferredFrom == 0) ? "" : temp5.temp4.temp3.temp2.temp1.temp0.refFrom.Contact,
+                                    FacilityTo = temp5.temp4.temp3.temp2.refTo.Name,
+                                    ActionMd = actMd.GetMDFullName(),
+                                    ReferringMd = temp5.temp4.refMd.GetMDFullName(),
+                                    Remarks = temp5.temp4.temp3.temp2.temp1.temp0.act.Remarks
+                                }
+                        )
+                        .ToListAsync();
                 var feedbacks = _context.Feedback;
                 var facilities = _context.Facility.Where(x => x.Id != UserFacility);
                 var issues = _context.Issue;
-                var track = await _context.Tracking
-                    .Where(x => x.Code.Equals(code))
+                var users = _context.Users.Where(x => x.Level.Equals(_roles.Value.DOCTOR));
+                var track = await _context.Tracking.Where(x=>x.Code == code)
                     .Join(
                         _context.Users,
-                        track => track.ReferringMd,
+                        tracking => tracking.ReferringMd,
                         refMd => refMd.Id,
-                        (track, refMd) =>
+                        (tracking, refMd) =>
                             new
                             {
-                                track = track,
+                                tracking = tracking,
                                 refMd = refMd
                             }
                     )
-                    .Join(
+                    .GroupJoin(
                         _context.Users,
-                        temp0 => temp0.track.ActionMd,
-                        actMd => actMd.Id,
-                        (temp0, actMd) =>
+                        temp0 => temp0.tracking.ActionMd,
+                        act => act.Id,
+                        (temp0, ACT) =>
                             new
                             {
                                 temp0 = temp0,
+                                ACT = ACT
+                            }
+                    )
+                    .SelectMany(
+                        temp1 => temp1.ACT.DefaultIfEmpty(),
+                        (temp1, actMd) =>
+                            new
+                            {
+                                temp1 = temp1,
                                 actMd = actMd
                             }
                     )
                     .Join(
                         _context.Facility,
-                        temp1 => temp1.temp0.track.ReferredFrom,
+                        temp2 => temp2.temp1.temp0.tracking.ReferredFrom,
                         refFrom => refFrom.Id,
-                        (temp1, refFrom) =>
+                        (temp2, refFrom) =>
                             new
                             {
-                                temp1 = temp1,
+                                temp2 = temp2,
                                 refFrom = refFrom
                             }
                     )
                     .Join(
                         _context.Facility,
-                        temp2 => temp2.temp1.temp0.track.ReferredTo,
+                        temp3 => temp3.temp2.temp1.temp0.tracking.ReferredTo,
                         refTo => refTo.Id,
-                        (temp2, refTo) =>
+                        (temp3, refTo) =>
                             new
                             {
-                                temp2 = temp2,
+                                temp3 = temp3,
                                 refTo = refTo
                             }
                     )
                     .Join(
                         _context.Patients,
-                        temp3 => temp3.temp2.temp1.temp0.track.PatientId,
-                        patient => patient.Id,
-                        (temp3, patient) =>
+                        temp4 => temp4.temp3.temp2.temp1.temp0.tracking.PatientId,
+                        pat => pat.Id,
+                        (temp4, pat) =>
                             new
                             {
-                                temp3 = temp3,
-                                patient = patient
+                                temp4 = temp4,
+                                pat = pat
                             }
                     )
                     .Join(
                         _context.Province,
-                        temp4 => temp4.patient.Province,
+                        temp5 => temp5.pat.Province,
                         province => province.Id,
-                        (temp4, province) =>
-                            new
-                            {
-                                temp4 = temp4,
-                                province = province
-                            }
-                    )
-                    .Join(
-                        _context.Muncity,
-                        temp5 => temp5.temp4.patient.Muncity,
-                        muncity => muncity.Id,
-                        (temp5, muncity) =>
+                        (temp5, province) =>
                             new
                             {
                                 temp5 = temp5,
+                                province = province
+                            }
+                    )
+                    .GroupJoin(
+                        _context.Muncity,
+                        temp6 => temp6.temp5.pat.Muncity,
+                        munct => munct.Id,
+                        (temp6, MUNCT) =>
+                            new
+                            {
+                                temp6 = temp6,
+                                MUNCT = MUNCT
+                            }
+                    )
+                    .SelectMany(
+                        temp7 => temp7.MUNCT.DefaultIfEmpty(),
+                        (temp7, muncity) =>
+                            new
+                            {
+                                temp7 = temp7,
                                 muncity = muncity
                             }
                     )
-                    .Join(
+                    .GroupJoin(
                         _context.Barangay,
-                        temp6 => temp6.temp5.temp4.patient.Brgy,
-                        barangay => barangay.Id,
-                        (temp6, barangay) =>
-                            new ReferredViewModel
+                        temp8 => temp8.temp7.temp6.temp5.pat.Brgy,
+                        brgy => brgy.Id,
+                        (temp8, BRGY) =>
+                            new
                             {
-                                PatientId = temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.PatientId,
-                                Fname = temp6.temp5.temp4.patient.Fname,
-                                Mname = temp6.temp5.temp4.patient.Mname ?? "",
-                                Lname = temp6.temp5.temp4.patient.Lname,
-                                PatientSex = temp6.temp5.temp4.patient.Sex,
-                                PatientAge = temp6.temp5.temp4.patient.Dob.ComputeAge(),
-                                Barangay = barangay.Description,
-                                Muncity = temp6.muncity.Description,
-                                Province = temp6.temp5.province.Description,
-                                ReferredBy = temp6.temp5.temp4.temp3.temp2.temp1.temp0.refMd.GetMDFullName(),
-                                ReferredTo = temp6.temp5.temp4.temp3.temp2.temp1.actMd.GetMDFullName(),
-                                ReferredToId = temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.ReferredTo,
-                                FacilityFrom = temp6.temp5.temp4.temp3.temp2.refFrom.Name,
-                                FacilityTo = temp6.temp5.temp4.temp3.refTo.Name,
-                                TrackingId = temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Id,
-                                SeenCount = seens.Where(x=>x.TrackingId == temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Id).Count(),
-                                CallerCount = activities.Where(x => x.Code.Equals(temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Code) && x.Status.Equals(_status.Value.CALLING)).Count(),
-                                IssueCount = issues.Where(x => x.TrackingId.Equals(temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Id)).Count(),
-                                ReCoCount = feedbacks.Where(x => x.Code.Equals(temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Code)).Count(),
-                                Travel = string.IsNullOrEmpty(temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.ModeTransportation),
-                                Code = temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Code,
-                                Status = temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Status,
-                                Pregnant = temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Type.Equals("pregnant"),
-                                Seen = temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.DateSeen != default,
-                                Walkin = temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Walkin.Equals("yes"),
-                                UpdatedAt = temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.DateReferred,
-                                Activities = activities.Where(x=>x.Code == temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.Code).OrderByDescending(x=>x.CreatedAt)
-                                    .Join(
-                                        _context.Facility,
-                                        act => act.ReferredFrom,
-                                        refFrom => refFrom.Id,
-                                        (act, refFrom) =>
-                                            new
-                                            {
-                                                act = act,
-                                                refFrom = refFrom
-                                            }
-                                    )
-                                    .GroupJoin(
-                                        _context.Facility,
-                                        temp0 => temp0.act.ReferredTo,
-                                        rto => rto.Id,
-                                        (temp0, RTO) =>
-                                            new
-                                            {
-                                                temp0 = temp0,
-                                                RTO = RTO
-                                            }
-                                    )
-                                    .SelectMany(
-                                        temp1 => temp1.RTO.DefaultIfEmpty(),
-                                        (temp1, refTo) =>
-                                            new
-                                            {
-                                                temp1 = temp1,
-                                                refTo = refTo
-                                            }
-                                    )
-                                    .GroupJoin(
-                                        _context.Users,
-                                        temp2 => temp2.temp1.temp0.act.ReferringMd,
-                                        rmd => rmd.Id,
-                                        (temp2, RMD) =>
-                                            new
-                                            {
-                                                temp2 = temp2,
-                                                RMD = RMD
-                                            }
-                                    )
-                                    .SelectMany(
-                                        temp3 => temp3.RMD.DefaultIfEmpty(),
-                                        (temp3, refMd) =>
-                                            new
-                                            {
-                                                temp3 = temp3,
-                                                refMd = refMd
-                                            }
-                                    )
-                                    .GroupJoin(
-                                        _context.Users,
-                                        temp4 => temp4.temp3.temp2.temp1.temp0.act.ActionMd,
-                                        amd => amd.Id,
-                                        (temp4, AMD) =>
-                                            new
-                                            {
-                                                temp4 = temp4,
-                                                AMD = AMD
-                                            }
-                                    )
-                                    .SelectMany(
-                                        temp5 => temp5.AMD.DefaultIfEmpty(),
-                                        (temp5, actMd) =>
-                                            new ActivityLess
-                                            {
-                                                Status = temp5.temp4.temp3.temp2.temp1.temp0.act.Status,
-                                                DateAction = temp5.temp4.temp3.temp2.temp1.temp0.act.DateReferred.ToString("MMM dd, yyyy hh:mm tt", CultureInfo.InvariantCulture),
-                                                FacilityFrom = (temp5.temp4.temp3.temp2.temp1.temp0.act.ReferredFrom == 0)? "": temp5.temp4.temp3.temp2.temp1.temp0.refFrom.Name,
-                                                FacilityFromContact = (temp5.temp4.temp3.temp2.temp1.temp0.act.ReferredFrom == 0)? "": temp5.temp4.temp3.temp2.temp1.temp0.refFrom.Contact,
-                                                FacilityTo = temp5.temp4.temp3.temp2.refTo.Name,
-                                                ActionMd = actMd.GetMDFullName(),
-                                                ReferringMd = temp5.temp4.refMd.GetMDFullName(),
-                                                Remarks = temp5.temp4.temp3.temp2.temp1.temp0.act.Remarks
-                                            }
-                                    )
-                                ,
-                                ReferredFromId = temp6.temp5.temp4.temp3.temp2.temp1.temp0.track.ReferredFrom
+                                temp8 = temp8,
+                                BRGY = BRGY
                             }
                     )
-                    .OrderByDescending(x => x.UpdatedAt)
-                    .FirstOrDefaultAsync();
-                    /*.Select(t => new ReferredViewModel
-                    {
-                        PatientId = t.PatientId,
-                        PatientName = t.Patient.Fname + " " + t.Patient.Mname + " " + t.Patient.Lname,
-                        PatientSex = t.Patient.Sex,
-                        PatientAge = t.Patient.Dob.ComputeAge(),
-                        Barangay = t.Patient.Barangay.Description,
-                        Muncity = t.Patient.Muncity.Description,
-                        Province = t.Patient.Province.Description,
-                        ReferredBy = t.ReferringMdNavigation.GetMDFullName(),
-                        ReferredTo = t.ActionMdNavigation.GetMDFullName(),
-                        ReferredToId = t.ReferredTo,
-                        TrackingId = t.Id,
-                        SeenCount = t.Seen.Count(),
-                        CallerCount = activities.Where(x => x.Code.Equals(t.Code) && x.Status.Equals(_status.Value.CALLING)).Count(),
-                        IssueCount = _context.Issue.Where(x => x.TrackingId.Equals(t.Id)).Count(),
-                        ReCoCount = feedbacks.Where(x => x.Code.Equals(t.Code)).Count(),
-                        Travel = string.IsNullOrEmpty(t.ModeTransportation),
-                        Code = t.Code,
-                        Status = t.Status,
-                        Pregnant = t.Type.Equals("pregnant"),
-                        Seen = t.DateSeen != default,
-                        Walkin = t.Walkin.Equals("yes"),
-                        UpdatedAt = t.DateReferred,
-                        Activities = activities.Where(x => x.Code.Equals(t.Code) && x.Status != _status.Value.CALLING).OrderByDescending(x => x.CreatedAt)
-                            .Select(i => new ActivityLess
+                    .SelectMany(
+                        temp9 => temp9.BRGY.DefaultIfEmpty(),
+                        (temp9, barangay) =>
+                            new ReferredViewModel
                             {
-                                Status = i.Status,
-                                DateAction = i.DateReferred.ToString("MMM dd, yyyy hh:mm tt", CultureInfo.InvariantCulture),
-                                FacilityFrom = i.ReferredFromNavigation == null ? "" : i.ReferredFromNavigation.Name,
-                                FacilityFromContact = i.ReferredFromNavigation == null ? "" : i.ReferredFromNavigation.ContactNo,
-                                FacilityTo = t.ReferredToNavigation.Name,
-                                PatientName = i.Patient.Fname + " " + i.Patient.Mname + " " + i.Patient.Lname,
-                                ActionMd = i.ActionMdNavigation.GetMDFullName(),
-                                ReferringMd = i.ReferringMdNavigation.GetMDFullName(),
-                                Remarks = i.Remarks
+                                PatientId = temp9.temp8.temp7.temp6.temp5.temp4.temp3.temp2.temp1.temp0.tracking.PatientId,
+                                Fname = temp9.temp8.temp7.temp6.temp5.pat.Fname,
+                                Mname = (temp9.temp8.temp7.temp6.temp5.pat.Mname ?? ""),
+                                Lname = temp9.temp8.temp7.temp6.temp5.pat.Lname,
+                                PatientSex = temp9.temp8.temp7.temp6.temp5.pat.Sex,
+                                PatientAge = temp9.temp8.temp7.temp6.temp5.pat.Dob.ComputeAge(),
+                                Barangay = barangay.Description,
+                                Muncity = temp9.temp8.muncity.Description,
+                                Province = temp9.temp8.temp7.temp6.province.Description,
+                                ReferredBy = temp9.temp8.temp7.temp6.temp5.temp4.temp3.temp2.temp1.temp0.refMd.GetMDFullName(),
+                                ReferredTo = temp9.temp8.temp7.temp6.temp5.temp4.temp3.temp2.actMd.GetMDFullName(),
+                                ReferredToId = temp9.temp8.temp7.temp6.temp5.temp4.temp3.temp2.temp1.temp0.tracking.ReferredTo,
+                                FacilityFrom = temp9.temp8.temp7.temp6.temp5.temp4.temp3.refFrom.Name,
+                                FacilityTo = temp9.temp8.temp7.temp6.temp5.temp4.refTo.Name,
+                                TrackingId = temp9.temp8.temp7.temp6.temp5.temp4.temp3.temp2.temp1.temp0.tracking.Id,
+                                SeenCount = seens.Where(x => x.TrackingId == temp9.temp8.temp7.temp6.temp5.temp4.temp3.temp2.temp1.temp0.tracking.Id).Count(),
+                                CallerCount = _context.Activity.Where(x => x.Code.Equals(code) && x.Status.Equals(_status.Value.CALLING)).Count(),
+                                IssueCount = issues.Where(x => x.TrackingId.Equals(temp9.temp8.temp7.temp6.temp5.temp4.temp3.temp2.temp1.temp0.tracking.Id)).Count(),
+                                ReCoCount = feedbacks.Where(x => x.Code.Equals(code)).Count(),
+                                Travel = string.IsNullOrEmpty(temp9.temp8.temp7.temp6.temp5.temp4.temp3.temp2.temp1.temp0.tracking.ModeTransportation),
+                                Code = temp9.temp8.temp7.temp6.temp5.temp4.temp3.temp2.temp1.temp0.tracking.Code,
+                                Status = temp9.temp8.temp7.temp6.temp5.temp4.temp3.temp2.temp1.temp0.tracking.Status,
+                                Pregnant = temp9.temp8.temp7.temp6.temp5.temp4.temp3.temp2.temp1.temp0.tracking.Type.Equals("pregnant"),
+                                Seen = temp9.temp8.temp7.temp6.temp5.temp4.temp3.temp2.temp1.temp0.tracking.DateSeen != default,
+                                Walkin = string.IsNullOrEmpty(temp9.temp8.temp7.temp6.temp5.temp4.temp3.temp2.temp1.temp0.tracking.Walkin) ? false : temp9.temp8.temp7.temp6.temp5.temp4.temp3.temp2.temp1.temp0.tracking.Walkin.Equals("yes"),
+                                UpdatedAt = temp9.temp8.temp7.temp6.temp5.temp4.temp3.temp2.temp1.temp0.tracking.DateReferred,
+                                ReferredFromId = temp9.temp8.temp7.temp6.temp5.temp4.temp3.temp2.temp1.temp0.tracking.ReferredFrom
                             })
-                    })  */
-
+                            .OrderByDescending(x=>x.UpdatedAt)
+                            .FirstOrDefaultAsync();
+                track.Activities = activities;
 
                 if (track != null)
                 {
@@ -286,6 +275,12 @@ namespace Referral2.Controllers
 
 
                 return View(track);
+                    #endregion
+                }
+                else
+                {
+                    return View();
+                }
             }
             else
             {

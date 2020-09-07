@@ -104,7 +104,7 @@ namespace Referral2.Controllers
         [Route("{controller}/{action}/{code}")]
         public void RequestCall(string code)
         {
-            var tracking = _context.Tracking.SingleOrDefault(x => x.Code == code);
+            var tracking = _context.Tracking.FirstOrDefault(x => x.Code == code);
             var activity = new Activity
             {
                 Code = code,
@@ -121,6 +121,8 @@ namespace Referral2.Controllers
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now
             };
+            tracking.UpdatedAt = DateTime.Now;
+            _context.Update(tracking);
             _context.Add(activity);
             _context.SaveChanges();
         }
@@ -427,6 +429,10 @@ namespace Referral2.Controllers
             {
                 Code = code,
             };
+
+            ViewBag.ClinicalStat = new SelectList(ListContainer.DisClinicalStatus, "Key", "Value");
+            ViewBag.SurveilanceCat = new SelectList(ListContainer.SurveillanceCategory, "Key", "Value");
+
             return PartialView(Discharge);
         }
 
@@ -442,6 +448,9 @@ namespace Referral2.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction("Accepted", "ViewPatients");
             }
+
+            ViewBag.ClinicalStat = new SelectList(ListContainer.DisClinicalStatus, "Key", "Value", model.ClinicaStatus);
+            ViewBag.SurveilanceCat = new SelectList(ListContainer.SurveillanceCategory, "Key", "Value", model.SurveillanceCategory);
             return PartialView(model);
         }
         #endregion

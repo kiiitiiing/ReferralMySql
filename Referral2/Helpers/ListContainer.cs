@@ -36,6 +36,19 @@ namespace Referral2.Helpers
             }
         }
 
+        public static List<KeyValuePair<string, string>> DisClinicalStatus
+        {
+            get
+            {
+                return new List<KeyValuePair<string, string>>
+                {
+                    new KeyValuePair<string, string>("asymptomatic","Asymptomatic for at least 3 days"),
+                    new KeyValuePair<string, string>("recovered","Recovered"),
+                    new KeyValuePair<string, string>("expired","Expired")
+                };
+            }
+        }
+
         public static List<KeyValuePair<string, string>> SurveillanceCategory
         {
             get

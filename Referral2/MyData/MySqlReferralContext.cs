@@ -14,6 +14,7 @@ namespace Referral2.MyData
         public MySqlReferralContext(DbContextOptions<MySqlReferralContext> options)
             : base(options)
         {
+            Database.SetCommandTimeout(300);
         }
 
         public virtual DbSet<Activity> Activity { get; set; }

@@ -152,9 +152,10 @@ namespace Referral2
         public static string GetAddress(params string[] addresses)
         {
             var address = "";
-            for (int x = 0; x < address.Length; x++)
+            for (int x = 0; x < addresses.Length; x++)
             {
-                address = address + ", " + address[x];
+                var coma = x == 0 ? "" : ", ";
+                address = address + coma + addresses[x];
             }
             return address;
         }
